@@ -153,15 +153,27 @@ class QRCamera {
       } else {
       // Better mobile camera selection with iOS fallback
       const backCam = devices.find(d => 
-        /back|rear|environment|camera2/i.test(d.label) || 
-        d.label.includes('0')
+        d.label.toLowerCase().includes('posterior') ||
+        d.label.toLowerCase().includes('trasera') ||
+        d.label.toLowerCase().includes('triple') ||
+        d.label.toLowerCase().includes('amplia') ||
+        d.label.toLowerCase().includes('back') ||
+        d.label.toLowerCase().includes('rear') ||
+        d.label.toLowerCase().includes('environment') ||
+        d.label.includes('1') || // Often camera 1 is rear
+        d.label.includes('2')    // Sometimes camera 2 is rear
       );
+      
       if (backCam && devices.length > 1) {
         console.log('📱 QRCamera: Using back camera:', backCam.label);
         cameraConfig = { deviceId: { exact: backCam.id } };
+      } else if (devices.length > 1) {
+        // Try index 1 (usually rear camera)
+        console.log('🍎 iOS fallback: Using camera index 1 (likely rear)');
+        cameraConfig = { deviceId: { exact: devices[1].id } };
       } else if (devices.length > 0) {
-        // iOS fallback: use the first available camera
-        console.log('🍎 iOS fallback: Using first available camera');
+        // Last resort: use first camera
+        console.log('� Last resort: Using first available camera');
         cameraConfig = { deviceId: { exact: devices[0].id } };
       } else {
         console.log('🌍 QRCamera: Using environment facing mode');
@@ -174,13 +186,13 @@ class QRCamera {
                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       
       const config = { 
-        fps: isIOS ? 8 : 10, // Lower FPS for iOS
+        fps: 6, // Reduced FPS for better performance on all devices
         rememberLastUsedCamera: false,
         disableFlip: true, // CRITICAL: Disable flip to prevent iOS rotation issues
         videoConstraints: isIOS ? {
-          // iOS-specific constraints
-          width: { exact: 640 },
-          height: { exact: 480 },
+          // iOS-specific constraints - use ideal instead of exact for better compatibility
+          width: { ideal: 640, max: 720 },
+          height: { ideal: 480, max: 540 },
           facingMode: 'environment'
         } : {
           // Other devices
@@ -190,7 +202,10 @@ class QRCamera {
         },
         aspectRatio: 1.0,
         // Remove qrbox to prevent additional overlays that can cause flipping
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: false // Disable to improve performance
+        }
       };
       
       console.log('🚀 QRCamera: Starting camera with config:', cameraConfig);
@@ -214,16 +229,11 @@ class QRCamera {
       this._retryCount = 0; // Reset successful
       console.log('✅ QRCamera: Camera started successfully!');
       
-      // iOS-specific: Multiple strategies to ensure video visibility and prevent flipping
+      // iOS-specific: Reduced frequency checks for better performance
       setTimeout(() => {
         this._ensureVideoVisibility();
         this._preventFlipping();
-      }, 200);
-      
-      setTimeout(() => {
-        this._ensureVideoVisibility();
-        this._preventFlipping();
-      }, 1000);
+      }, 500);
       
       setTimeout(() => {
         this._ensureVideoVisibility();
@@ -262,22 +272,51 @@ class QRCamera {
 
   async stop() {
     if (!this.html5Qrcode) return;
+    
+    // Cleanup observers first
+    if (this.transformObserver) {
+      this.transformObserver.disconnect();
+      this.transformObserver = null;
+    }
+    
     try {
+      // Stop camera gracefully
       await this.html5Qrcode.stop();
-      this.html5Qrcode.clear();
       
-      // Cleanup observers
-      if (this.transformObserver) {
-        this.transformObserver.disconnect();
-        this.transformObserver = null;
+      // Clear scanner safely
+      try {
+        this.html5Qrcode.clear();
+      } catch (clearError) {
+        console.warn('Warning during scanner clear:', clearError.message);
+        // Continue execution even if clear fails
       }
       
       dispatchCustomEvent('qr-camera-stopped', {});
     } catch (e) {
       console.warn('Could not stop camera', e);
+      
+      // Force cleanup if normal stop fails
+      try {
+        const container = document.getElementById('qr-reader');
+        if (container) {
+          // Remove all video elements manually
+          const videos = container.querySelectorAll('video');
+          videos.forEach(video => {
+            if (video.parentNode) {
+              video.parentNode.removeChild(video);
+            }
+          });
+          
+          // Clear container content
+          container.innerHTML = '';
+        }
+      } catch (forceError) {
+        console.warn('Force cleanup also failed:', forceError);
+      }
     }
+    
     this.isScanning = false;
-  this._pending = false;
+    this._pending = false;
   }
 
   _onScan(text) {
@@ -289,31 +328,26 @@ class QRCamera {
     console.log('📱 QRCamera: Preventing camera flipping...');
     
     // Find all video elements and prevent transforms
-    const videos = document.querySelectorAll('video');
+    const videos = document.querySelectorAll('#qr-reader video');
     videos.forEach(video => {
       if (video) {
         video.style.transform = 'none !important';
         video.style.webkitTransform = 'none !important';
         
-        // Force redraw
-        video.style.display = 'none';
-        video.offsetHeight; // Trigger reflow
-        video.style.display = 'block';
-        
         console.log('🎥 Video transform reset:', video);
       }
     });
     
-    // Mutation observer to watch for transform changes
+    // Lighter mutation observer - only watch for style changes on video elements
     if (!this.transformObserver && videos.length > 0) {
       this.transformObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
-          if (mutation.type === 'attributes' && 
-              (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
             const target = mutation.target;
             if (target.tagName === 'VIDEO') {
-              if (target.style.transform && target.style.transform !== 'none') {
-                console.log('🚫 Blocking transform on video:', target.style.transform);
+              const transform = target.style.transform;
+              if (transform && transform !== 'none' && transform !== 'none !important') {
+                console.log('🚫 Blocking transform on video:', transform);
                 target.style.transform = 'none !important';
                 target.style.webkitTransform = 'none !important';
               }
@@ -322,92 +356,74 @@ class QRCamera {
         });
       });
       
-      // Observe all video elements
+      // Observe only video elements, only for style changes
       videos.forEach(video => {
         this.transformObserver.observe(video, {
           attributes: true,
-          attributeFilter: ['style', 'class']
+          attributeFilter: ['style']
         });
       });
     }
   }
 
-  _ensureVideoVisibility() {
+    _ensureVideoVisibility() {
     console.log('🔧 Ensuring video visibility and preventing flips...');
     
-    const container = document.getElementById(this.elementId);
-    if (!container) return;
-    
-    // Find all video elements
-    const videos = container.querySelectorAll('video');
-    const canvases = container.querySelectorAll('canvas');
+    const videos = document.querySelectorAll('#qr-reader video');
+    const canvases = document.querySelectorAll('#qr-reader canvas');
     
     console.log(`📹 Found ${videos.length} videos and ${canvases.length} canvases`);
     
+    // Process videos with reduced frequency logging
     videos.forEach((video, index) => {
-      console.log(`📱 Processing video ${index}:`, {
-        readyState: video.readyState,
-        paused: video.paused,
-        videoWidth: video.videoWidth,
-        videoHeight: video.videoHeight,
-        currentTime: video.currentTime
-      });
-      
-      // Force video properties and prevent flipping
-      video.style.display = 'block !important';
-      video.style.visibility = 'visible !important';
-      video.style.opacity = '1 !important';
-      video.style.width = '100% !important';
-      video.style.height = '100% !important';
-      video.style.objectFit = 'cover !important';
-      
-      // CRITICAL: Prevent transforms that cause flipping
-      video.style.transform = 'none !important';
-      video.style.webkitTransform = 'none !important';
-      video.style.transformStyle = 'flat !important';
-      video.style.webkitTransformStyle = 'flat !important';
-      video.style.backfaceVisibility = 'hidden !important';
-      video.style.webkitBackfaceVisibility = 'hidden !important';
-      
-      // Prevent animations that might cause flipping
-      video.style.animation = 'none !important';
-      video.style.webkitAnimation = 'none !important';
-      video.style.transition = 'none !important';
-      video.style.webkitTransition = 'none !important';
-      
-      // iOS specific properties
-      video.muted = false;
-      video.playsInline = true;
-      video.autoplay = true;
-      
-      // Set CSS custom properties to prevent library overrides
-      video.style.setProperty('transform', 'none', 'important');
-      video.style.setProperty('-webkit-transform', 'none', 'important');
-      
-      // Force play
-      if (video.paused) {
-        video.play().then(() => {
-          console.log(`✅ Video ${index} playing without flips`);
-        }).catch(e => {
-          console.warn(`❌ Video ${index} play failed:`, e);
+      if (video && video.readyState >= 2) { // Only process when video has data
+        console.log(`📱 Processing video ${index}:`, {
+          readyState: video.readyState,
+          paused: video.paused,
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+          currentTime: video.currentTime
         });
+        
+        // Ensure video is visible and playing
+        video.style.display = 'block';
+        video.style.visibility = 'visible';
+        video.style.opacity = '1';
+        video.style.transform = 'none !important';
+        video.style.webkitTransform = 'none !important';
+        
+        // Force video to play if paused
+        if (video.paused) {
+          video.play().catch(e => console.warn('Could not play video:', e));
+        }
+        
+        // Set optimal size for performance
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          const containerWidth = Math.min(window.innerWidth, 400);
+          video.style.width = containerWidth + 'px';
+          video.style.height = 'auto';
+        }
       }
     });
     
-    // Also prevent canvas flipping
+    // Process canvases (less frequent logging)
     canvases.forEach((canvas, index) => {
-      console.log(`🎨 Processing canvas ${index}`);
-      canvas.style.display = 'block !important';
-      canvas.style.visibility = 'visible !important';
-      canvas.style.opacity = '1 !important';
-      canvas.style.transform = 'none !important';
-      canvas.style.webkitTransform = 'none !important';
+      if (canvas) {
+        console.log(`🎨 Processing canvas ${index}`);
+        canvas.style.display = 'block';
+        canvas.style.visibility = 'visible';
+        canvas.style.opacity = '1';
+        canvas.style.transform = 'none !important';
+        canvas.style.webkitTransform = 'none !important';
+      }
     });
     
     // Prevent container transforms
-    container.style.transform = 'none !important';
-    container.style.webkitTransform = 'none !important';
-    container.offsetHeight; // Trigger reflow
+    const container = document.getElementById('qr-reader');
+    if (container) {
+      container.style.transform = 'none !important';
+      container.style.webkitTransform = 'none !important';
+    }
   }
 
   // Webcam-only; no image file scanning
