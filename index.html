@@ -2,101 +2,513 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no" />
   <title>QR Hunt - Find the Pieces</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #0f1115 0%, #1a1f2e 100%);
-      color: #d0d7df;
-      line-height: 1.5;
-      min-height: 100vh;
-      padding: 1rem;
+      background: #000;
+      color: #fff;
+      line-height: 1.4;
+      height: 100vh;
+      height: 100dvh; /* Dynamic viewport height for mobile */
+      overflow: hidden;
+      position: relative;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Fullscreen camera container */
+    .camera-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 1;
+      background: #000;
+    }
+
+    #qr-reader {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* Safe area for notched devices */
+    .safe-area-top {
+      padding-top: env(safe-area-inset-top);
     }
     
-    .header {
-      background: rgba(45, 140, 255, 0.1);
-      border: 1px solid rgba(45, 140, 255, 0.3);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
+    .safe-area-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* UI Overlay */
+    .ui-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ui-overlay > * {
+      pointer-events: auto;
+    }
+
+    /* Top UI Bar */
+    .top-bar {
+      background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 100%);
+      padding: calc(env(safe-area-inset-top) + 0.5rem) 1rem 0.75rem 1rem;
       text-align: center;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-    
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
+
+    .top-bar h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
-    
-    .section {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
+
+    .pieces-count {
+      font-size: 0.8rem;
+      color: #2d8cff;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
-    
+
+    /* 3D Puzzle Overlay */
+    .puzzle-overlay {
+      position: absolute;
+      top: 15%;
+      right: 0.75rem;
+      width: 90px;
+      height: 90px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
     #puzzle-3d-canvas {
       width: 100%;
-      height: 300px;
-      background: transparent;
-      border-radius: 8px;
-      margin-bottom: 1rem;
+      height: 100%;
+      border-radius: 10px;
+    }
+
+    /* Bottom UI Panel */
+    .bottom-panel {
+      margin-top: auto;
+      background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 100%);
+      padding: 0.75rem;
+      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      max-height: 35vh;
+      overflow-y: auto;
+    }
+
+    .clue-section {
+      margin-bottom: 0.75rem;
+    }
+
+    .clue-text {
+      background: rgba(45, 140, 255, 0.2);
+      border: 1px solid rgba(45, 140, 255, 0.4);
+      border-radius: 6px;
+      padding: 0.6rem;
+      text-align: center;
+      font-size: 0.85rem;
+      min-height: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .pieces-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .piece-item {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .piece-item:active {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .piece-item.obtained {
+      background: rgba(76, 175, 80, 0.2);
+      border-color: rgba(76, 175, 80, 0.4);
+    }
+
+    .piece-item.obtained:active {
+      background: rgba(76, 175, 80, 0.35);
+    }
+
+    .piece-mark {
+      font-size: 1rem;
+    }
+
+    /* QR Target Overlay */
+    .qr-overlay { 
+      position: absolute; 
+      inset: 0; 
+      pointer-events: none; 
+      z-index: 5; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .qr-target {
+      width: min(70vw, 280px);
+      aspect-ratio: 1 / 1;
+      border: 2px solid rgba(45,140,255,0.6);
+      box-shadow: 0 0 30px rgba(45,140,255,0.3);
+      border-radius: 12px;
       position: relative;
     }
     
-    #qr-reader {
-      width: 100%;
-      height: 300px;
-      background: #000;
-      border-radius: 8px;
-      margin-bottom: 1rem;
+    .qr-target::before, .qr-target::after { 
+      content: ''; 
+      position: absolute; 
+      width: 25px; 
+      height: 25px; 
+      border: 3px solid #2d8cff; 
     }
     
+    .qr-target::before { 
+      top: -3px; 
+      left: -3px; 
+      border-right: none; 
+      border-bottom: none; 
+      border-top-left-radius: 8px; 
+    }
+    
+    .qr-target::after { 
+      bottom: -3px; 
+      right: -3px; 
+      border-left: none; 
+      border-top: none; 
+      border-bottom-right-radius: 8px; 
+    }
+    
+    .qr-corner { 
+      position: absolute; 
+      width: 25px; 
+      height: 25px; 
+      border: 3px solid #2d8cff; 
+    }
+    
+    .qr-corner.top-right { 
+      top: -3px; 
+      right: -3px; 
+      border-left: none; 
+      border-bottom: none; 
+      border-top-right-radius: 8px; 
+    }
+    
+    .qr-corner.bottom-left { 
+      bottom: -3px; 
+      left: -3px; 
+      border-right: none; 
+      border-top: none; 
+      border-bottom-left-radius: 8px; 
+    }
+
+    .flash-overlay { 
+      position: absolute; 
+      inset: 0; 
+      background: radial-gradient(ellipse at center, rgba(255,255,255,0.9) 0%, rgba(77,160,255,0.45) 35%, rgba(0,0,0,0) 70%); 
+      opacity: 0; 
+      pointer-events: none; 
+      z-index: 6; 
+      transform: scale(1.05); 
+    }
+    
+    .flash-animate { 
+      animation: flashPulse 600ms ease-out; 
+    }
+    
+    @keyframes flashPulse { 
+      0% { opacity: 0; transform: scale(1.1); filter: blur(1px);} 
+      25% { opacity: 1; transform: scale(1.0); filter: none;} 
+      100% { opacity: 0; transform: scale(1.0);} 
+    }
+
+    /* Button styles */
     .btn {
-      background: #2d8cff;
+      background: rgba(45, 140, 255, 0.9);
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
       cursor: pointer;
-      margin: 4px;
       font-size: 0.9rem;
+      font-weight: 600;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(45, 140, 255, 0.3);
+      transition: all 0.2s ease;
     }
-    
-    .btn:hover {
-      background: #1a73e8;
+
+    .btn:hover, .btn:active {
+      background: rgba(45, 140, 255, 1);
+      transform: translateY(-1px);
     }
-    
-    .test-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 1rem;
-    }
-    
+
+    /* Hidden elements */
     .hidden {
       display: none !important;
     }
+
+    /* Camera status */
+    #camera-status {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #2d8cff;
+      font-weight: 600;
+      z-index: 3;
+      background: rgba(0,0,0,0.8);
+      padding: 1rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Test section - minimal overlay */
+    #test-section {
+      position: fixed;
+      bottom: 1rem;
+      left: 1rem;
+      right: 1rem;
+      background: rgba(0,0,0,0.9);
+      border-radius: 12px;
+      padding: 1rem;
+      z-index: 20;
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .test-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .test-buttons .btn {
+      padding: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    /* Remove html5-qrcode overlays */
+    .qr-shaded-region { 
+      box-shadow: none !important; 
+      background: transparent !important; 
+      border: none !important;
+      opacity: 0 !important;
+      display: none !important;
+    }
     
-    /* Trivia button styles */
+    #qr-reader__scan_region { 
+      background: transparent !important; 
+      border: none !important;
+      box-shadow: none !important;
+      opacity: 0 !important;
+      display: none !important;
+    }
+    
+    #qr-reader div[style*="border"] {
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    /* Ensure video fills container properly on iOS */
+    #qr-reader video, #qr-reader canvas { 
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      filter: brightness(1.1) contrast(1.05) saturate(1.1) !important;
+      -webkit-transform: translateZ(0) !important;
+      transform: translateZ(0) !important;
+      backface-visibility: hidden !important;
+      -webkit-backface-visibility: hidden !important;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .modal-content {
+      background: rgba(26, 31, 46, 0.95);
+      padding: 2rem;
+      border-radius: 16px;
+      max-width: 90vw;
+      width: 400px;
+      border: 2px solid rgba(45, 140, 255, 0.3);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* Trivia styles */
     #trivia-options li {
       margin: 0.5rem 0;
     }
-    
+
     #trivia-options button {
       width: 100%;
       padding: 0.75rem;
-      background: #2d8cff;
+      background: rgba(45, 140, 255, 0.9);
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 0.9rem;
       transition: all 0.2s;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
+
+    #trivia-options button:hover, #trivia-options button:active {
+      background: rgba(45, 140, 255, 1);
+      transform: translateY(-1px);
+    }
+
+    #trivia-options button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    #trivia-options button.correct {
+      background: #4CAF50 !important;
+    }
+
+    #trivia-options button.incorrect {
+      background: #f44336 !important;
+    }
+
+    /* Responsive adjustments for iPhone and small screens */
+    @media (max-height: 700px) {
+      .bottom-panel {
+        max-height: 32vh;
+      }
+      
+      .top-bar {
+        padding: calc(env(safe-area-inset-top) + 0.25rem) 0.75rem 0.5rem 0.75rem;
+      }
+      
+      .top-bar h1 {
+        font-size: 0.9rem;
+      }
+      
+      .pieces-count {
+        font-size: 0.75rem;
+      }
+      
+      .puzzle-overlay {
+        width: 80px;
+        height: 80px;
+        top: 12%;
+      }
+    }
+
+    @media (max-height: 600px) {
+      .bottom-panel {
+        max-height: 30vh;
+      }
+      
+      .clue-text {
+        font-size: 0.8rem;
+        min-height: 2rem;
+        padding: 0.5rem;
+      }
+      
+      .piece-item {
+        padding: 0.4rem;
+        font-size: 0.75rem;
+      }
+    }
+
+    @media (max-width: 375px) {
+      .pieces-grid {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+      }
+      
+      .test-buttons {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .puzzle-overlay {
+        width: 70px;
+        height: 70px;
+        right: 0.5rem;
+      }
+    }
+
+    /* iPhone SE and smaller screens */
+    @media (max-width: 320px) {
+      .top-bar h1 {
+        font-size: 0.85rem;
+      }
+      
+      .bottom-panel {
+        padding: 0.5rem;
+        max-height: 28vh;
+      }
+    }
+  </style>
     
     #trivia-options button:hover {
       background: #1a73e8;
@@ -200,95 +612,96 @@
   </script>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
+  <!-- Fullscreen Camera Background -->
+  <div class="camera-container">
+    <div id="qr-reader">
+      <div id="camera-status">
+        <div>📷 Camera Initializing...</div>
+        <small style="opacity: 0.7; margin-top: 8px;">Please allow camera access</small>
+      </div>
+    </div>
+    
+    <!-- QR Target Overlay -->
+    <div class="qr-overlay" aria-hidden="true">
+      <div class="qr-target">
+        <div class="qr-corner top-right"></div>
+        <div class="qr-corner bottom-left"></div>
+      </div>
+      <div id="scan-flash" class="flash-overlay"></div>
+    </div>
+  </div>
+
+  <!-- UI Overlay -->
+  <div class="ui-overlay">
+    <!-- Top Bar -->
+    <div class="top-bar safe-area-top">
       <h1>🔍 QR Scavenger Hunt</h1>
-      <p>Scan QR codes to collect all 7 tangram pieces!</p>
-    </div>
-
-    <!-- Contador de piezas -->
-    <div class="pieces-count">
-      <span id="pieces-count">0/7</span> pieces collected
-    </div>
-
-    <!-- QR Scanner con 3D superpuesto -->
-    <div class="section">
-      <h3>📱 QR Scanner with 3D Overlay</h3>
-      <div style="position: relative; width: 100%; height: 300px; border-radius: 8px; overflow: hidden;">
-        <!-- QR Reader (fondo) -->
-        <div id="qr-reader" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1;">
-          <div style="color: #2d8cff; text-align: center; display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column;">
-            <div>📷 Camera Initializing...</div>
-            <small style="opacity: 0.7; margin-top: 8px;">Please allow camera access</small>
-          </div>
-        </div>
-        <!-- Overlays: square target + flash -->
-        <div class="qr-overlay" aria-hidden="true">
-          <div class="qr-target">
-            <div class="qr-corner top-right"></div>
-            <div class="qr-corner bottom-left"></div>
-          </div>
-          <div id="scan-flash" class="flash-overlay"></div>
-        </div>
-        
-        <!-- 3D Puzzle superpuesto (frente) -->
-        <div id="puzzle-3d-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
-          <!-- Canvas 3D se insertará aquí por JavaScript -->
-        </div>
-      </div>
-      <div id="camera-status" style="text-align: center; padding: 0.5rem; font-weight: bold; color: #2d8cff;">Initializing camera...</div>
-      <div id="detected-text" style="text-align:center; font-size: 0.85rem; opacity:0.9; margin-top: 4px;"></div>
-    </div>
-
-    <!-- Test Buttons (hidden) -->
-    <div id="test-section" class="section hidden">
-      <h3>🧪 Test QR Simulation</h3>
-      <div class="test-buttons">
-        <button class="test-qr-btn btn" data-piece="piece_1">QR 1: Key</button>
-        <button class="test-qr-btn btn" data-piece="piece_2">QR 2: Map</button>
-        <button class="test-qr-btn btn" data-piece="piece_3">QR 3: Charger</button>
-        <button class="test-qr-btn btn" data-piece="piece_4">QR 4: Books</button>
-        <button class="test-qr-btn btn" data-piece="piece_5">QR 5: Food</button>
-        <button class="test-qr-btn btn" data-piece="piece_6">QR 6: Water</button>
-        <button class="test-qr-btn btn" data-piece="piece_7">QR 7: Outside</button>
-        <button id="reset-progress-btn" class="btn" style="background: #ff4757; grid-column: 1 / -1;">🔄 Reset Progress</button>
+      <div class="pieces-count">
+        <span id="pieces-count">0/7</span> pieces collected
       </div>
     </div>
 
-    <!-- Results -->
-    <div id="qr-reader-results" class="hidden"></div>
-
-    <!-- Clues & Pieces Status -->
-    <div class="section">
-      <h3>🧩 Clues & Pieces</h3>
-      <p class="clue-text" style="margin: 0.5rem 0 0.75rem; color: #d0e2ff;"></p>
-      <ul id="pieces-status" style="list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;"></ul>
+    <!-- 3D Puzzle Overlay -->
+    <div class="puzzle-overlay">
+      <div id="puzzle-3d-canvas"></div>
     </div>
 
-    <!-- Trivia Modal -->
-    <div id="trivia-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-      <div style="background: #1a1f2e; padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%; border: 2px solid #2d8cff;">
-        <h2 id="trivia-title">🧠 Trivia Question</h2>
-        <p id="trivia-question" style="margin: 1rem 0; font-size: 1.1rem; line-height: 1.4;">Question will appear here</p>
-        <ul id="trivia-options" style="list-style: none; padding: 0; margin: 1rem 0;">
-          <!-- Options will be populated by JavaScript -->
-        </ul>
-        <div id="trivia-feedback" style="margin: 1rem 0; font-weight: bold; text-align: center; min-height: 1.5rem;"></div>
-        <div style="text-align: center;">
-          <button id="trivia-close" class="btn hidden">Continue</button>
-        </div>
+    <!-- Bottom Panel -->
+    <div class="bottom-panel safe-area-bottom">
+      <!-- Clue Section -->
+      <div class="clue-section">
+        <div class="clue-text">Scan a QR code to begin your hunt!</div>
+      </div>
+
+      <!-- Pieces Grid -->
+      <div class="pieces-grid" id="pieces-status">
+        <!-- Pieces will be populated by JavaScript -->
       </div>
     </div>
+  </div>
 
-    <!-- Final Form -->
-    <div id="final-form" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-      <div style="background: #1a1f2e; padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%;">
-        <h2>🎉 Congratulations!</h2>
-        <p>You've collected all 7 pieces! Please enter your name to complete the hunt:</p>
-        <input type="text" id="player-name" placeholder="Your name" style="width: 100%; padding: 8px; margin: 1rem 0; border-radius: 4px; border: 1px solid #333; background: #2a2a2a; color: white;">
-        <div style="text-align: center;">
-          <button id="submit-completion" class="btn">Complete Hunt!</button>
-        </div>
+  <!-- Test Buttons (hidden) -->
+  <div id="test-section" class="hidden">
+    <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">🧪 Test QR Simulation</h3>
+    <div class="test-buttons">
+      <button class="test-qr-btn btn" data-piece="piece_1">QR 1</button>
+      <button class="test-qr-btn btn" data-piece="piece_2">QR 2</button>
+      <button class="test-qr-btn btn" data-piece="piece_3">QR 3</button>
+      <button class="test-qr-btn btn" data-piece="piece_4">QR 4</button>
+      <button class="test-qr-btn btn" data-piece="piece_5">QR 5</button>
+      <button class="test-qr-btn btn" data-piece="piece_6">QR 6</button>
+      <button class="test-qr-btn btn" data-piece="piece_7">QR 7</button>
+      <button id="reset-progress-btn" class="btn" style="background: rgba(255, 71, 87, 0.9); grid-column: 1 / -1;">🔄 Reset</button>
+    </div>
+  </div>
+
+  <!-- Results (hidden) -->
+  <div id="qr-reader-results" class="hidden"></div>
+  <div id="detected-text" class="hidden"></div>
+
+  <!-- Trivia Modal -->
+  <div id="trivia-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2 id="trivia-title">🧠 Trivia Question</h2>
+      <p id="trivia-question" style="margin: 1rem 0; font-size: 1.1rem; line-height: 1.4;">Question will appear here</p>
+      <ul id="trivia-options" style="list-style: none; padding: 0; margin: 1rem 0;">
+        <!-- Options will be populated by JavaScript -->
+      </ul>
+      <div id="trivia-feedback" style="margin: 1rem 0; font-weight: bold; text-align: center; min-height: 1.5rem;"></div>
+      <div style="text-align: center;">
+        <button id="trivia-close" class="btn hidden">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Form -->
+  <div id="final-form" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>🎉 Congratulations!</h2>
+      <p>You've collected all 7 pieces! Please enter your name to complete the hunt:</p>
+      <input type="text" id="player-name" placeholder="Your name" style="width: 100%; padding: 0.75rem; margin: 1rem 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+      <div style="text-align: center;">
+        <button id="submit-completion" class="btn">Complete Hunt!</button>
       </div>
     </div>
   </div>

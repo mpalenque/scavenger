@@ -75,15 +75,22 @@ class QRCamera {
       // Verificar permisos de cámara primero
       try {
         console.log('🔐 QRCamera: Checking camera permissions...');
-        const permissionStatus = await navigator.permissions.query({ name: 'camera' });
-        console.log('🔐 Camera permission status:', permissionStatus.state);
         
-        if (permissionStatus.state === 'denied') {
+        // Try to get media devices to trigger permission request
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        
+        // Stop the stream immediately, we just wanted to trigger permission
+        stream.getTracks().forEach(track => track.stop());
+        console.log('✅ Camera permission granted');
+        
+      } catch (permError) {
+        console.warn('⚠️ Camera permission error:', permError);
+        if (permError.name === 'NotAllowedError') {
           throw new Error('Camera permission denied. Please allow camera access and refresh the page.');
         }
-      } catch (permError) {
-        console.warn('⚠️ Could not check camera permissions:', permError);
-        // Continuar anyway, no todos los navegadores soportan permissions API
+        // Continue anyway for other errors
       }
       
       if (!this.html5Qrcode) {
@@ -121,7 +128,7 @@ class QRCamera {
       // Informar lista de dispositivos
       dispatchCustomEvent('qr-camera-devices', { devices });
 
-      // Selección de dispositivo
+      // Selección de dispositivo con mejor lógica para móviles
       let cameraConfig;
       if (this._requestedDeviceId) {
         const found = devices.find(d => d.id === this._requestedDeviceId);
@@ -133,9 +140,12 @@ class QRCamera {
           cameraConfig = { facingMode: 'environment' };
         }
       } else {
-        // Intentar seleccionar cámara trasera heurísticamente
-        const backCam = devices.find(d => /back|rear|environment/i.test(d.label));
-        if (backCam) {
+        // Better mobile camera selection
+        const backCam = devices.find(d => 
+          /back|rear|environment|camera2/i.test(d.label) || 
+          d.label.includes('0')
+        );
+        if (backCam && devices.length > 1) {
           console.log('📱 QRCamera: Using back camera:', backCam.label);
           cameraConfig = { deviceId: { exact: backCam.id } };
         } else {
@@ -145,10 +155,16 @@ class QRCamera {
       }
       
       const config = { 
-        fps: 10, 
-        aspectRatio: 1.0, 
+        fps: 10,
         rememberLastUsedCamera: false,
-        disableFlip: false
+        disableFlip: false,
+        videoConstraints: {
+          width: { min: 320, ideal: 720, max: 1280 },
+          height: { min: 240, ideal: 1280, max: 720 },
+          facingMode: 'environment',
+          frameRate: { max: 15 }
+        },
+        aspectRatio: 1.0
       };
       
       console.log('🚀 QRCamera: Starting camera with config:', cameraConfig);
@@ -171,6 +187,18 @@ class QRCamera {
       this._pending = false;
       this._retryCount = 0; // Reset successful
       console.log('✅ QRCamera: Camera started successfully!');
+      
+      // iOS-specific: Add a small delay to ensure video element is properly initialized
+      setTimeout(() => {
+        const videoEl = document.querySelector('#qr-reader video');
+        if (videoEl) {
+          console.log('📱 Video element found, ensuring proper display');
+          videoEl.style.display = 'block';
+          videoEl.style.visibility = 'visible';
+          videoEl.play().catch(e => console.warn('Video play error:', e));
+        }
+      }, 500);
+      
       dispatchCustomEvent('qr-camera-started', {});
       
     } catch (e) {

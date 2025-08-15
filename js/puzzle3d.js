@@ -2,10 +2,10 @@
 import { PIECES, TANGRAM_PIECES } from './data.js';
 
 // Constantes de escala (30% más chico => 70% del tamaño original)
-const TANGRAM_SCALE = 2.1;       // antes 3
-const SCATTER_RADIUS = 8.4;      // antes 12
-const BASE_GROUP_SCALE = 4.2;    // antes 6
-const FINAL_GROUP_SCALE = 6.3;   // antes 9
+const TANGRAM_SCALE = 1.47;       // 30% más chico (2.1 * 0.7)
+const SCATTER_RADIUS = 5.88;      // 30% más chico (8.4 * 0.7)
+const BASE_GROUP_SCALE = 2.94;    // 30% más chico (4.2 * 0.7)
+const FINAL_GROUP_SCALE = 4.41;   // 30% más chico (6.3 * 0.7)
 
 class Puzzle3D {
   constructor() {
@@ -617,12 +617,11 @@ class Puzzle3D {
       return; // Only highlight obtained pieces
     }
 
-    // Store original color and material properties
-    const originalColor = mesh.material.color.getHex();
+    // Store original properties
     const originalEmissive = mesh.material.emissive.getHex();
     
-    // Create highlight animation
-    const duration = 2000; // 2 seconds
+    // Create brief highlight animation (shorter for mobile)
+    const duration = 1000; // 1 second instead of 2
     const startTime = performance.now();
     
     const animateHighlight = (currentTime) => {
@@ -630,24 +629,19 @@ class Puzzle3D {
       const progress = elapsed / duration;
       
       if (progress < 1) {
-        // Create pulsing glow effect
-        const pulseValue = (Math.sin(progress * Math.PI * 4) + 1) * 0.5; // 0 to 1
-        const glowIntensity = pulseValue * 0.3; // Adjust intensity
+        // Create simple glow effect without scaling
+        const pulseValue = (Math.sin(progress * Math.PI * 3) + 1) * 0.5; // 0 to 1
+        const glowIntensity = pulseValue * 0.2; // Reduced intensity
         
-        // Apply highlight color (brighter version of original)
+        // Apply highlight color
         mesh.material.emissive.setHex(0x4CAF50);
         mesh.material.emissiveIntensity = glowIntensity;
-        
-        // Slightly scale the piece
-        const scaleMultiplier = 1 + pulseValue * 0.1;
-        mesh.scale.setScalar(TANGRAM_SCALE * scaleMultiplier);
         
         requestAnimationFrame(animateHighlight);
       } else {
         // Reset to original state
         mesh.material.emissive.setHex(originalEmissive);
         mesh.material.emissiveIntensity = 0;
-        mesh.scale.setScalar(TANGRAM_SCALE);
       }
     };
     

@@ -163,65 +163,60 @@ function updateNextClue() {
 }
 
 function renderPiecesStatus() {
-  const list = document.getElementById('pieces-status');
-  if (!list) return;
-  list.innerHTML = '';
+  const grid = document.getElementById('pieces-status');
+  if (!grid) return;
+  grid.innerHTML = '';
   PIECES.forEach(p => {
-    const li = document.createElement('li');
+    const div = document.createElement('div');
+    div.className = 'piece-item';
     const obtained = !!state.obtained[p.id];
-    li.style.display = 'flex';
-    li.style.alignItems = 'center';
-    li.style.justifyContent = 'space-between';
-    li.style.padding = '8px 10px';
-    li.style.border = '1px solid rgba(255,255,255,0.12)';
-    li.style.borderRadius = '8px';
-    li.style.background = obtained ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.04)';
-    li.style.cursor = 'pointer';
-    li.style.transition = 'all 0.2s ease';
     
-    // Add hover effect
-    li.addEventListener('mouseenter', () => {
-      li.style.background = obtained ? 'rgba(76, 175, 80, 0.25)' : 'rgba(255, 255, 255, 0.08)';
-      li.style.transform = 'translateY(-1px)';
-    });
-    
-    li.addEventListener('mouseleave', () => {
-      li.style.background = obtained ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.04)';
-      li.style.transform = 'translateY(0)';
-    });
+    if (obtained) {
+      div.classList.add('obtained');
+    }
     
     // Add click event listener
-    li.addEventListener('click', () => {
+    div.addEventListener('click', () => {
       handlePieceClick(p.id, obtained);
     });
     
     const name = document.createElement('span');
     name.textContent = p.name;
+    name.style.flex = '1';
+    
     const mark = document.createElement('span');
+    mark.className = 'piece-mark';
     mark.textContent = obtained ? '✅' : '○';
     mark.style.color = obtained ? '#4CAF50' : '#a8b2c1';
-    li.appendChild(name);
-    li.appendChild(mark);
-    list.appendChild(li);
+    
+    div.appendChild(name);
+    div.appendChild(mark);
+    grid.appendChild(div);
   });
 }
 
+let clueTimeout = null;
+
 function handlePieceClick(pieceId, obtained) {
+  // Clear any existing timeout to prevent flickering
+  if (clueTimeout) {
+    clearTimeout(clueTimeout);
+    clueTimeout = null;
+  }
+  
+  const clueTextEl = document.querySelector('.clue-text');
+  if (!clueTextEl) return;
+  
   if (obtained) {
     // Piece already found - show confirmation and highlight 3D piece
-    const clueTextEl = document.querySelector('.clue-text');
-    if (clueTextEl) {
-      clueTextEl.textContent = `✅ ${PIECES.find(p => p.id === pieceId)?.name || 'Piece'} already found!`;
-      clueTextEl.style.color = '#4CAF50';
-      clueTextEl.style.fontWeight = 'bold';
-      clueTextEl.style.fontSize = '1.1em';
-      setTimeout(() => {
-        clueTextEl.style.color = '';
-        clueTextEl.style.fontWeight = '';
-        clueTextEl.style.fontSize = '';
-        updateNextClue(); // Return to showing next clue
-      }, 3000);
-    }
+    clueTextEl.textContent = `✅ ${PIECES.find(p => p.id === pieceId)?.name || 'Piece'} already found!`;
+    clueTextEl.style.color = '#4CAF50';
+    
+    clueTimeout = setTimeout(() => {
+      clueTextEl.style.color = '';
+      updateNextClue(); // Return to showing next clue
+      clueTimeout = null;
+    }, 1500); // Shorter timeout
     
     // Highlight the 3D piece
     if (puzzle3DInstance && puzzle3DInstance.highlightPiece) {
@@ -230,24 +225,15 @@ function handlePieceClick(pieceId, obtained) {
   } else {
     // Piece not found - show clue
     const clue = CLUES[pieceId];
-    const clueTextEl = document.querySelector('.clue-text');
-    if (clueTextEl && clue) {
-      clueTextEl.textContent = `💡 Clue: ${clue}`;
+    if (clue) {
+      clueTextEl.textContent = `💡 ${clue}`;
       clueTextEl.style.color = '#2d8cff';
-      clueTextEl.style.fontWeight = 'bold';
-      clueTextEl.style.fontSize = '1.1em';
-      clueTextEl.style.background = 'rgba(45, 140, 255, 0.1)';
-      clueTextEl.style.padding = '8px 12px';
-      clueTextEl.style.borderRadius = '6px';
-      setTimeout(() => {
+      
+      clueTimeout = setTimeout(() => {
         clueTextEl.style.color = '';
-        clueTextEl.style.fontWeight = '';
-        clueTextEl.style.fontSize = '';
-        clueTextEl.style.background = '';
-        clueTextEl.style.padding = '';
-        clueTextEl.style.borderRadius = '';
         updateNextClue(); // Return to showing next clue
-      }, 7000);
+        clueTimeout = null;
+      }, 3000); // Shorter timeout for clues too
     }
   }
 }
@@ -649,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Eventos de estado de cámara
 window.addEventListener('qr-camera-started', () => {
-  cameraStatusEl && (cameraStatusEl.textContent = 'Camera active: point at a QR code.');
+  cameraStatusEl && (cameraStatusEl.style.display = 'none');
 });
 window.addEventListener('qr-camera-stopped', () => {
   cameraStatusEl && (cameraStatusEl.textContent = 'Camera stopped.');
