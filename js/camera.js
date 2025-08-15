@@ -72,29 +72,29 @@ class QRCamera {
       }
       console.log('✅ QRCamera: DOM element found:', element);
       
+      // Detect iOS for specific handling
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      
       // Verificar permisos de cámara primero
       try {
         console.log('🔐 QRCamera: Checking camera permissions...');
         
-        // Para iOS, usar una estrategia más directa
-        const testStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-          } 
-        });
-        
-        // Parar el stream inmediatamente
-        testStream.getTracks().forEach(track => {
-          track.stop();
-          console.log('🛑 Test track stopped:', track.label);
-        });
-        
-        console.log('✅ Camera permission granted');
-        
-        // Esperar un poco antes de continuar
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Evitar abrir un stream extra en iOS (impacta performance y a veces falla)
+        if (!isIOS) {
+          const testStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              facingMode: 'environment',
+              width: { ideal: 640 },
+              height: { ideal: 480 }
+            } 
+          });
+          // Parar el stream inmediatamente
+          testStream.getTracks().forEach(track => track.stop());
+          console.log('✅ Camera permission check passed');
+          // Esperar un poco antes de continuar
+          await new Promise(resolve => setTimeout(resolve, 60));
+        }
         
       } catch (permError) {
         console.warn('⚠️ Camera permission error:', permError);
@@ -181,30 +181,38 @@ class QRCamera {
       }
       }
       
-      // Detect iOS for specific handling
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      
+      const onlyQrFormat = (typeof Html5QrcodeSupportedFormats !== 'undefined' && Html5QrcodeSupportedFormats.QR_CODE)
+        ? [Html5QrcodeSupportedFormats.QR_CODE]
+        : undefined;
+
       const config = { 
-        fps: 6, // Reduced FPS for better performance on all devices
-        rememberLastUsedCamera: false,
-        disableFlip: true, // CRITICAL: Disable flip to prevent iOS rotation issues
+        // Un FPS moderado reduce carga sin afectar mucho detección
+  fps: 6,
+        rememberLastUsedCamera: true,
+        disableFlip: true, // Evitar issues de rotación en iOS
+        // Reducir resolución en iOS; usar 480p ideal
         videoConstraints: isIOS ? {
-          // iOS-specific constraints - use ideal instead of exact for better compatibility
-          width: { ideal: 640, max: 720 },
-          height: { ideal: 480, max: 540 },
+          width: { ideal: 480, max: 640 },
+          height: { ideal: 360, max: 480 },
           facingMode: 'environment'
         } : {
-          // Other devices
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          width: { ideal: 640, max: 1280 },
+          height: { ideal: 480, max: 720 },
           facingMode: 'environment'
         },
-        aspectRatio: 1.0,
-        // Remove qrbox to prevent additional overlays that can cause flipping
+        // Usar relación 16:9 nativa del video y recortar con qrbox
+  aspectRatio: 1.0, // 1:1 para alinear con qrbox cuadrado
+        // Limitar el área de análisis para acelerar (overlay visual sigue siendo nuestra UI)
+        qrbox: function(viewfinderWidth, viewfinderHeight) {
+          const size = Math.min(Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.55), 240);
+          return { width: size, height: size };
+        },
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+  // Solo QR codes para reducir decoders activos (si está disponible)
+  ...(onlyQrFormat ? { formatsToSupport: onlyQrFormat } : {}),
         experimentalFeatures: {
-          useBarCodeDetectorIfSupported: false // Disable to improve performance
+          // Usar el detector nativo si está disponible (mucho más rápido en iOS 16+)
+          useBarCodeDetectorIfSupported: true
         }
       };
       
@@ -322,10 +330,20 @@ class QRCamera {
   _onScan(text) {
     // Expected QR format: "piece_3"
     dispatchCustomEvent('qr-detected', { raw: text });
+    // Pausar escaneo inmediatamente para ahorrar CPU/GPU en iPhone
+    // y evitar múltiples detecciones de un mismo código.
+    if (this.isScanning) {
+      this.stop().catch(() => {});
+    }
+  }
+
+  async resume() {
+    // Reanudar usando último dispositivo si existe
+    return this.start(this._requestedDeviceId);
   }
 
   _preventFlipping() {
-    console.log('📱 QRCamera: Preventing camera flipping...');
+  // Minimize logs for performance
     
     // Find all video elements and prevent transforms
     const videos = document.querySelectorAll('#qr-reader video');
@@ -334,26 +352,25 @@ class QRCamera {
         video.style.transform = 'none !important';
         video.style.webkitTransform = 'none !important';
         
-        console.log('🎥 Video transform reset:', video);
+  // no-op log
       }
     });
     
     // Lighter mutation observer - only watch for style changes on video elements
     if (!this.transformObserver && videos.length > 0) {
       this.transformObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
+        for (const mutation of mutations) {
           if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
             const target = mutation.target;
             if (target.tagName === 'VIDEO') {
               const transform = target.style.transform;
               if (transform && transform !== 'none' && transform !== 'none !important') {
-                console.log('🚫 Blocking transform on video:', transform);
                 target.style.transform = 'none !important';
                 target.style.webkitTransform = 'none !important';
               }
             }
           }
-        });
+        }
       });
       
       // Observe only video elements, only for style changes
@@ -367,23 +384,13 @@ class QRCamera {
   }
 
     _ensureVideoVisibility() {
-    console.log('🔧 Ensuring video visibility and preventing flips...');
-    
-    const videos = document.querySelectorAll('#qr-reader video');
-    const canvases = document.querySelectorAll('#qr-reader canvas');
-    
-    console.log(`📹 Found ${videos.length} videos and ${canvases.length} canvases`);
+  const videos = document.querySelectorAll('#qr-reader video');
+  const canvases = document.querySelectorAll('#qr-reader canvas');
     
     // Process videos with reduced frequency logging
     videos.forEach((video, index) => {
       if (video && video.readyState >= 2) { // Only process when video has data
-        console.log(`📱 Processing video ${index}:`, {
-          readyState: video.readyState,
-          paused: video.paused,
-          videoWidth: video.videoWidth,
-          videoHeight: video.videoHeight,
-          currentTime: video.currentTime
-        });
+  // Minimal checks and no logging for performance
         
         // Ensure video is visible and playing
         video.style.display = 'block';
@@ -409,7 +416,7 @@ class QRCamera {
     // Process canvases (less frequent logging)
     canvases.forEach((canvas, index) => {
       if (canvas) {
-        console.log(`🎨 Processing canvas ${index}`);
+  // keep visible
         canvas.style.display = 'block';
         canvas.style.visibility = 'visible';
         canvas.style.opacity = '1';

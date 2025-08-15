@@ -295,6 +295,8 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
 
 triviaCloseBtn.addEventListener('click', () => {
   triviaModal.classList.add('hidden');
+  // Reanudar la cámara tras cerrar la trivia
+  setTimeout(() => qrCamera.resume().catch(() => {}), 150);
 });
 
 // Cierra trivia clic fuera
@@ -326,6 +328,10 @@ function awardPiece(pieceId) {
   puzzle3DInstance.syncState(state.obtained);
   
   checkCompletion();
+  // Reanudar la cámara si aún no se completó el juego
+  if (!state.completed) {
+    setTimeout(() => qrCamera.resume().catch(() => {}), 300);
+  }
 }
 
 function checkCompletion() {
@@ -432,6 +438,7 @@ window.addEventListener('qr-detected', (e) => {
   updateDetectedText(raw);
   triggerScanFlash();
   processPieceIdentifier(raw);
+  // camera.js detiene el escaneo al detectar; reanudaremos luego de cerrar trivia o al completar.
 });
 
 function parsePieceIdFrom(raw) {

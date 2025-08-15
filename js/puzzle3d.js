@@ -479,7 +479,12 @@ class Puzzle3D {
   animate() {
     if (!this.renderer || !this.scene || !this.camera) return;
     
-    this.animationFrame = requestAnimationFrame(() => this.animate());
+  // Throttle render loop on mobile to reduce GPU contention with camera decoding
+  const isMobile = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent);
+  const targetFps = isMobile ? 30 : 60;
+  const frameDelay = 1000 / targetFps;
+    
+  this.animationFrame = setTimeout(() => requestAnimationFrame(() => this.animate()), frameDelay);
     
     const time = performance.now() * 0.001;
     
@@ -501,11 +506,11 @@ class Puzzle3D {
       }
     });
     
-    // Oscilación suave de la cámara (±15°) solo si no estamos ensamblando
-    if (!this.isAssembling) {
-      const r = 15;
-      const maxAngle = THREE.MathUtils.degToRad(15);
-      const a = Math.sin(time * 0.3) * maxAngle;
+    // Oscilación suave de la cámara reducida (±8°) para bajar trabajo en GPU
+    if (!this.isAssembling && document.visibilityState !== 'hidden') {
+      const r = 12;
+      const maxAngle = THREE.MathUtils.degToRad(8);
+      const a = Math.sin(time * 0.25) * maxAngle;
       this.camera.position.x = Math.sin(a) * r;
       this.camera.position.z = Math.cos(a) * r;
       this.camera.lookAt(0, 0, 0);
