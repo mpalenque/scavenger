@@ -176,7 +176,7 @@ class QRCamera {
       const config = { 
         fps: isIOS ? 8 : 10, // Lower FPS for iOS
         rememberLastUsedCamera: false,
-        disableFlip: false,
+        disableFlip: true, // CRITICAL: Disable flip to prevent iOS rotation issues
         videoConstraints: isIOS ? {
           // iOS-specific constraints
           width: { exact: 640 },
@@ -188,7 +188,9 @@ class QRCamera {
           height: { ideal: 480 },
           facingMode: 'environment'
         },
-        aspectRatio: 1.0
+        aspectRatio: 1.0,
+        // Remove qrbox to prevent additional overlays that can cause flipping
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
       };
       
       console.log('🚀 QRCamera: Starting camera with config:', cameraConfig);
@@ -212,17 +214,20 @@ class QRCamera {
       this._retryCount = 0; // Reset successful
       console.log('✅ QRCamera: Camera started successfully!');
       
-      // iOS-specific: Multiple strategies to ensure video visibility
+      // iOS-specific: Multiple strategies to ensure video visibility and prevent flipping
       setTimeout(() => {
         this._ensureVideoVisibility();
+        this._preventFlipping();
       }, 200);
       
       setTimeout(() => {
         this._ensureVideoVisibility();
+        this._preventFlipping();
       }, 1000);
       
       setTimeout(() => {
         this._ensureVideoVisibility();
+        this._preventFlipping();
       }, 2000);
       
       dispatchCustomEvent('qr-camera-started', {});
@@ -260,6 +265,13 @@ class QRCamera {
     try {
       await this.html5Qrcode.stop();
       this.html5Qrcode.clear();
+      
+      // Cleanup observers
+      if (this.transformObserver) {
+        this.transformObserver.disconnect();
+        this.transformObserver = null;
+      }
+      
       dispatchCustomEvent('qr-camera-stopped', {});
     } catch (e) {
       console.warn('Could not stop camera', e);
@@ -273,8 +285,55 @@ class QRCamera {
     dispatchCustomEvent('qr-detected', { raw: text });
   }
 
+  _preventFlipping() {
+    console.log('📱 QRCamera: Preventing camera flipping...');
+    
+    // Find all video elements and prevent transforms
+    const videos = document.querySelectorAll('video');
+    videos.forEach(video => {
+      if (video) {
+        video.style.transform = 'none !important';
+        video.style.webkitTransform = 'none !important';
+        
+        // Force redraw
+        video.style.display = 'none';
+        video.offsetHeight; // Trigger reflow
+        video.style.display = 'block';
+        
+        console.log('🎥 Video transform reset:', video);
+      }
+    });
+    
+    // Mutation observer to watch for transform changes
+    if (!this.transformObserver && videos.length > 0) {
+      this.transformObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && 
+              (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+            const target = mutation.target;
+            if (target.tagName === 'VIDEO') {
+              if (target.style.transform && target.style.transform !== 'none') {
+                console.log('🚫 Blocking transform on video:', target.style.transform);
+                target.style.transform = 'none !important';
+                target.style.webkitTransform = 'none !important';
+              }
+            }
+          }
+        });
+      });
+      
+      // Observe all video elements
+      videos.forEach(video => {
+        this.transformObserver.observe(video, {
+          attributes: true,
+          attributeFilter: ['style', 'class']
+        });
+      });
+    }
+  }
+
   _ensureVideoVisibility() {
-    console.log('🔧 Ensuring video visibility...');
+    console.log('🔧 Ensuring video visibility and preventing flips...');
     
     const container = document.getElementById(this.elementId);
     if (!container) return;
@@ -294,43 +353,60 @@ class QRCamera {
         currentTime: video.currentTime
       });
       
-      // Force video properties
+      // Force video properties and prevent flipping
       video.style.display = 'block !important';
       video.style.visibility = 'visible !important';
       video.style.opacity = '1 !important';
       video.style.width = '100% !important';
       video.style.height = '100% !important';
       video.style.objectFit = 'cover !important';
-      video.style.transform = 'translateZ(0) !important';
-      video.style.webkitTransform = 'translateZ(0) !important';
+      
+      // CRITICAL: Prevent transforms that cause flipping
+      video.style.transform = 'none !important';
+      video.style.webkitTransform = 'none !important';
+      video.style.transformStyle = 'flat !important';
+      video.style.webkitTransformStyle = 'flat !important';
       video.style.backfaceVisibility = 'hidden !important';
       video.style.webkitBackfaceVisibility = 'hidden !important';
+      
+      // Prevent animations that might cause flipping
+      video.style.animation = 'none !important';
+      video.style.webkitAnimation = 'none !important';
+      video.style.transition = 'none !important';
+      video.style.webkitTransition = 'none !important';
+      
+      // iOS specific properties
+      video.muted = false;
+      video.playsInline = true;
+      video.autoplay = true;
+      
+      // Set CSS custom properties to prevent library overrides
+      video.style.setProperty('transform', 'none', 'important');
+      video.style.setProperty('-webkit-transform', 'none', 'important');
       
       // Force play
       if (video.paused) {
         video.play().then(() => {
-          console.log(`✅ Video ${index} playing`);
+          console.log(`✅ Video ${index} playing without flips`);
         }).catch(e => {
           console.warn(`❌ Video ${index} play failed:`, e);
         });
       }
-      
-      // Ensure video is not muted (iOS requirement)
-      video.muted = false;
-      video.playsInline = true;
-      video.autoplay = true;
     });
     
-    // Also check canvases
+    // Also prevent canvas flipping
     canvases.forEach((canvas, index) => {
       console.log(`🎨 Processing canvas ${index}`);
       canvas.style.display = 'block !important';
       canvas.style.visibility = 'visible !important';
       canvas.style.opacity = '1 !important';
+      canvas.style.transform = 'none !important';
+      canvas.style.webkitTransform = 'none !important';
     });
     
-    // Force a layout recalculation
-    container.style.transform = 'translateZ(0)';
+    // Prevent container transforms
+    container.style.transform = 'none !important';
+    container.style.webkitTransform = 'none !important';
     container.offsetHeight; // Trigger reflow
   }
 
