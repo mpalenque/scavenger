@@ -76,14 +76,25 @@ class QRCamera {
       try {
         console.log('🔐 QRCamera: Checking camera permissions...');
         
-        // Try to get media devices to trigger permission request
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
+        // Para iOS, usar una estrategia más directa
+        const testStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          } 
         });
         
-        // Stop the stream immediately, we just wanted to trigger permission
-        stream.getTracks().forEach(track => track.stop());
+        // Parar el stream inmediatamente
+        testStream.getTracks().forEach(track => {
+          track.stop();
+          console.log('🛑 Test track stopped:', track.label);
+        });
+        
         console.log('✅ Camera permission granted');
+        
+        // Esperar un poco antes de continuar
+        await new Promise(resolve => setTimeout(resolve, 100));
         
       } catch (permError) {
         console.warn('⚠️ Camera permission error:', permError);
@@ -140,29 +151,42 @@ class QRCamera {
           cameraConfig = { facingMode: 'environment' };
         }
       } else {
-        // Better mobile camera selection
-        const backCam = devices.find(d => 
-          /back|rear|environment|camera2/i.test(d.label) || 
-          d.label.includes('0')
-        );
-        if (backCam && devices.length > 1) {
-          console.log('📱 QRCamera: Using back camera:', backCam.label);
-          cameraConfig = { deviceId: { exact: backCam.id } };
-        } else {
-          console.log('🌍 QRCamera: Using environment facing mode');
-          cameraConfig = { facingMode: 'environment' };
-        }
+      // Better mobile camera selection with iOS fallback
+      const backCam = devices.find(d => 
+        /back|rear|environment|camera2/i.test(d.label) || 
+        d.label.includes('0')
+      );
+      if (backCam && devices.length > 1) {
+        console.log('📱 QRCamera: Using back camera:', backCam.label);
+        cameraConfig = { deviceId: { exact: backCam.id } };
+      } else if (devices.length > 0) {
+        // iOS fallback: use the first available camera
+        console.log('🍎 iOS fallback: Using first available camera');
+        cameraConfig = { deviceId: { exact: devices[0].id } };
+      } else {
+        console.log('🌍 QRCamera: Using environment facing mode');
+        cameraConfig = { facingMode: 'environment' };
+      }
       }
       
+      // Detect iOS for specific handling
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      
       const config = { 
-        fps: 10,
+        fps: isIOS ? 8 : 10, // Lower FPS for iOS
         rememberLastUsedCamera: false,
         disableFlip: false,
-        videoConstraints: {
-          width: { min: 320, ideal: 720, max: 1280 },
-          height: { min: 240, ideal: 1280, max: 720 },
-          facingMode: 'environment',
-          frameRate: { max: 15 }
+        videoConstraints: isIOS ? {
+          // iOS-specific constraints
+          width: { exact: 640 },
+          height: { exact: 480 },
+          facingMode: 'environment'
+        } : {
+          // Other devices
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'environment'
         },
         aspectRatio: 1.0
       };
@@ -188,16 +212,18 @@ class QRCamera {
       this._retryCount = 0; // Reset successful
       console.log('✅ QRCamera: Camera started successfully!');
       
-      // iOS-specific: Add a small delay to ensure video element is properly initialized
+      // iOS-specific: Multiple strategies to ensure video visibility
       setTimeout(() => {
-        const videoEl = document.querySelector('#qr-reader video');
-        if (videoEl) {
-          console.log('📱 Video element found, ensuring proper display');
-          videoEl.style.display = 'block';
-          videoEl.style.visibility = 'visible';
-          videoEl.play().catch(e => console.warn('Video play error:', e));
-        }
-      }, 500);
+        this._ensureVideoVisibility();
+      }, 200);
+      
+      setTimeout(() => {
+        this._ensureVideoVisibility();
+      }, 1000);
+      
+      setTimeout(() => {
+        this._ensureVideoVisibility();
+      }, 2000);
       
       dispatchCustomEvent('qr-camera-started', {});
       
@@ -245,6 +271,67 @@ class QRCamera {
   _onScan(text) {
     // Expected QR format: "piece_3"
     dispatchCustomEvent('qr-detected', { raw: text });
+  }
+
+  _ensureVideoVisibility() {
+    console.log('🔧 Ensuring video visibility...');
+    
+    const container = document.getElementById(this.elementId);
+    if (!container) return;
+    
+    // Find all video elements
+    const videos = container.querySelectorAll('video');
+    const canvases = container.querySelectorAll('canvas');
+    
+    console.log(`📹 Found ${videos.length} videos and ${canvases.length} canvases`);
+    
+    videos.forEach((video, index) => {
+      console.log(`📱 Processing video ${index}:`, {
+        readyState: video.readyState,
+        paused: video.paused,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        currentTime: video.currentTime
+      });
+      
+      // Force video properties
+      video.style.display = 'block !important';
+      video.style.visibility = 'visible !important';
+      video.style.opacity = '1 !important';
+      video.style.width = '100% !important';
+      video.style.height = '100% !important';
+      video.style.objectFit = 'cover !important';
+      video.style.transform = 'translateZ(0) !important';
+      video.style.webkitTransform = 'translateZ(0) !important';
+      video.style.backfaceVisibility = 'hidden !important';
+      video.style.webkitBackfaceVisibility = 'hidden !important';
+      
+      // Force play
+      if (video.paused) {
+        video.play().then(() => {
+          console.log(`✅ Video ${index} playing`);
+        }).catch(e => {
+          console.warn(`❌ Video ${index} play failed:`, e);
+        });
+      }
+      
+      // Ensure video is not muted (iOS requirement)
+      video.muted = false;
+      video.playsInline = true;
+      video.autoplay = true;
+    });
+    
+    // Also check canvases
+    canvases.forEach((canvas, index) => {
+      console.log(`🎨 Processing canvas ${index}`);
+      canvas.style.display = 'block !important';
+      canvas.style.visibility = 'visible !important';
+      canvas.style.opacity = '1 !important';
+    });
+    
+    // Force a layout recalculation
+    container.style.transform = 'translateZ(0)';
+    container.offsetHeight; // Trigger reflow
   }
 
   // Webcam-only; no image file scanning

@@ -635,7 +635,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Eventos de estado de cámara
 window.addEventListener('qr-camera-started', () => {
-  cameraStatusEl && (cameraStatusEl.style.display = 'none');
+  console.log('✅ Camera started event received');
+  const statusEl = document.getElementById('camera-status');
+  if (statusEl) {
+    statusEl.style.display = 'none';
+  }
+  
+  // Additional iOS fix - force video visibility after start
+  setTimeout(() => {
+    const videos = document.querySelectorAll('#qr-reader video');
+    videos.forEach(video => {
+      console.log('🔧 Post-start video check:', {
+        paused: video.paused,
+        readyState: video.readyState,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight
+      });
+      
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        console.log('⚠️ Video has no dimensions, forcing refresh...');
+        video.load();
+        video.play().catch(e => console.warn('Video play error:', e));
+      }
+    });
+  }, 1000);
 });
 window.addEventListener('qr-camera-stopped', () => {
   cameraStatusEl && (cameraStatusEl.textContent = 'Camera stopped.');
