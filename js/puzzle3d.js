@@ -611,6 +611,49 @@ class Puzzle3D {
     this.renderer.setSize(width, height);
   }
 
+  highlightPiece(pieceId) {
+    const mesh = this.pieces.get(pieceId);
+    if (!mesh || !this.obtainedPieces[pieceId]) {
+      return; // Only highlight obtained pieces
+    }
+
+    // Store original color and material properties
+    const originalColor = mesh.material.color.getHex();
+    const originalEmissive = mesh.material.emissive.getHex();
+    
+    // Create highlight animation
+    const duration = 2000; // 2 seconds
+    const startTime = performance.now();
+    
+    const animateHighlight = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = elapsed / duration;
+      
+      if (progress < 1) {
+        // Create pulsing glow effect
+        const pulseValue = (Math.sin(progress * Math.PI * 4) + 1) * 0.5; // 0 to 1
+        const glowIntensity = pulseValue * 0.3; // Adjust intensity
+        
+        // Apply highlight color (brighter version of original)
+        mesh.material.emissive.setHex(0x4CAF50);
+        mesh.material.emissiveIntensity = glowIntensity;
+        
+        // Slightly scale the piece
+        const scaleMultiplier = 1 + pulseValue * 0.1;
+        mesh.scale.setScalar(TANGRAM_SCALE * scaleMultiplier);
+        
+        requestAnimationFrame(animateHighlight);
+      } else {
+        // Reset to original state
+        mesh.material.emissive.setHex(originalEmissive);
+        mesh.material.emissiveIntensity = 0;
+        mesh.scale.setScalar(TANGRAM_SCALE);
+      }
+    };
+    
+    requestAnimationFrame(animateHighlight);
+  }
+
   destroy() {
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);

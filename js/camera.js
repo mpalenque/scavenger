@@ -146,7 +146,6 @@ class QRCamera {
       
       const config = { 
         fps: 10, 
-        qrbox: { width: 250, height: 250 }, 
         aspectRatio: 1.0, 
         rememberLastUsedCamera: false,
         disableFlip: false

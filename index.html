@@ -155,8 +155,26 @@
     /* Keep webcam bright (some libs dim the feed on detection) */
     #qr-reader video, #qr-reader canvas { filter: brightness(1.08) contrast(1.05) saturate(1.06) !important; }
   /* Remove shaded overlay from html5-qrcode */
-  .qr-shaded-region { box-shadow: none !important; background: transparent !important; }
-  #qr-reader__scan_region { background: transparent !important; }
+  .qr-shaded-region { 
+    box-shadow: none !important; 
+    background: transparent !important; 
+    border: none !important;
+    opacity: 0 !important;
+    display: none !important;
+  }
+  #qr-reader__scan_region { 
+    background: transparent !important; 
+    border: none !important;
+    box-shadow: none !important;
+    opacity: 0 !important;
+    display: none !important;
+  }
+  /* Hide any other potential white overlays from html5-qrcode */
+  #qr-reader div[style*="border"] {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
   </style>
   
   <!-- html5-qrcode local -->

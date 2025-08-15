@@ -176,6 +176,25 @@ function renderPiecesStatus() {
     li.style.border = '1px solid rgba(255,255,255,0.12)';
     li.style.borderRadius = '8px';
     li.style.background = obtained ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.04)';
+    li.style.cursor = 'pointer';
+    li.style.transition = 'all 0.2s ease';
+    
+    // Add hover effect
+    li.addEventListener('mouseenter', () => {
+      li.style.background = obtained ? 'rgba(76, 175, 80, 0.25)' : 'rgba(255, 255, 255, 0.08)';
+      li.style.transform = 'translateY(-1px)';
+    });
+    
+    li.addEventListener('mouseleave', () => {
+      li.style.background = obtained ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.04)';
+      li.style.transform = 'translateY(0)';
+    });
+    
+    // Add click event listener
+    li.addEventListener('click', () => {
+      handlePieceClick(p.id, obtained);
+    });
+    
     const name = document.createElement('span');
     name.textContent = p.name;
     const mark = document.createElement('span');
@@ -185,6 +204,52 @@ function renderPiecesStatus() {
     li.appendChild(mark);
     list.appendChild(li);
   });
+}
+
+function handlePieceClick(pieceId, obtained) {
+  if (obtained) {
+    // Piece already found - show confirmation and highlight 3D piece
+    const clueTextEl = document.querySelector('.clue-text');
+    if (clueTextEl) {
+      clueTextEl.textContent = `✅ ${PIECES.find(p => p.id === pieceId)?.name || 'Piece'} already found!`;
+      clueTextEl.style.color = '#4CAF50';
+      clueTextEl.style.fontWeight = 'bold';
+      clueTextEl.style.fontSize = '1.1em';
+      setTimeout(() => {
+        clueTextEl.style.color = '';
+        clueTextEl.style.fontWeight = '';
+        clueTextEl.style.fontSize = '';
+        updateNextClue(); // Return to showing next clue
+      }, 3000);
+    }
+    
+    // Highlight the 3D piece
+    if (puzzle3DInstance && puzzle3DInstance.highlightPiece) {
+      puzzle3DInstance.highlightPiece(pieceId);
+    }
+  } else {
+    // Piece not found - show clue
+    const clue = CLUES[pieceId];
+    const clueTextEl = document.querySelector('.clue-text');
+    if (clueTextEl && clue) {
+      clueTextEl.textContent = `💡 Clue: ${clue}`;
+      clueTextEl.style.color = '#2d8cff';
+      clueTextEl.style.fontWeight = 'bold';
+      clueTextEl.style.fontSize = '1.1em';
+      clueTextEl.style.background = 'rgba(45, 140, 255, 0.1)';
+      clueTextEl.style.padding = '8px 12px';
+      clueTextEl.style.borderRadius = '6px';
+      setTimeout(() => {
+        clueTextEl.style.color = '';
+        clueTextEl.style.fontWeight = '';
+        clueTextEl.style.fontSize = '';
+        clueTextEl.style.background = '';
+        clueTextEl.style.padding = '';
+        clueTextEl.style.borderRadius = '';
+        updateNextClue(); // Return to showing next clue
+      }, 7000);
+    }
+  }
 }
 
 function highlightObtainedPiece(pieceId) {
@@ -537,6 +602,18 @@ document.addEventListener('visibilitychange', () => {
 
 window.addEventListener('load', () => {
   console.log('Window loaded, starting init...');
+  
+  // Debug: show test buttons on Ctrl+Shift+T
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+      const testSection = document.getElementById('test-section');
+      if (testSection) {
+        testSection.classList.toggle('hidden');
+        console.log('Test section toggled');
+      }
+    }
+  });
+  
   init();
 });
 
