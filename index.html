@@ -224,10 +224,10 @@
     }
     
     .qr-target {
-      width: min(70vw, 280px);
+      width: min(58vw, 220px);
       aspect-ratio: 1 / 1;
-      border: 2px solid rgba(45,140,255,0.6);
-      box-shadow: 0 0 30px rgba(45,140,255,0.3);
+      border: 2px solid rgba(45,140,255,0.5);
+      box-shadow: 0 0 18px rgba(45,140,255,0.22);
       border-radius: 12px;
       position: relative;
     }
@@ -412,7 +412,7 @@
       transform: none !important;
     }
 
-    /* iOS Safari specific fixes */
+    /* iOS Safari specific fixes and performance: reduce backdrop blur on iOS */
     @supports (-webkit-touch-callout: none) {
       #qr-reader video {
         -webkit-playsinline: true !important;
@@ -421,6 +421,11 @@
         animation: none !important;
         -webkit-transition: none !important;
         transition: none !important;
+      }
+      /* Desactivar blur costoso en iOS para ahorrar GPU */
+      .top-bar, .bottom-panel, .modal-overlay, .modal-content, .puzzle-overlay, .btn {
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
       }
       
       /* Ensure no flipping transforms are applied */

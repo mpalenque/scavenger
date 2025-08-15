@@ -186,8 +186,8 @@ class QRCamera {
         : undefined;
 
       const config = { 
-        // Un FPS moderado reduce carga sin afectar mucho detección
-  fps: 6,
+        // FPS aún más bajo en iOS para reducir CPU
+        fps: isIOS ? 4 : 6,
         rememberLastUsedCamera: true,
         disableFlip: true, // Evitar issues de rotación en iOS
         // Reducir resolución en iOS; usar 480p ideal
@@ -200,11 +200,10 @@ class QRCamera {
           height: { ideal: 480, max: 720 },
           facingMode: 'environment'
         },
-        // Usar relación 16:9 nativa del video y recortar con qrbox
-  aspectRatio: 1.0, // 1:1 para alinear con qrbox cuadrado
-        // Limitar el área de análisis para acelerar (overlay visual sigue siendo nuestra UI)
+        // Limitar el área de análisis para acelerar
         qrbox: function(viewfinderWidth, viewfinderHeight) {
-          const size = Math.min(Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.55), 240);
+          const base = Math.min(viewfinderWidth, viewfinderHeight);
+          const size = Math.min(Math.floor(base * 0.45), 200);
           return { width: size, height: size };
         },
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
@@ -233,6 +232,7 @@ class QRCamera {
       );
       
       this.isScanning = true;
+  window.__qrScannerActive = true;
       this._pending = false;
       this._retryCount = 0; // Reset successful
       console.log('✅ QRCamera: Camera started successfully!');
@@ -324,6 +324,7 @@ class QRCamera {
     }
     
     this.isScanning = false;
+  window.__qrScannerActive = false;
     this._pending = false;
   }
 

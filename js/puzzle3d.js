@@ -76,24 +76,33 @@ class Puzzle3D {
       this.scene.add(this.camera);
 
       // Renderer setup optimizado para objetos sólidos
+      const isMobile = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent);
       this.renderer = new THREE.WebGLRenderer({ 
-        antialias: true, 
+        antialias: !isMobile, 
         alpha: true,
         premultipliedAlpha: false,
-        preserveDrawingBuffer: true,
-        powerPreference: "high-performance"
+        preserveDrawingBuffer: false,
+        powerPreference: isMobile ? "low-power" : "high-performance"
       });
       this.renderer.setClearColor(0x000000, 0);
       this.renderer.setSize(this.container.clientWidth || 400, this.container.clientHeight || 300);
       this.renderer.shadowMap.enabled = false;
       this.renderer.sortObjects = false; // Desactivar sorting que puede causar problemas
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limitar pixel ratio
+  // Pixel ratio más bajo en mobile para reducir fill-rate
+  const maxPR = isMobile ? 1.5 : 2;
+  this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPR));
       
-      // Configuraciones adicionales para evitar artefactos
+      // Configuraciones adicionales para evitar artefactos y bajar coste en mobile
   this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-  this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  this.renderer.toneMappingExposure = 1.25;
-  this.renderer.physicallyCorrectLights = true;
+  if (isMobile) {
+    this.renderer.toneMapping = THREE.NoToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.physicallyCorrectLights = false;
+  } else {
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.25;
+    this.renderer.physicallyCorrectLights = true;
+  }
       
       // Agregar canvas al contenedor
       this.container.appendChild(this.renderer.domElement);
@@ -481,7 +490,7 @@ class Puzzle3D {
     
   // Throttle render loop on mobile to reduce GPU contention with camera decoding
   const isMobile = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent);
-  const targetFps = isMobile ? 30 : 60;
+  const targetFps = isMobile ? (window.__qrScannerActive ? 20 : 30) : 60;
   const frameDelay = 1000 / targetFps;
     
   this.animationFrame = setTimeout(() => requestAnimationFrame(() => this.animate()), frameDelay);
@@ -507,7 +516,7 @@ class Puzzle3D {
     });
     
     // Oscilación suave de la cámara reducida (±8°) para bajar trabajo en GPU
-    if (!this.isAssembling && document.visibilityState !== 'hidden') {
+  if (!this.isAssembling && document.visibilityState !== 'hidden' && !window.__qrScannerActive) {
       const r = 12;
       const maxAngle = THREE.MathUtils.degToRad(8);
       const a = Math.sin(time * 0.25) * maxAngle;
