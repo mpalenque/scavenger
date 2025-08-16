@@ -24,6 +24,20 @@
 
     .ui-overlay { position:fixed; inset:0; z-index:10; pointer-events:none; display:flex; flex-direction:column; }
     .ui-overlay > * { pointer-events:auto; }
+    /* 3D Puzzle Overlay */
+    .puzzle-overlay {
+      position: absolute;
+      top: 15%;
+      right: 0.75rem;
+      width: 90px;
+      height: 90px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    #puzzle-3d-canvas { width:100%; height:100%; border-radius:10px; }
 
     .top-bar { background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 100%); padding: calc(env(safe-area-inset-top) + 0.5rem) 1rem 0.75rem 1rem; text-align:center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .top-bar h1 { font-size:1rem; font-weight:600; margin-bottom:0.25rem; text-shadow:0 2px 4px rgba(0,0,0,0.5); }
@@ -94,6 +108,10 @@
       <h1>🔍 QR Scavenger Hunt</h1>
       <div class="pieces-count"><span id="pieces-count">0/7</span> pieces collected</div>
     </div>
+    <!-- 3D Puzzle Overlay -->
+    <div class="puzzle-overlay">
+      <div id="puzzle-3d-canvas"></div>
+    </div>
     <div class="bottom-panel safe-area-bottom">
       <div class="clue-section"><div class="clue-text">Scan a QR code to begin your hunt!</div></div>
       <div class="pieces-grid" id="pieces-status"></div>
@@ -134,6 +152,14 @@
       <div style="text-align: center;"><button id="submit-completion" class="btn">Complete Hunt!</button></div>
     </div>
   </div>
+
+  <!-- Three.js (for 3D overlay) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+
+  <!-- app data & perf for 3D -->
+  <script type="module" src="./js/data.js"></script>
+  <script type="module" src="./js/perf.js"></script>
+  <script type="module" src="./js/puzzle3d.js"></script>
 
   <!-- camera-only preview (no QR detection) -->
   <script type="module" src="./js/camera_preview.js"></script>
