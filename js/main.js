@@ -524,8 +524,12 @@ function init() {
   
   console.log('App: Starting QR camera immediately...');
   
-  // Múltiples intentos de inicio de cámara
-  startCameraAggressively();
+  // Múltiples intentos de inicio de cámara, salvo que esté desactivada por flag
+  if (!window.__disableCamera) {
+    startCameraAggressively();
+  } else {
+    console.warn('Camera disabled via ?nocam=1');
+  }
   
   checkURLParam();
   console.log('App: Initialization complete');
@@ -647,6 +651,8 @@ window.addEventListener('qr-camera-started', () => {
   if (statusEl) {
     statusEl.style.display = 'none';
   }
+  // Activar modo bajo consumo durante el escaneo (quita blur)
+  document.documentElement.classList.add('low-power');
   
   // Additional iOS fix - force video visibility after start
   setTimeout(() => {
@@ -669,6 +675,11 @@ window.addEventListener('qr-camera-started', () => {
 });
 window.addEventListener('qr-camera-stopped', () => {
   cameraStatusEl && (cameraStatusEl.textContent = 'Camera stopped.');
+  // Restaurar UI normal si no se requiere low-power global
+  const params = new URLSearchParams(location.search);
+  if (params.get('low') !== '1') {
+    document.documentElement.classList.remove('low-power');
+  }
 });
 window.addEventListener('qr-camera-error', (e) => {
   const msg = e.detail?.message || 'Camera error.';

@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no" />
   <title>QR Hunt - Find the Pieces</title>
   <style>
+    /* Low-power mode: disable backdrop filters across UI when .low-power is on html */
+    .low-power .top-bar,
+    .low-power .bottom-panel,
+    .low-power .modal-overlay,
+    .low-power .modal-content,
+    .low-power .puzzle-overlay,
+    .low-power .btn {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
     * { margin:0; padding:0; box-sizing:border-box; }
     
     body {
@@ -652,6 +662,22 @@
   <!-- Three.js - from jsDelivr CDN -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
   
+  <!-- Perf/feature flags: set via URL params (?nocam=1&no3d=1&low=1&perf=1) -->
+  <script>
+    (function(){
+      try {
+        const p = new URLSearchParams(location.search);
+        window.__disableCamera = p.get('nocam') === '1';
+        window.__disable3D = p.get('no3d') === '1';
+        window.__lowPower = p.get('low') === '1';
+        if (p.get('perf') === '1') localStorage.setItem('perfDebug','1');
+        if (window.__lowPower) {
+          document.documentElement.classList.add('low-power');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  
   <script>
     window.addEventListener('load', () => {
       console.log('Html5Qrcode available:', typeof Html5Qrcode !== 'undefined');
@@ -767,6 +793,7 @@
   <script type="module" src="./js/data.js"></script>
   <script type="module" src="./js/puzzle3d.js"></script>
   <script type="module" src="./js/camera.js"></script>
+  <script type="module" src="./js/perf.js"></script>
   <script type="module" src="./js/main.js"></script>
 </body>
 </html>

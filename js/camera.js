@@ -186,8 +186,9 @@ class QRCamera {
         : undefined;
 
       const config = { 
-        // FPS aún más bajo en iOS para reducir CPU
-        fps: isIOS ? 4 : 6,
+        // Subir FPS de escaneo para vista previa más fluida
+        // Nota: mantener resolución baja + qrbox pequeño para contener CPU
+        fps: 30,
         rememberLastUsedCamera: true,
         disableFlip: true, // Evitar issues de rotación en iOS
         // Reducir resolución en iOS; usar 480p ideal

@@ -1,5 +1,6 @@
 // puzzle3d.js - Sistema completo de tangram con animaciones
 import { PIECES, TANGRAM_PIECES } from './data.js';
+import { shouldRenderThisFrame } from './perf.js';
 
 // Constantes de escala (30% más chico => 70% del tamaño original)
 const TANGRAM_SCALE = 1.47;       // 30% más chico (2.1 * 0.7)
@@ -27,6 +28,10 @@ class Puzzle3D {
   initWithRetry() {
     // Esperar a que todo esté listo
     const tryInit = () => {
+      if (window.__disable3D) {
+        console.warn('3D disabled via ?no3d=1');
+        return; // do not init
+      }
       if (typeof THREE === 'undefined') {
         console.log('🔄 Esperando THREE.js...');
         setTimeout(tryInit, 500);
@@ -97,11 +102,11 @@ class Puzzle3D {
   if (isMobile) {
     this.renderer.toneMapping = THREE.NoToneMapping;
     this.renderer.toneMappingExposure = 1.0;
-    this.renderer.physicallyCorrectLights = false;
+    // physicallyCorrectLights fue removido; no usarlo
   } else {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.25;
-    this.renderer.physicallyCorrectLights = true;
+    this.renderer.toneMappingExposure = 1.1;
+    // physicallyCorrectLights fue removido; no usarlo
   }
       
       // Agregar canvas al contenedor
@@ -488,12 +493,8 @@ class Puzzle3D {
   animate() {
     if (!this.renderer || !this.scene || !this.camera) return;
     
-  // Throttle render loop on mobile to reduce GPU contention with camera decoding
-  const isMobile = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent);
-  const targetFps = isMobile ? (window.__qrScannerActive ? 20 : 30) : 60;
-  const frameDelay = 1000 / targetFps;
-    
-  this.animationFrame = setTimeout(() => requestAnimationFrame(() => this.animate()), frameDelay);
+  // rAF puro con frame-skipping: más suave en desktop, control de FPS en mobile
+  this.animationFrame = requestAnimationFrame(() => this.animate());
     
     const time = performance.now() * 0.001;
     
@@ -525,7 +526,16 @@ class Puzzle3D {
       this.camera.lookAt(0, 0, 0);
     }
     
-    this.renderer.render(this.scene, this.camera);
+    // Elegir FPS objetivo por plataforma/estado
+    const isMobile = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent);
+    // Nueva política móvil: pausar render totalmente cuando el escáner está activo
+    if (isMobile && window.__qrScannerActive) {
+      return; // ceder GPU/CPU a la cámara
+    }
+    const targetFps = isMobile ? 30 : (window.__qrScannerActive ? 30 : 60);
+    if (shouldRenderThisFrame(targetFps)) {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   updatePiecesCount() {
