@@ -1,8 +1,7 @@
 // main.js
-// Orquestación general de la app
+// Orquestación general de la app (SIN THREE.JS)
 
 import { PIECES, CLUES, TRIVIA, STORAGE_KEY, getInitialState } from './data.js';
-import { puzzle3DInstance } from './puzzle3d.js';
 import { qrCamera } from './camera.js';
 
 // --- Utilidades ---
@@ -42,7 +41,6 @@ function resetProgress() {
   
   // Update UI elements
   refreshPiecesNav();
-  puzzle3DInstance.syncState(state.obtained);
   
   // Update clue to first piece
   updateClue(PIECES[0].id);
@@ -218,10 +216,7 @@ function handlePieceClick(pieceId, obtained) {
       clueTimeout = null;
     }, 1500); // Shorter timeout
     
-    // Highlight the 3D piece
-    if (puzzle3DInstance && puzzle3DInstance.highlightPiece) {
-      puzzle3DInstance.highlightPiece(pieceId);
-    }
+    // No 3D highlight - removed
   } else {
     // Piece not found - show clue
     const clue = CLUES[pieceId];
@@ -321,11 +316,7 @@ function awardPiece(pieceId) {
   refreshPiecesNav();
   updateNextClue();
   
-  // Reveal piece in 3D
-  puzzle3DInstance.revealPiece(pieceId);
-  
-  // Sync the entire state with 3D instance to be sure
-  puzzle3DInstance.syncState(state.obtained);
+  // No 3D reveal - removed
   
   checkCompletion();
   // Reanudar la cámara si aún no se completó el juego
@@ -340,9 +331,8 @@ function checkCompletion() {
     state.completed = true;
     saveState();
     sendGA('puzzle_completed', {});
-    puzzle3DInstance.playCompletionAnimation(() => {
-      openFinalForm();
-    });
+    // No 3D animation - go straight to final form
+    openFinalForm();
   }
 }
 
@@ -514,7 +504,7 @@ function init() {
   console.log('📊 Current state:', state);
   buildPiecesNav();
   refreshPiecesNav(); // Update UI with current state
-  puzzle3DInstance.syncState(state.obtained);
+  // No 3D sync - removed
   checkCompletion();
   updateNextClue();
   
@@ -732,16 +722,5 @@ window.addEventListener('qr-camera-devices', (e) => {
 
 // Exponer para debugging opcional
 window.__qrPuzzleState = state;
-window.__puzzle3DInstance = puzzle3DInstance;
 
-// Debug: Try to show 3D after page loads
-setTimeout(() => {
-  console.log('🔧 DEBUG: Checking 3D puzzle status...');
-  console.log('- Initialized:', puzzle3DInstance.initialized);
-  console.log('- Pieces map size:', puzzle3DInstance.pieces?.size || 0);
-  
-  // Force show a piece for debugging
-  if (puzzle3DInstance.debugShowPiece) {
-    puzzle3DInstance.debugShowPiece('piece_1');
-  }
-}, 5000);
+// No 3D debug - removed

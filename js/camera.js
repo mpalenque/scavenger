@@ -233,7 +233,7 @@ class QRCamera {
       );
       
       this.isScanning = true;
-  window.__qrScannerActive = true;
+      window.__qrScannerActive = true;
       this._pending = false;
       this._retryCount = 0; // Reset successful
       console.log('✅ QRCamera: Camera started successfully!');
@@ -325,7 +325,7 @@ class QRCamera {
     }
     
     this.isScanning = false;
-  window.__qrScannerActive = false;
+    window.__qrScannerActive = false;
     this._pending = false;
   }
 
