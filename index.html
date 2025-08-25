@@ -187,11 +187,12 @@
     .flash-overlay { 
       position:absolute; 
       inset:0; 
-      background: radial-gradient(ellipse at center, rgba(255,255,255,0.9) 0%, rgba(77,160,255,0.45) 35%, rgba(0,0,0,0) 70%); 
+      background: transparent; 
       opacity:0; 
       pointer-events:none; 
       z-index:6; 
-      transform: scale(1.05); 
+      transform: scale(1.05);
+      display: none; /* Hide flash overlay to prevent black screen */
     }
     .flash-animate { animation: flashPulse 600ms ease-out; }
     @keyframes flashPulse { 

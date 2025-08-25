@@ -296,7 +296,7 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
 triviaCloseBtn.addEventListener('click', () => {
   triviaModal.classList.add('hidden');
   // Resume camera after closing trivia
-  setTimeout(() => qrCamera.resume().catch(() => {}), 150);
+  setTimeout(() => qrCamera.resume().catch(() => {}), 50);
 });
 
 // Cierra trivia clic fuera
@@ -326,7 +326,7 @@ function awardPiece(pieceId) {
   checkCompletion();
   // Resume camera if game not yet completed
   if (!state.completed) {
-    setTimeout(() => qrCamera.resume().catch(() => {}), 300);
+    setTimeout(() => qrCamera.resume().catch(() => {}), 100);
   }
 }
 
@@ -435,10 +435,38 @@ window.addEventListener('qr-detected', (e) => {
   
   // Show raw detected text and flash effect
   updateDetectedText(raw);
-  triggerScanFlash();
+  triggerScanFlash(); // Disabled to prevent black screen
   processPieceIdentifier(raw);
-  // camera.js detiene el escaneo al detectar; reanudaremos luego de cerrar trivia o al completar.
+  
+  // Ensure video stays visible after detection
+  ensureVideoVisible();
+  // camera.js pauses the scanning; we'll resume after trivia or completion.
 });
+
+// Ensure video element stays visible and playing
+function ensureVideoVisible() {
+  const videos = document.querySelectorAll('#qr-reader video');
+  videos.forEach(video => {
+    if (video) {
+      video.style.display = 'block';
+      video.style.visibility = 'visible';
+      video.style.opacity = '1';
+      video.style.background = 'transparent';
+      if (video.paused) {
+        video.play().catch(e => console.warn('Video play failed:', e));
+      }
+    }
+  });
+  
+  // Also ensure container is visible
+  const container = document.getElementById('qr-reader');
+  if (container) {
+    container.style.display = 'block';
+    container.style.visibility = 'visible';
+    container.style.opacity = '1';
+    container.style.background = '#000';
+  }
+}
 
 // Show QR detection feedback with URL
 function showQRDetectionFeedback(url) {
@@ -497,16 +525,17 @@ function updateDetectedText(raw) {
 }
 
 function triggerScanFlash() {
-  const flashEl = document.getElementById('scan-flash');
-  if (!flashEl) return;
-  const now = Date.now();
-  if (now - __lastFlashAt < 800) return; // throttle
-  __lastFlashAt = now;
-  flashEl.classList.remove('flash-animate');
-  // retrigger animation
-  void flashEl.offsetWidth;
-  flashEl.classList.add('flash-animate');
-  setTimeout(() => flashEl.classList.remove('flash-animate'), 700);
+  // Flash effect disabled to prevent black screen issues
+  // const flashEl = document.getElementById('scan-flash');
+  // if (!flashEl) return;
+  // const now = Date.now();
+  // if (now - __lastFlashAt < 800) return; // throttle
+  // __lastFlashAt = now;
+  // flashEl.classList.remove('flash-animate');
+  // // retrigger animation
+  // void flashEl.offsetWidth;
+  // flashEl.classList.add('flash-animate');
+  // setTimeout(() => flashEl.classList.remove('flash-animate'), 700);
 }
 
 // Process URL parameter ?piece=piece_1
@@ -528,41 +557,49 @@ function init() {
   
   console.log('App: Initializing...');
   
-  // Verificar dependencias críticas
-  if (typeof Html5Qrcode === 'undefined') {
-    console.error('Html5Qrcode not loaded');
+  try {
+    // Verificar dependencias críticas
+    if (typeof Html5Qrcode === 'undefined') {
+      console.error('Html5Qrcode not loaded');
+      const statusEl = document.getElementById('camera-status');
+      if (statusEl) statusEl.textContent = 'Error: Html5Qrcode library not loaded';
+      return;
+    }
+    
+    // Initialize UI
+    console.log('📊 Current state:', state);
+    buildPiecesNav();
+    refreshPiecesNav(); // Update UI with current state
+    // No 3D sync - removed
+    checkCompletion();
+    updateNextClue();
+    
+    console.log('App: Setting camera status...');
     const statusEl = document.getElementById('camera-status');
-    if (statusEl) statusEl.textContent = 'Error: Html5Qrcode library not loaded';
-    return;
+    if (statusEl) statusEl.textContent = 'Requesting camera access...';
+    
+    console.log('App: Starting QR camera with delay for iPhone compatibility...');
+    
+    // Multiple camera start attempts, unless disabled by flag
+    if (!window.__disableCamera) {
+      // Add longer delay for iPhone compatibility and stability
+      setTimeout(() => {
+        startCameraAggressively();
+      }, 1500);
+    } else {
+      console.warn('Camera disabled via ?nocam=1');
+    }
+    
+    checkURLParam();
+    console.log('App: Initialization complete');
+    
+    // Start periodic video visibility check
+    setInterval(ensureVideoVisible, 1000);
+  } catch (e) {
+    console.error('Initialization error:', e);
+  } finally {
+    setupCameraControls();
   }
-  
-  // Initialize UI
-  console.log('📊 Current state:', state);
-  buildPiecesNav();
-  refreshPiecesNav(); // Update UI with current state
-  // No 3D sync - removed
-  checkCompletion();
-  updateNextClue();
-  
-  console.log('App: Setting camera status...');
-  const statusEl = document.getElementById('camera-status');
-  if (statusEl) statusEl.textContent = 'Requesting camera access...';
-  
-  console.log('App: Starting QR camera with delay for iPhone compatibility...');
-  
-  // Multiple camera start attempts, unless disabled by flag
-  if (!window.__disableCamera) {
-    // Add longer delay for iPhone compatibility and stability
-    setTimeout(() => {
-      startCameraAggressively();
-    }, 1500);
-  } else {
-    console.warn('Camera disabled via ?nocam=1');
-  }
-  
-  checkURLParam();
-  console.log('App: Initialization complete');
-  setupCameraControls();
 }
 
 function startCameraAggressively() {

@@ -325,15 +325,65 @@ class QRCamera {
   _onScan(text) {
     // Expected QR format: "piece_3"
     dispatchCustomEvent('qr-detected', { raw: text });
-    // Pausar escaneo inmediatamente para ahorrar CPU/GPU en iPhone
-    // y evitar múltiples detecciones de un mismo código.
-    if (this.isScanning) {
-      this.stop().catch(() => {});
+    // Pause scanning temporarily to prevent multiple detections
+    // but keep camera video stream active
+    this.pause();
+  }
+
+  pause() {
+    // Temporarily stop QR detection but keep video stream active
+    if (this.html5Qrcode && this.isScanning) {
+      try {
+        this.html5Qrcode.pause(true); // Keep video stream
+        console.log('📷 QRCamera: Scanning paused (video stream active)');
+        
+        // Ensure video remains visible during pause
+        setTimeout(() => {
+          const videos = document.querySelectorAll('#qr-reader video');
+          videos.forEach(video => {
+            if (video) {
+              video.style.display = 'block';
+              video.style.visibility = 'visible';
+              video.style.opacity = '1';
+              if (video.paused) {
+                video.play().catch(e => console.warn('Video play failed:', e));
+              }
+            }
+          });
+        }, 50);
+      } catch (e) {
+        console.warn('QRCamera: Pause failed, video stream might stop:', e);
+      }
     }
   }
 
   async resume() {
-    // Reanudar usando último dispositivo si existe
+    // Resume scanning from paused state
+    if (this.html5Qrcode && !this.isScanning) {
+      try {
+        await this.html5Qrcode.resume();
+        console.log('🎯 QRCamera: Scanning resumed');
+        
+        // Ensure video visibility after resume
+        setTimeout(() => {
+          const videos = document.querySelectorAll('#qr-reader video');
+          videos.forEach(video => {
+            if (video) {
+              video.style.display = 'block';
+              video.style.visibility = 'visible';
+              video.style.opacity = '1';
+              if (video.paused) {
+                video.play().catch(e => console.warn('Video play failed after resume:', e));
+              }
+            }
+          });
+        }, 100);
+        return;
+      } catch (e) {
+        console.warn('QRCamera: Resume failed, restarting camera:', e);
+      }
+    }
+    // Fallback: restart camera with last device
     return this.start(this._requestedDeviceId);
   }
 
