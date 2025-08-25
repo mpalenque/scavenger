@@ -58,12 +58,12 @@ function resetProgress() {
     triviaModal.classList.add('hidden');
   }
   
-  console.log('✅ Progress reset successfully');
+  console.log('✅ Progreso reseteado exitosamente');
   
   // Show confirmation message in clue
   const clueTextEl = document.querySelector('.clue-text');
   if (clueTextEl) {
-    clueTextEl.textContent = '🔄 Progress reset! Start by scanning your first QR code.';
+    clueTextEl.textContent = '🔄 ¡Progreso reseteado! Comienza escaneando tu primer código QR.';
   }
 }
 
@@ -212,7 +212,7 @@ function handlePieceClick(pieceId, obtained) {
   
   if (obtained) {
     // Piece already found - show confirmation and highlight 3D piece
-    clueTextEl.textContent = `✅ ${PIECES.find(p => p.id === pieceId)?.name || 'Piece'} already found!`;
+    clueTextEl.textContent = `✅ ${PIECES.find(p => p.id === pieceId)?.name || 'Pieza'} ¡ya encontrada!`;
     clueTextEl.style.color = '#4CAF50';
     
     clueTimeout = setTimeout(() => {
@@ -358,8 +358,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const name = nameInput ? nameInput.value.trim() : '';
       
       if (name) {
-        alert(`🎉 Congratulations ${name}! You've completed the QR Scavenger Hunt!`);
-        console.log('🏆 Hunt completed by:', name);
+        alert(`🎉 ¡Felicitaciones ${name}! ¡Has completado la Búsqueda del Tesoro QR!`);
+        console.log('🏆 Búsqueda completada por:', name);
         sendGA('hunt_completed', { player_name: name });
         
         // Hide final form
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset for next player
         resetProgress();
       } else {
-        alert('Please enter your name to complete the hunt!');
+        alert('¡Por favor ingresa tu nombre para completar la búsqueda!');
       }
     });
   }
@@ -408,7 +408,7 @@ function processPieceIdentifier(raw) {
     updateClue('invalid');
     const clueTextEl = document.querySelector('.clue-text');
     if (clueTextEl) {
-      clueTextEl.textContent = 'Invalid QR code.';
+      clueTextEl.textContent = 'Código QR inválido.';
     }
     return;
   }
@@ -521,16 +521,16 @@ function checkURLParam() {
 // --- Init principal ---
 function init() {
   if (window.__initRan) {
-    console.log('Init already ran, skipping...');
+    console.log('Init ya se ejecutó, omitiendo...');
     return;
   }
   window.__initRan = true;
   
-  console.log('App: Initializing...');
+  console.log('App: Inicializando...');
   
   // Verificar dependencias críticas
   if (typeof Html5Qrcode === 'undefined') {
-    console.error('Html5Qrcode not loaded');
+    console.error('Html5Qrcode no cargado');
     const statusEl = document.getElementById('camera-status');
     if (statusEl) statusEl.textContent = 'Error: Biblioteca Html5Qrcode no cargada';
     return;
@@ -544,11 +544,11 @@ function init() {
   checkCompletion();
   updateNextClue();
   
-  console.log('App: Setting camera status...');
+  console.log('App: Configurando estado de cámara...');
   const statusEl = document.getElementById('camera-status');
   if (statusEl) statusEl.textContent = 'Solicitando acceso a la cámara...';
   
-  console.log('App: Starting QR camera with delay for iPhone compatibility...');
+  console.log('App: Iniciando cámara QR con retraso para compatibilidad iPhone...');
   
   // Múltiples intentos de inicio de cámara, salvo que esté desactivada por flag
   if (!window.__disableCamera) {
@@ -557,20 +557,20 @@ function init() {
       startCameraAggressively();
     }, 1500);
   } else {
-    console.warn('Camera disabled via ?nocam=1');
+    console.warn('Cámara deshabilitada via ?nocam=1');
   }
   
   checkURLParam();
-  console.log('App: Initialization complete');
+  console.log('App: Inicialización completa');
   setupCameraControls();
 }
 
 function startCameraAggressively() {
-  console.log('Starting camera aggressively...');
+  console.log('Iniciando cámara agresivamente...');
   
   // Evitar múltiples inicializaciones
   if (window.__cameraStarting) {
-    console.log('Camera already starting, skipping...');
+    console.log('Cámara ya iniciándose, omitiendo...');
     return;
   }
   window.__cameraStarting = true;
@@ -596,7 +596,7 @@ function startCameraAggressively() {
   
   // Intento 1: Inmediato
   qrCamera.start().catch(e => {
-    console.warn('Camera start failed:', e);
+    console.warn('Inicio de cámara falló:', e);
     const statusEl = document.getElementById('camera-status');
     if (statusEl) {
       statusEl.innerHTML = `
@@ -618,15 +618,13 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.addEventListener('load', () => {
-  console.log('Window loaded, starting init...');
-  
-  // Debug: show test buttons on Ctrl+Shift+T
+    console.log('Ventana cargada, iniciando init...');  // Debug: show test buttons on Ctrl+Shift+T
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.key === 'T') {
       const testSection = document.getElementById('test-section');
       if (testSection) {
         testSection.classList.toggle('hidden');
-        console.log('Test section toggled');
+        console.log('Sección de prueba alternada');
       }
     }
   });
@@ -636,7 +634,7 @@ window.addEventListener('load', () => {
 
 // Backup: también con DOMContentLoaded por si acaso
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM loaded, checking if init already ran...');
+  console.log('DOM cargado, verificando si init ya se ejecutó...');
   if (!window.__initRan) {
     init();
   }
@@ -648,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
   testButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const pieceId = btn.dataset.piece;
-      console.log(`Test: Simulating QR scan for ${pieceId}`);
+      console.log(`Prueba: Simulando escaneo QR para ${pieceId}`);
       processPieceIdentifier(pieceId);
     });
   });
@@ -676,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Eventos de estado de cámara
 window.addEventListener('qr-camera-started', () => {
-  console.log('✅ Camera started event received');
+  console.log('✅ Evento de cámara iniciada recibido');
   const statusEl = document.getElementById('camera-status');
   if (statusEl) {
     statusEl.style.display = 'none';
@@ -696,15 +694,15 @@ window.addEventListener('qr-camera-started', () => {
       });
       
       if (video.paused) {
-        console.log('⚠️ Video is paused, forcing play...');
-        video.play().catch(e => console.warn('Failed to play video:', e));
+        console.log('⚠️ Video está pausado, forzando reproducción...');
+        video.play().catch(e => console.warn('Error al reproducir video:', e));
       }
       
       if (video.videoWidth === 0 || video.videoHeight === 0) {
-        console.log('⚠️ Video has no dimensions, forcing refresh...');
+        console.log('⚠️ Video no tiene dimensiones, forzando recarga...');
         video.load();
         setTimeout(() => {
-          video.play().catch(e => console.warn('Failed to play after load:', e));
+          video.play().catch(e => console.warn('Error al reproducir después de cargar:', e));
         }, 100);
       }
     });
@@ -732,14 +730,14 @@ function setupCameraControls() {
   if (!cameraSelect || !cameraStartBtn) return;
   cameraStartBtn.addEventListener('click', () => {
     const deviceId = cameraSelect.value || null;
-    cameraStatusEl && (cameraStatusEl.textContent = 'Starting selected camera...');
+    cameraStatusEl && (cameraStatusEl.textContent = 'Iniciando cámara seleccionada...');
     qrCamera.restartWithDevice(deviceId);
   });
   
   if (cameraRetryBtn) {
     cameraRetryBtn.addEventListener('click', () => {
       cameraRetryBtn.classList.add('hidden');
-      cameraStatusEl && (cameraStatusEl.textContent = 'Retrying camera...');
+      cameraStatusEl && (cameraStatusEl.textContent = 'Reintentando cámara...');
       setTimeout(() => qrCamera.start(), 80);
     });
   }
@@ -754,14 +752,14 @@ window.addEventListener('qr-camera-devices', (e) => {
   devices.forEach(d => {
     const opt = document.createElement('option');
     opt.value = d.id;
-    opt.textContent = d.label || ('Camera ' + d.id.substring(0,6));
+    opt.textContent = d.label || ('Cámara ' + d.id.substring(0,6));
     cameraSelect.appendChild(opt);
   });
   if (devices.length > 1) {
     cameraSelect.classList.remove('hidden');
     cameraStartBtn && cameraStartBtn.classList.remove('hidden');
   } else {
-    // Single camera: hide manual controls
+    // Una sola cámara: ocultar controles manuales
     cameraSelect.classList.add('hidden');
     cameraStartBtn && cameraStartBtn.classList.add('hidden');
   }
