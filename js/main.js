@@ -77,7 +77,11 @@ function sendGA(eventName, params = {}) {
 let state = loadState();
 
 // --- Referencias DOM ---
-const nav = document.querySelector('.pieces-nav') || { innerHTML: '', querySelectorAll: () => [] };
+const nav = document.querySelector('.pieces-nav') || { 
+  innerHTML: '', 
+  querySelectorAll: () => [], 
+  querySelector: () => null 
+};
 const clueBar = document.querySelector('.clue-text') || document.getElementById('clue-bar');
 const triviaModal = document.getElementById('trivia-modal');
 const triviaQuestionEl = document.getElementById('trivia-question');
@@ -551,7 +555,7 @@ function init() {
     // Add longer delay for iPhone compatibility and stability
     setTimeout(() => {
       startCameraAggressively();
-    }, 1000);
+    }, 1500);
   } else {
     console.warn('Camera disabled via ?nocam=1');
   }
@@ -592,37 +596,17 @@ function startCameraAggressively() {
   
   // Intento 1: Inmediato
   qrCamera.start().catch(e => {
-    console.warn('Camera start attempt 1 failed:', e);
+    console.warn('Camera start failed:', e);
     const statusEl = document.getElementById('camera-status');
-    if (statusEl) statusEl.textContent = 'Camera access failed, retrying...';
+    if (statusEl) {
+      statusEl.innerHTML = `
+        <div>❌ Camera Error</div>
+        <small style="opacity:0.7; margin-top:8px;">Please allow camera access and refresh</small>
+      `;
+    }
   }).finally(() => {
     window.__cameraStarting = false;
   });
-  
-  // Intento 2: 1 segundo delay
-  setTimeout(() => {
-    if (!qrCamera.isScanning) {
-      console.log('Camera not started, trying again...');
-      qrCamera.start().catch(e => {
-        console.warn('Camera start attempt 2 failed:', e);
-        const statusEl = document.getElementById('camera-status');
-        if (statusEl) statusEl.textContent = 'Camera access denied or unavailable';
-      });
-    }
-  }, 500);
-  
-  // Intento 3: 1.5s delay
-  setTimeout(() => {
-    if (!qrCamera.isScanning) {
-      console.log('Camera still not started, trying again...');
-      qrCamera.start().catch(e => console.warn('Camera start attempt 3 failed:', e));
-    }
-  }, 1500);
-  
-  // Listar dispositivos después de intentos
-  setTimeout(() => {
-    qrCamera.listDevices().catch(e => console.warn('List devices failed:', e));
-  }, 2000);
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -711,10 +695,17 @@ window.addEventListener('qr-camera-started', () => {
         videoHeight: video.videoHeight
       });
       
+      if (video.paused) {
+        console.log('⚠️ Video is paused, forcing play...');
+        video.play().catch(e => console.warn('Failed to play video:', e));
+      }
+      
       if (video.videoWidth === 0 || video.videoHeight === 0) {
         console.log('⚠️ Video has no dimensions, forcing refresh...');
         video.load();
-        video.play().catch(e => console.warn('Video play error:', e));
+        setTimeout(() => {
+          video.play().catch(e => console.warn('Failed to play after load:', e));
+        }, 100);
       }
     });
   }, 1000);

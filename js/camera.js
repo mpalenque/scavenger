@@ -76,6 +76,8 @@ class QRCamera {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       
+      console.log('📱 Device detection: iOS =', isIOS, ', UserAgent:', navigator.userAgent);
+      
       // Skip permission check - it can cause conflicts and freezing
       console.log('🔐 QRCamera: Skipping permission check to avoid conflicts...');
       
@@ -217,6 +219,17 @@ class QRCamera {
       this._pending = false;
       this._retryCount = 0; // Reset successful
       console.log('✅ QRCamera: Camera started successfully!');
+      
+      // Force video to play after a short delay
+      setTimeout(() => {
+        const videos = document.querySelectorAll('#qr-reader video');
+        videos.forEach(video => {
+          if (video.paused) {
+            console.log('🎬 Forcing video play after camera start...');
+            video.play().catch(e => console.warn('Video autoplay failed:', e));
+          }
+        });
+      }, 500);
       
       // iOS-specific: Reduced frequency checks for better performance
       setTimeout(() => {
