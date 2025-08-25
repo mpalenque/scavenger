@@ -63,31 +63,10 @@
     .top-bar { 
       background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 100%); 
       padding: calc(env(safe-area-inset-top) + 0.5rem) 1rem 0.75rem 1rem; 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       backdrop-filter: blur(10px); 
       -webkit-backdrop-filter: blur(10px); 
     }
-    .top-bar-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      margin-top: 0.25rem;
-    }
-    .top-bar h1 { 
-      font-size:1rem; 
-      font-weight:600; 
-      margin-bottom:0.25rem; 
-      text-shadow:0 2px 4px rgba(0,0,0,0.5); 
-    }
-    .pieces-count { 
-      font-size:0.8rem; 
-      color:#2d8cff; 
-      font-weight:600; 
-      text-shadow:0 1px 2px rgba(0,0,0,0.5); 
-    }
+    /* Remove unused styles */
     .reset-btn {
       background: rgba(255, 71, 87, 0.8);
       border: 1px solid rgba(255, 71, 87, 0.6);
@@ -110,79 +89,73 @@
       transform: translateY(0);
     }
     
-    /* Responsive adjustments for reset button */
-    @media (max-width: 480px) {
-      .reset-btn {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.7rem;
-      }
-      .top-bar-row {
-        gap: 0.5rem;
-      }
-      .pieces-count {
-        font-size: 0.75rem;
-      }
-    }
+    /* Remove unused responsive styles */
 
     .qr-overlay { 
       position:absolute; 
       inset:0; 
       z-index:5; 
       display:flex; 
+      flex-direction: column;
       align-items:center; 
       justify-content:center; 
       pointer-events:none; 
+      gap: 2rem;
     }
+    
+    /* Main Instructions Container - Figma style */
+    .main-instructions {
+      background: rgba(22, 37, 46, 0.9);
+      border: 3px solid #00D4D4;
+      border-radius: 40px;
+      padding: 1rem 2rem;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      max-width: 280px;
+      margin-bottom: 1rem;
+    }
+    
+    .main-instructions h2 {
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+      line-height: 1.3;
+    }
+    
+    .main-instructions p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.8rem;
+      margin: 0.25rem 0 0 0;
+    }
+    
     .qr-target { 
       width:min(58vw, 220px); 
       aspect-ratio:1/1; 
-      border:2px solid rgba(45,140,255,0.5); 
-      box-shadow:0 0 18px rgba(45,140,255,0.22); 
-      border-radius:12px; 
       position:relative; 
-      transition: all 0.3s ease; 
+      transition: all 0.3s ease;
+      background: url('./assets/qr-scanner-frame.svg') center/contain no-repeat;
     }
+    
+    /* Remove old corner styles - not needed with SVG */
     .qr-target::before, .qr-target::after { 
-      content:''; 
-      position:absolute; 
-      width:25px; 
-      height:25px; 
-      border:3px solid #2d8cff; 
-    }
-    .qr-target::before { 
-      top:-3px; 
-      left:-3px; 
-      border-right:none; 
-      border-bottom:none; 
-      border-top-left-radius:8px; 
-    }
-    .qr-target::after { 
-      bottom:-3px; 
-      right:-3px; 
-      border-left:none; 
-      border-top:none; 
-      border-bottom-right-radius:8px; 
+      display: none;
     }
     .qr-corner { 
-      position:absolute; 
-      width:25px; 
-      height:25px; 
-      border:3px solid #2d8cff; 
+      display: none;
     }
-    .qr-corner.top-right { 
-      top:-3px; 
-      right:-3px; 
-      border-left:none; 
-      border-bottom:none; 
-      border-top-right-radius:8px; 
+    
+    /* Scan instruction text */
+    .scan-instruction {
+      color: #00D4D4;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 1rem 0;
     }
-    .qr-corner.bottom-left { 
-      bottom:-3px; 
-      left:-3px; 
-      border-right:none; 
-      border-top:none; 
-      border-bottom-left-radius:8px; 
-    }
+    /* Remove old corner styles */
 
     .flash-overlay { 
       position:absolute; 
@@ -211,44 +184,67 @@
       max-height:35vh; 
       overflow-y:auto; 
     }
-    .clue-section { margin-bottom:0.75rem; }
-    .clue-text { 
-      background: rgba(45, 140, 255, 0.2); 
-      border: 1px solid rgba(45, 140, 255, 0.4); 
-      border-radius: 6px; 
-      padding: 0.6rem; 
-      text-align: center; 
-      font-size: 0.85rem; 
-      min-height: 2.2rem; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      text-shadow: 0 1px 2px rgba(0,0,0,0.5); 
+    
+    /* Progress indicators - Figma style */
+    .progress-container {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+      padding: 0 1rem;
     }
-    .pieces-grid { 
-      display:grid; 
-      grid-template-columns:1fr 1fr; 
-      gap:0.5rem; 
-      max-height:200px; 
-      overflow-y:auto; 
+    
+    .progress-circle {
+      width: 32px;
+      height: 32px;
+      background: url('./assets/empty-circle.svg') center/contain no-repeat;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      outline: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    .piece-item { 
-      background: rgba(255, 255, 255, 0.1); 
-      border: 1px solid rgba(255, 255, 255, 0.2); 
-      border-radius: 6px; 
-      padding: 0.5rem; 
-      font-size:0.8rem; 
-      display:flex; 
-      align-items:center; 
-      justify-content:space-between; 
-      cursor: pointer; 
-      transition: all 0.2s ease; 
+    
+    .progress-circle:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0, 212, 212, 0.3);
     }
-    .piece-item:hover { background: rgba(255, 255, 255, 0.2); }
-    .piece-item.obtained { 
-      background: rgba(76, 175, 80, 0.2); 
-      border-color: rgba(76, 175, 80, 0.4); 
+    
+    .progress-circle:active {
+      transform: scale(0.95);
     }
+    
+    .progress-circle.completed {
+      background: url('./assets/check-circle.svg') center/contain no-repeat;
+    }
+    
+    /* Hint display - Solo informativo, no botón */
+    .hint-display {
+      background: linear-gradient(135deg, #FF8A50, #FF6B2C);
+      border: 2px solid #FF6B2C;
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 30px;
+      text-align: center;
+      margin: 1rem auto;
+      max-width: 280px;
+      box-shadow: 0 4px 12px rgba(255, 107, 44, 0.3);
+    }
+    
+    #hint-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    #hint-detail {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-top: 0.5rem;
+    }
+    /* Remove unused clue styles */
 
     /* Button styles */
     .btn {
@@ -283,7 +279,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
-      color: #2d8cff;
+      color: #00D4D4;
       font-weight: 600;
       z-index: 3;
       background: rgba(0,0,0,0.8);
@@ -292,34 +288,6 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       white-space: nowrap;
-    }
-
-    /* Test section - positioned lower to avoid overlapping pieces */
-    #test-section {
-      position: fixed;
-      bottom: 12rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.9);
-      border-radius: 12px;
-      padding: 0.75rem;
-      z-index: 25;
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border: 1px solid rgba(255,255,255,0.2);
-      max-width: 90vw;
-    }
-
-    .test-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 0.4rem;
-    }
-
-    .test-buttons .btn {
-      padding: 0.4rem 0.6rem;
-      font-size: 0.75rem;
-      min-width: 0;
     }
 
     /* Hide html5-qrcode overlays completely */
@@ -437,45 +405,54 @@
       <div id="camera-status">
         <div>📷 Camera Initializing...</div>
         <small style="opacity:0.7; margin-top:8px;">Please allow camera access</small>
-        <button id="resume-camera-btn" style="display:none; margin-top:10px; padding:8px 16px; background:#2d8cff; color:white; border:none; border-radius:6px; font-size:0.8rem; cursor:pointer;">
+        <button id="resume-camera-btn" style="display:none; margin-top:10px; padding:8px 16px; background:#00D4D4; color:white; border:none; border-radius:6px; font-size:0.8rem; cursor:pointer;">
           🔄 Resume Scanning
         </button>
       </div>
     </div>
     <div class="qr-overlay" aria-hidden="true">
-      <div class="qr-target">
-        <div class="qr-corner top-right"></div>
-        <div class="qr-corner bottom-left"></div>
+      <!-- Main Instructions - Figma Style -->
+      <div class="main-instructions">
+        <h2>Main Instructions</h2>
+        <p>(Find QR to discover puzzle, trivia, etc.)</p>
       </div>
+      
+      <!-- QR Scanner Frame -->
+      <div class="qr-target">
+        <!-- Frame is now handled by CSS background -->
+      </div>
+      
+      <!-- Scan Instruction -->
+      <div class="scan-instruction">SCAN QR CODE</div>
+      
+      <!-- Progress Indicators - Interactive buttons -->
+      <div class="progress-container">
+        <button class="progress-circle" data-piece="1" data-piece-id="piece_1"></button>
+        <button class="progress-circle" data-piece="2" data-piece-id="piece_2"></button>
+        <button class="progress-circle" data-piece="3" data-piece-id="piece_3"></button>
+        <button class="progress-circle" data-piece="4" data-piece-id="piece_4"></button>
+        <button class="progress-circle" data-piece="5" data-piece-id="piece_5"></button>
+        <button class="progress-circle" data-piece="6" data-piece-id="piece_6"></button>
+        <button class="progress-circle" data-piece="7" data-piece-id="piece_7"></button>
+      </div>
+      
       <div id="scan-flash" class="flash-overlay"></div>
     </div>
   </div>
 
   <div class="ui-overlay">
     <div class="top-bar safe-area-top">
-      <h1>🔍 QR Scavenger Hunt</h1>
-      <div class="top-bar-row">
-        <div class="pieces-count"><span id="pieces-count">0/7</span> pieces collected</div>
+      <!-- Solo el botón de reset como pediste -->
+      <div style="width: 100%; display: flex; justify-content: flex-end;">
         <button id="reset-pieces-btn" class="reset-btn">🔄 Reset</button>
       </div>
     </div>
-    <div class="bottom-panel safe-area-bottom">
-      <div class="clue-section"><div class="clue-text">Scan a QR code to begin your hunt!</div></div>
-      <div class="pieces-grid" id="pieces-status"></div>
-    </div>
-  </div>
-
-  <div id="test-section" class="hidden">
-    <h3 style="margin-bottom: 0.5rem; font-size: 0.9rem; text-align: center;">🧪 Test QR</h3>
-    <div class="test-buttons">
-      <button class="test-qr-btn btn" data-piece="piece_1">QR 1</button>
-      <button class="test-qr-btn btn" data-piece="piece_2">QR 2</button>
-      <button class="test-qr-btn btn" data-piece="piece_3">QR 3</button>
-      <button class="test-qr-btn btn" data-piece="piece_4">QR 4</button>
-      <button class="test-qr-btn btn" data-piece="piece_5">QR 5</button>
-      <button class="test-qr-btn btn" data-piece="piece_6">QR 6</button>
-      <button class="test-qr-btn btn" data-piece="piece_7">QR 7</button>
-      <button id="reset-progress-btn" class="btn" style="background: rgba(255, 71, 87, 0.9); grid-column: 1 / -1;">🔄 Reset</button>
+        <div class="bottom-panel safe-area-bottom">
+      <!-- Hint Display - Solo informativo, no botón -->
+      <div class="hint-display" id="hint-display">
+        <div id="hint-text">Scan a QR code to begin your hunt!</div>
+        <small id="hint-detail" style="opacity: 0.8; display: block; margin-top: 0.25rem;"></small>
+      </div>
     </div>
   </div>
 

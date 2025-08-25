@@ -1,0 +1,12 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main frame -->
+  <rect x="20" y="20" width="200" height="200" rx="24" stroke="#00D4D4" stroke-width="4" fill="none"/>
+  
+  <!-- Top corners -->
+  <path d="M20 44 L20 20 L44 20" stroke="#00D4D4" stroke-width="6" stroke-linecap="round"/>
+  <path d="M196 20 L220 20 L220 44" stroke="#00D4D4" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Bottom corners -->
+  <path d="M20 196 L20 220 L44 220" stroke="#00D4D4" stroke-width="6" stroke-linecap="round"/>
+  <path d="M220 196 L220 220 L196 220" stroke="#00D4D4" stroke-width="6" stroke-linecap="round"/>
+</svg>

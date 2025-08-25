@@ -108,39 +108,112 @@ function buildPiecesNav() {
   refreshPiecesNav();
 }
 
-function refreshPiecesNav() {
-  nav.querySelectorAll('.piece-icon').forEach(el => {
-    const id = el.dataset.pieceId;
-    const obtained = !!state.obtained[id];
-    el.classList.toggle('obtained', obtained);
-    el.setAttribute('aria-pressed', obtained);
-  });
-  
-  // Update pieces count
-  const obtainedCount = Object.values(state.obtained).filter(Boolean).length;
-  const totalCount = PIECES.length;
-  const countEl = document.getElementById('pieces-count');
-  if (countEl) {
-    countEl.textContent = `${obtainedCount}/${totalCount}`;
-  }
-  console.log(`📊 Pieces count updated: ${obtainedCount}/${totalCount}`);
-  
-  // Also update test buttons to show obtained state
-  document.querySelectorAll('.test-qr-btn').forEach(btn => {
-    const pieceId = btn.dataset.piece;
-    const obtained = !!state.obtained[pieceId];
-    if (obtained) {
-      btn.style.background = '#4CAF50';
-      btn.style.opacity = '0.7';
-      btn.textContent = btn.textContent.replace('QR', '✅').replace('QR', '✅'); // Double replace to handle edge cases
-      btn.disabled = true; // Disable already obtained pieces
-    } else {
-      btn.style.background = '#2d8cff';
-      btn.style.opacity = '1';
-      btn.textContent = btn.textContent.replace('✅', 'QR');
-      btn.disabled = false;
+function setupProgressCircleListeners() {
+  // Use event delegation for better reliability
+  document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('progress-circle')) {
+      console.log('🔵 Click detected on progress circle via delegation');
+      handleProgressCircleClick(event);
     }
   });
+  
+  console.log('🎯 Global click delegation setup for progress circles');
+}
+
+function initializeHintDisplay() {
+  const hintTextEl = document.getElementById('hint-text');
+  const hintDetailEl = document.getElementById('hint-detail');
+  
+  if (!hintTextEl || !hintDetailEl) {
+    console.warn('Hint elements not found during initialization');
+    return;
+  }
+  
+  // Show default hint message
+  hintTextEl.textContent = '👆 Click a progress circle above';
+  hintDetailEl.textContent = 'Click on any circle to see the hint for that piece. Completed pieces show as ✅.';
+  
+  // Also add event listeners here as backup
+  setTimeout(() => {
+    document.querySelectorAll('.progress-circle').forEach(circle => {
+      circle.addEventListener('click', handleProgressCircleClick);
+      console.log(`🔄 Backup listener added to circle ${circle.dataset.piece}`);
+    });
+  }, 100);
+}
+
+function handleProgressCircleClick(event) {
+  console.log('🔵 Progress circle clicked!', event.target.dataset);
+  
+  const circle = event.target;
+  const pieceIndex = circle.dataset.piece;
+  const pieceId = `piece_${pieceIndex}`;
+  const obtained = !!state.obtained[pieceId];
+  
+  console.log(`Click on piece ${pieceIndex}, ID: ${pieceId}, obtained: ${obtained}`);
+  
+  // Find the piece data
+  const piece = PIECES.find(p => p.id === pieceId);
+  if (!piece) {
+    console.error('Piece not found:', pieceId);
+    return;
+  }
+  
+  // Update hint display
+  const hintTextEl = document.getElementById('hint-text');
+  const hintDetailEl = document.getElementById('hint-detail');
+  
+  if (!hintTextEl || !hintDetailEl) {
+    console.error('Hint elements not found');
+    return;
+  }
+  
+  if (obtained) {
+    // Piece already found - show completion status
+    hintTextEl.textContent = `✅ ${piece.name} Found!`;
+    hintDetailEl.textContent = `This piece has been collected successfully.`;
+  } else {
+    // Piece not found - show hint
+    const clue = CLUES[pieceId];
+    if (clue) {
+      hintTextEl.textContent = `💡 Hint for ${piece.name}`;
+      hintDetailEl.textContent = clue;
+    } else {
+      hintTextEl.textContent = `❓ ${piece.name}`;
+      hintDetailEl.textContent = `Look for the QR code to collect this piece.`;
+    }
+  }
+  
+  // Add visual feedback to the clicked circle
+  circle.style.transform = 'scale(0.9)';
+  setTimeout(() => {
+    circle.style.transform = '';
+  }, 150);
+}
+
+function refreshPiecesNav() {
+  console.log('🔄 Refreshing pieces nav...');
+  
+  // Update progress circles - Figma style (solo círculos, sin texto)
+  const circles = document.querySelectorAll('.progress-circle');
+  console.log(`Found ${circles.length} progress circles`);
+  
+  circles.forEach((circle, index) => {
+    const pieceIndex = circle.dataset.piece;
+    const pieceId = `piece_${pieceIndex}`;
+    const obtained = !!state.obtained[pieceId];
+    circle.classList.toggle('completed', obtained);
+    
+    // Remove old listeners and add new ones
+    const newCircle = circle.cloneNode(true);
+    circle.parentNode.replaceChild(newCircle, circle);
+    
+    // Add click listener
+    newCircle.addEventListener('click', handleProgressCircleClick);
+    console.log(`✅ Added listener to circle ${pieceIndex} (obtained: ${obtained})`);
+  });
+  
+  console.log(`📊 Progress circles updated with click handlers`);
 
   // Update the pieces status list UI
   renderPiecesStatus();
@@ -339,6 +412,11 @@ function awardPiece(pieceId) {
   // Update all UI elements
   refreshPiecesNav();
   updateNextClue();
+  
+  // Update hint button text
+  if (window.updateHintText) {
+    window.updateHintText();
+  }
   
   // No 3D reveal - removed
   
@@ -610,6 +688,8 @@ function init() {
     console.log('📊 Current state:', state);
     buildPiecesNav();
     refreshPiecesNav(); // Update UI with current state
+    initializeHintDisplay(); // Initialize hint area
+    setupProgressCircleListeners(); // Add global listeners
     // No 3D sync - removed
     checkCompletion();
     updateNextClue();
@@ -717,27 +797,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Debug: Test buttons for all pieces
+// Setup event listeners
 document.addEventListener('DOMContentLoaded', () => {
-  const testButtons = document.querySelectorAll('.test-qr-btn');
-  testButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const pieceId = btn.dataset.piece;
-      console.log(`Prueba: Simulando escaneo QR para ${pieceId}`);
-      processPieceIdentifier(pieceId);
-    });
-  });
-  
-  // Reset progress button
-  const resetBtn = document.getElementById('reset-progress-btn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to reset all progress? This will clear all found pieces.')) {
-        resetProgress();
-      }
-    });
-  }
-  
   // Main reset button in top bar
   const mainResetBtn = document.getElementById('reset-pieces-btn');
   if (mainResetBtn) {
@@ -759,6 +820,43 @@ document.addEventListener('DOMContentLoaded', () => {
         qrCamera.start().catch(() => {});
       });
     });
+  }
+  
+  // Hint button - Figma style (dinámico, no texto fijo)
+  const hintButton = document.getElementById('hint-button');
+  if (hintButton) {
+    // Función para actualizar el texto del hint
+    function updateHintText() {
+      const obtainedCount = Object.values(state.obtained).filter(Boolean).length;
+      const nextPiece = PIECES.find(p => !state.obtained[p.id]);
+      
+      if (nextPiece) {
+        hintButton.innerHTML = `Hint about <strong>${nextPiece.name}</strong><br><small style="opacity: 0.8;">(${nextPiece.description || 'Scan QR to continue'})</small>`;
+      } else if (obtainedCount === PIECES.length) {
+        hintButton.innerHTML = `🎉 All pieces found!<br><small style="opacity: 0.8;">(Hunt completed)</small>`;
+      } else {
+        hintButton.innerHTML = `Hint about piece selected<br><small style="opacity: 0.8;">(Scan any QR to start)</small>`;
+      }
+    }
+    
+    // Actualizar al cargar y cuando cambie el estado
+    updateHintText();
+    
+    hintButton.addEventListener('click', () => {
+      const obtainedCount = Object.values(state.obtained).filter(Boolean).length;
+      const nextPiece = PIECES.find(p => !state.obtained[p.id]);
+      
+      if (nextPiece) {
+        alert(`💡 Next piece: ${nextPiece.name}\n${nextPiece.description || 'Look for the QR code!'}`);
+      } else if (obtainedCount === PIECES.length) {
+        alert('🎉 Congratulations! You\'ve found all pieces!');
+      } else {
+        alert('💡 Scan any QR code to get started with your hunt!');
+      }
+    });
+    
+    // Exponer función para actualizar desde otras partes
+    window.updateHintText = updateHintText;
   }
 });
 
