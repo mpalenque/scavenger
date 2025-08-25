@@ -424,12 +424,41 @@ function processPieceIdentifier(raw) {
 // Escucha evento personalizado de cámara
 window.addEventListener('qr-detected', (e) => {
   const { raw } = e.detail;
+  
+  // Show QR detection success feedback
+  showQRDetectionFeedback(raw);
+  
   // Show raw detected text and flash effect
   updateDetectedText(raw);
   triggerScanFlash();
   processPieceIdentifier(raw);
   // camera.js detiene el escaneo al detectar; reanudaremos luego de cerrar trivia o al completar.
 });
+
+// Show QR detection feedback with URL
+function showQRDetectionFeedback(url) {
+  const qrTarget = document.querySelector('.qr-target');
+  const qrStatus = document.getElementById('qr-status');
+  
+  // Add success visual feedback to QR target
+  if (qrTarget) {
+    qrTarget.classList.add('qr-detected');
+    setTimeout(() => {
+      qrTarget.classList.remove('qr-detected');
+    }, 2000);
+  }
+  
+  // Show detected URL in status display
+  if (qrStatus) {
+    qrStatus.textContent = `🎯 QR Detected: ${url}`;
+    qrStatus.classList.add('show', 'success');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+      qrStatus.classList.remove('show', 'success');
+    }, 3000);
+  }
+}
 
 function parsePieceIdFrom(raw) {
   const text = (raw || '').trim();
