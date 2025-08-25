@@ -58,9 +58,18 @@
     .top-bar { 
       background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 100%); 
       padding: calc(env(safe-area-inset-top) + 0.5rem) 1rem 0.75rem 1rem; 
-      text-align:center; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       backdrop-filter: blur(10px); 
       -webkit-backdrop-filter: blur(10px); 
+    }
+    .top-bar-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-top: 0.25rem;
     }
     .top-bar h1 { 
       font-size:1rem; 
@@ -73,6 +82,41 @@
       color:#2d8cff; 
       font-weight:600; 
       text-shadow:0 1px 2px rgba(0,0,0,0.5); 
+    }
+    .reset-btn {
+      background: rgba(255, 71, 87, 0.8);
+      border: 1px solid rgba(255, 71, 87, 0.6);
+      color: white;
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .reset-btn:hover {
+      background: rgba(255, 71, 87, 1);
+      transform: translateY(-1px);
+    }
+    .reset-btn:active {
+      transform: translateY(0);
+    }
+    
+    /* Responsive adjustments for reset button */
+    @media (max-width: 480px) {
+      .reset-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+      }
+      .top-bar-row {
+        gap: 0.5rem;
+      }
+      .pieces-count {
+        font-size: 0.75rem;
+      }
     }
 
     .qr-overlay { 
@@ -401,7 +445,10 @@
   <div class="ui-overlay">
     <div class="top-bar safe-area-top">
       <h1>🔍 QR Scavenger Hunt</h1>
-      <div class="pieces-count"><span id="pieces-count">0/7</span> pieces collected</div>
+      <div class="top-bar-row">
+        <div class="pieces-count"><span id="pieces-count">0/7</span> pieces collected</div>
+        <button id="reset-pieces-btn" class="reset-btn">🔄 Reset</button>
+      </div>
     </div>
     <div class="bottom-panel safe-area-bottom">
       <div class="clue-section"><div class="clue-text">Scan a QR code to begin your hunt!</div></div>

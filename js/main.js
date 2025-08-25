@@ -666,6 +666,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  
+  // Main reset button in top bar
+  const mainResetBtn = document.getElementById('reset-pieces-btn');
+  if (mainResetBtn) {
+    mainResetBtn.addEventListener('click', () => {
+      if (confirm('¿Estás seguro de que quieres resetear todo el progreso? Esto borrará todas las piezas encontradas.')) {
+        resetProgress();
+      }
+    });
+  }
 });
 
 // Eventos de estado de cámara
