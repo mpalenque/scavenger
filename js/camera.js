@@ -112,7 +112,7 @@ class QRCamera {
           console.log('🔄 QRCamera: Retrying in', this._retryDelay, 'ms');
           return setTimeout(() => this._attemptStart(), this._retryDelay);
         }
-        dispatchCustomEvent('qr-camera-error', { message: 'No se detectó cámara en el dispositivo.' });
+        dispatchCustomEvent('qr-camera-error', { message: 'No camera detected on device.' });
         this._pending = false;
         return;
       }
@@ -209,7 +209,7 @@ class QRCamera {
           this._onScan(decodedText);
         },
         (errorMessage) => {
-          // Error silencioso de escaneo, no es crítico
+          // Silent scan error, not critical
           // console.log('QR scan error (normal):', errorMessage);
         }
       );
@@ -255,7 +255,7 @@ class QRCamera {
       const permissionDenied = /NotAllowedError|Permission|denied/i.test(e.name || e.message || '');
       if (permissionDenied) {
         console.error('🚫 QRCamera: Permission denied');
-        dispatchCustomEvent('qr-camera-error', { message: 'Permisos de cámara denegados. Habilítalos y recarga la página.' });
+        dispatchCustomEvent('qr-camera-error', { message: 'Camera permissions denied. Please enable them and reload the page.' });
         this._pending = false;
         return;
       }
