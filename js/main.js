@@ -109,15 +109,36 @@ function buildPiecesNav() {
 }
 
 function setupProgressCircleListeners() {
-  // Use event delegation for better reliability
-  document.addEventListener('click', function(event) {
+  console.log('🎯 Setting up progress circle listeners...');
+  
+  // Use event delegation - the most reliable method
+  document.body.addEventListener('click', function(event) {
+    // Check if clicked element is a progress circle
     if (event.target.classList.contains('progress-circle')) {
-      console.log('🔵 Click detected on progress circle via delegation');
+      console.log('🔵 CLICK DETECTED on progress circle!', event.target);
       handleProgressCircleClick(event);
+      event.preventDefault();
+      event.stopPropagation();
     }
   });
   
-  console.log('🎯 Global click delegation setup for progress circles');
+  // Also try direct listeners as backup
+  const circles = document.querySelectorAll('.progress-circle');
+  console.log(`Found ${circles.length} circles for direct listeners`);
+  
+  circles.forEach((circle, index) => {
+    circle.addEventListener('click', function(e) {
+      console.log(`🔴 DIRECT CLICK on circle ${index + 1}!`);
+      handleProgressCircleClick(e);
+    });
+    
+    // Make sure it's definitely clickable
+    circle.style.pointerEvents = 'auto';
+    circle.style.cursor = 'pointer';
+    console.log(`✅ Direct listener added to circle ${index + 1}`);
+  });
+  
+  console.log('🎯 All progress circle listeners setup complete');
 }
 
 function initializeHintDisplay() {
@@ -133,13 +154,22 @@ function initializeHintDisplay() {
   hintTextEl.textContent = '👆 Click a progress circle above';
   hintDetailEl.textContent = 'Click on any circle to see the hint for that piece. Completed pieces show as ✅.';
   
-  // Also add event listeners here as backup
+  // Add a simple test to verify clicks work
   setTimeout(() => {
-    document.querySelectorAll('.progress-circle').forEach(circle => {
-      circle.addEventListener('click', handleProgressCircleClick);
-      console.log(`🔄 Backup listener added to circle ${circle.dataset.piece}`);
-    });
-  }, 100);
+    const testCircle = document.querySelector('.progress-circle');
+    if (testCircle) {
+      console.log('🧪 Testing click on first circle...');
+      testCircle.addEventListener('click', () => {
+        console.log('🎉 TEST CLICK WORKS!');
+      });
+      
+      // Force add pointer events
+      document.querySelectorAll('.progress-circle').forEach(c => {
+        c.style.pointerEvents = 'auto';
+        c.style.cursor = 'pointer';
+      });
+    }
+  }, 500);
 }
 
 function handleProgressCircleClick(event) {
@@ -151,6 +181,14 @@ function handleProgressCircleClick(event) {
   const obtained = !!state.obtained[pieceId];
   
   console.log(`Click on piece ${pieceIndex}, ID: ${pieceId}, obtained: ${obtained}`);
+  
+  // Remove selected class from all circles
+  document.querySelectorAll('.progress-circle').forEach(c => {
+    c.classList.remove('selected');
+  });
+  
+  // Add selected class to clicked circle
+  circle.classList.add('selected');
   
   // Find the piece data
   const piece = PIECES.find(p => p.id === pieceId);
@@ -168,6 +206,10 @@ function handleProgressCircleClick(event) {
     return;
   }
   
+  console.log('🎯 Updating hint display...');
+  
+  // No need to manage classes - text is always white now
+  
   if (obtained) {
     // Piece already found - show completion status
     hintTextEl.textContent = `✅ ${piece.name} Found!`;
@@ -184,10 +226,12 @@ function handleProgressCircleClick(event) {
     }
   }
   
+  console.log('✅ Hint display updated successfully');
+  
   // Add visual feedback to the clicked circle
   circle.style.transform = 'scale(0.9)';
   setTimeout(() => {
-    circle.style.transform = '';
+    circle.style.transform = circle.classList.contains('selected') ? 'scale(1.05)' : '';
   }, 150);
 }
 
@@ -204,16 +248,10 @@ function refreshPiecesNav() {
     const obtained = !!state.obtained[pieceId];
     circle.classList.toggle('completed', obtained);
     
-    // Remove old listeners and add new ones
-    const newCircle = circle.cloneNode(true);
-    circle.parentNode.replaceChild(newCircle, circle);
-    
-    // Add click listener
-    newCircle.addEventListener('click', handleProgressCircleClick);
-    console.log(`✅ Added listener to circle ${pieceIndex} (obtained: ${obtained})`);
+    console.log(`✅ Updated circle ${pieceIndex} (obtained: ${obtained})`);
   });
   
-  console.log(`📊 Progress circles updated with click handlers`);
+  console.log(`📊 Progress circles updated`);
 
   // Update the pieces status list UI
   renderPiecesStatus();
@@ -354,7 +392,21 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
     triviaFeedbackEl.textContent = 'Correct! Piece obtained.';
     sendGA('trivia_correct', { piece: currentTargetPiece });
     awardPiece(currentTargetPiece);
-    triviaCloseBtn.classList.remove('hidden');
+    
+    // Automáticamente continuar después de 1.5 segundos sin mostrar botón
+    setTimeout(() => {
+      console.log('🎯 Auto-closing trivia after correct answer and resuming camera');
+      triviaModal.classList.add('hidden');
+      // Resume camera after closing trivia
+      setTimeout(() => {
+        console.log('🎯 Attempting to resume camera after trivia auto-close');
+        qrCamera.resume().catch(e => {
+          console.error('❌ Camera resume failed:', e);
+          // Fallback: restart camera
+          setTimeout(() => qrCamera.start().catch(() => {}), 500);
+        });
+      }, 50);
+    }, 1500);
   } else {
     btn.classList.add('incorrect');
     triviaFeedbackEl.textContent = 'Incorrect answer. Try again.';
