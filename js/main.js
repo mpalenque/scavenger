@@ -95,6 +95,7 @@ const cameraStatusEl = document.getElementById('camera-status');
 const cameraSelect = document.getElementById('camera-select');
 const cameraStartBtn = document.getElementById('camera-start');
 const cameraRetryBtn = document.getElementById('camera-retry-btn');
+const resumeCameraBtn = document.getElementById('resume-camera-btn');
 
 let currentTargetPiece = null; // piece being attempted to obtain
 let __lastFlashAt = 0; // throttle flash effect
@@ -294,15 +295,33 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
 }
 
 triviaCloseBtn.addEventListener('click', () => {
+  console.log('🎯 Trivia close button clicked - hiding modal and resuming camera');
   triviaModal.classList.add('hidden');
   // Resume camera after closing trivia
-  setTimeout(() => qrCamera.resume().catch(() => {}), 50);
+  setTimeout(() => {
+    console.log('🎯 Attempting to resume camera after trivia close');
+    qrCamera.resume().catch(e => {
+      console.error('❌ Camera resume failed:', e);
+      // Fallback: restart camera
+      setTimeout(() => qrCamera.start().catch(() => {}), 500);
+    });
+  }, 50);
 });
 
 // Cierra trivia clic fuera
 triviaModal.addEventListener('click', (e) => {
   if (e.target === triviaModal) {
+    console.log('🎯 Trivia modal clicked outside - hiding and resuming camera');
     triviaModal.classList.add('hidden');
+    // Resume camera after closing trivia by clicking outside
+    setTimeout(() => {
+      console.log('🎯 Attempting to resume camera after modal close');
+      qrCamera.resume().catch(e => {
+        console.error('❌ Camera resume failed:', e);
+        // Fallback: restart camera
+        setTimeout(() => qrCamera.start().catch(() => {}), 500);
+      });
+    }, 50);
   }
 });
 
@@ -326,7 +345,14 @@ function awardPiece(pieceId) {
   checkCompletion();
   // Resume camera if game not yet completed
   if (!state.completed) {
-    setTimeout(() => qrCamera.resume().catch(() => {}), 100);
+    console.log('🎯 Game not completed - resuming camera after piece award');
+    setTimeout(() => {
+      qrCamera.resume().catch(e => {
+        console.error('❌ Camera resume failed after piece award:', e);
+        // Fallback: restart camera
+        setTimeout(() => qrCamera.start().catch(() => {}), 500);
+      });
+    }, 100);
   }
 }
 
@@ -465,6 +491,20 @@ function ensureVideoVisible() {
     container.style.visibility = 'visible';
     container.style.opacity = '1';
     container.style.background = '#000';
+  }
+  
+  // Check if scanner should be resumed after long pause
+  if (qrCamera && qrCamera._isPaused && qrCamera._lastPauseTime) {
+    const timeSincePause = Date.now() - qrCamera._lastPauseTime;
+    if (timeSincePause > 10000) { // 10 seconds
+      console.log('🔄 Auto-resuming scanner after long pause');
+      qrCamera.resume().catch(e => console.warn('Auto-resume failed:', e));
+    } else if (timeSincePause > 5000) { // 5 seconds
+      // Show resume button for manual control
+      if (resumeCameraBtn) {
+        resumeCameraBtn.style.display = 'block';
+      }
+    }
   }
 }
 
@@ -705,6 +745,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirm('Are you sure you want to reset all progress? This will clear all found pieces.')) {
         resetProgress();
       }
+    });
+  }
+  
+  // Resume camera button
+  if (resumeCameraBtn) {
+    resumeCameraBtn.addEventListener('click', () => {
+      console.log('🔄 Manual camera resume button clicked');
+      resumeCameraBtn.style.display = 'none';
+      qrCamera.resume().catch(e => {
+        console.error('❌ Manual camera resume failed:', e);
+        // Fallback: restart camera completely
+        qrCamera.start().catch(() => {});
+      });
     });
   }
 });

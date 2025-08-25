@@ -16,6 +16,9 @@ class QRCamera {
     this._retryDelay = 800; // ms
     this._pending = false;
     this._requestedDeviceId = null;
+    this._isPaused = false;
+    this._lastScanTime = 0;
+    this._lastPauseTime = 0;
   }
 
   async start(deviceId = null) {
@@ -323,68 +326,62 @@ class QRCamera {
   }
 
   _onScan(text) {
+    // Check if scanner is paused (ignore scans during pause)
+    if (this._isPaused) {
+      console.log('📷 QRCamera: Ignoring scan while paused');
+      return;
+    }
+    
+    // Check for rapid repeat scans
+    const now = Date.now();
+    if (this._lastScanTime && (now - this._lastScanTime) < 1000) {
+      console.log('📷 QRCamera: Ignoring rapid repeat scan');
+      return;
+    }
+    this._lastScanTime = now;
+    
     // Expected QR format: "piece_3"
+    console.log('🎯 QRCamera: Valid QR scan detected:', text);
     dispatchCustomEvent('qr-detected', { raw: text });
+    
     // Pause scanning temporarily to prevent multiple detections
-    // but keep camera video stream active
     this.pause();
   }
 
   pause() {
     // Temporarily stop QR detection but keep video stream active
-    if (this.html5Qrcode && this.isScanning) {
-      try {
-        this.html5Qrcode.pause(true); // Keep video stream
-        console.log('📷 QRCamera: Scanning paused (video stream active)');
-        
-        // Ensure video remains visible during pause
-        setTimeout(() => {
-          const videos = document.querySelectorAll('#qr-reader video');
-          videos.forEach(video => {
-            if (video) {
-              video.style.display = 'block';
-              video.style.visibility = 'visible';
-              video.style.opacity = '1';
-              if (video.paused) {
-                video.play().catch(e => console.warn('Video play failed:', e));
-              }
-            }
-          });
-        }, 50);
-      } catch (e) {
-        console.warn('QRCamera: Pause failed, video stream might stop:', e);
-      }
-    }
+    console.log('📷 QRCamera: Pausing scanner...');
+    this._isPaused = true;
+    this._lastPauseTime = Date.now();
   }
 
   async resume() {
-    // Resume scanning from paused state
-    if (this.html5Qrcode && !this.isScanning) {
-      try {
-        await this.html5Qrcode.resume();
-        console.log('🎯 QRCamera: Scanning resumed');
-        
-        // Ensure video visibility after resume
-        setTimeout(() => {
-          const videos = document.querySelectorAll('#qr-reader video');
-          videos.forEach(video => {
-            if (video) {
-              video.style.display = 'block';
-              video.style.visibility = 'visible';
-              video.style.opacity = '1';
-              if (video.paused) {
-                video.play().catch(e => console.warn('Video play failed after resume:', e));
-              }
-            }
-          });
-        }, 100);
-        return;
-      } catch (e) {
-        console.warn('QRCamera: Resume failed, restarting camera:', e);
-      }
+    // Resume scanning
+    console.log('🎯 QRCamera: Resuming scanner...');
+    this._isPaused = false;
+    
+    // If camera is not running, restart it
+    if (!this.isScanning) {
+      console.log('📱 QRCamera: Camera not running, restarting...');
+      return this.start(this._requestedDeviceId);
     }
-    // Fallback: restart camera with last device
-    return this.start(this._requestedDeviceId);
+    
+    // Ensure video visibility after resume
+    setTimeout(() => {
+      const videos = document.querySelectorAll('#qr-reader video');
+      videos.forEach(video => {
+        if (video) {
+          video.style.display = 'block';
+          video.style.visibility = 'visible';
+          video.style.opacity = '1';
+          if (video.paused) {
+            video.play().catch(e => console.warn('Video play failed after resume:', e));
+          }
+        }
+      });
+    }, 100);
+    
+    console.log('✅ QRCamera: Scanner resumed successfully');
   }
 
   _preventFlipping() {
