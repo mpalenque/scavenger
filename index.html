@@ -23,7 +23,7 @@
       inset:0 !important; 
       width:100% !important; 
       height:100% !important;
-      object-fit: cover !important; 
+      object-fit: contain !important; 
       transform:none !important; 
       -webkit-transform:none !important;
       backface-visibility:hidden !important; 
@@ -429,8 +429,8 @@
   <div class="camera-container">
     <div id="qr-reader">
       <div id="camera-status">
-        <div>📷 Camera Initializing...</div>
-        <small style="opacity:0.7; margin-top:8px;">Please allow camera access</small>
+        <div>📷 Inicializando Cámara...</div>
+        <small style="opacity:0.7; margin-top:8px;">Por favor permite el acceso a la cámara</small>
       </div>
     </div>
     <div class="qr-overlay" aria-hidden="true">
@@ -446,12 +446,12 @@
     <div class="top-bar safe-area-top">
       <h1>🔍 QR Scavenger Hunt</h1>
       <div class="top-bar-row">
-        <div class="pieces-count"><span id="pieces-count">0/7</span> pieces collected</div>
+        <div class="pieces-count"><span id="pieces-count">0/7</span> piezas recolectadas</div>
         <button id="reset-pieces-btn" class="reset-btn">🔄 Reset</button>
       </div>
     </div>
     <div class="bottom-panel safe-area-bottom">
-      <div class="clue-section"><div class="clue-text">Scan a QR code to begin your hunt!</div></div>
+      <div class="clue-section"><div class="clue-text">¡Escanea un código QR para comenzar tu búsqueda!</div></div>
       <div class="pieces-grid" id="pieces-status"></div>
     </div>
   </div>
@@ -475,20 +475,20 @@
 
   <div id="trivia-modal" class="modal-overlay hidden">
     <div class="modal-content">
-      <h2 id="trivia-title">🧠 Trivia Question</h2>
-      <p id="trivia-question" style="margin: 1rem 0; font-size: 1.1rem; line-height: 1.4;">Question will appear here</p>
+      <h2 id="trivia-title">🧠 Pregunta de Trivia</h2>
+      <p id="trivia-question" style="margin: 1rem 0; font-size: 1.1rem; line-height: 1.4;">La pregunta aparecerá aquí</p>
       <ul id="trivia-options" style="list-style: none; padding: 0; margin: 1rem 0;"></ul>
       <div id="trivia-feedback" style="margin: 1rem 0; font-weight: bold; text-align: center; min-height: 1.5rem;"></div>
-      <div style="text-align: center;"><button id="trivia-close" class="btn hidden">Continue</button></div>
+      <div style="text-align: center;"><button id="trivia-close" class="btn hidden">Continuar</button></div>
     </div>
   </div>
 
   <div id="final-form" class="modal-overlay hidden">
     <div class="modal-content">
-      <h2>🎉 Congratulations!</h2>
-      <p>You've collected all 7 pieces! Please enter your name to complete the hunt:</p>
-      <input type="text" id="player-name" placeholder="Your name" style="width: 100%; padding: 0.75rem; margin: 1rem 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
-      <div style="text-align: center;"><button id="submit-completion" class="btn">Complete Hunt!</button></div>
+      <h2>🎉 ¡Felicitaciones!</h2>
+      <p>¡Has recolectado las 7 piezas! Por favor ingresa tu nombre para completar la búsqueda:</p>
+      <input type="text" id="player-name" placeholder="Tu nombre" style="width: 100%; padding: 0.75rem; margin: 1rem 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+      <div style="text-align: center;"><button id="submit-completion" class="btn">¡Completar Búsqueda!</button></div>
     </div>
   </div>
 

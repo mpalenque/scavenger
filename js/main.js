@@ -146,7 +146,7 @@ function refreshPiecesNav() {
 }
 
 function updateClue(pieceId) {
-  const text = CLUES[pieceId] || 'Scan a QR code to begin.';
+  const text = CLUES[pieceId] || '¡Escanea un código QR para comenzar!';
   const clueTextEl = document.querySelector('.clue-text');
   if (clueTextEl) {
     clueTextEl.textContent = text;
@@ -277,13 +277,13 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
   buttons.forEach(b => b.disabled = true);
   if (selectedIdx === correctIdx) {
     btn.classList.add('correct');
-    triviaFeedbackEl.textContent = 'Correct! Piece obtained.';
+    triviaFeedbackEl.textContent = '¡Correcto! Pieza obtenida.';
     sendGA('trivia_correct', { piece: currentTargetPiece });
     awardPiece(currentTargetPiece);
     triviaCloseBtn.classList.remove('hidden');
   } else {
     btn.classList.add('incorrect');
-    triviaFeedbackEl.textContent = 'Incorrect answer. Try again.';
+    triviaFeedbackEl.textContent = 'Respuesta incorrecta. Inténtalo de nuevo.';
     sendGA('trivia_incorrect', { piece: currentTargetPiece });
     // Re-enable after brief delay
     setTimeout(() => {
@@ -417,7 +417,7 @@ function processPieceIdentifier(raw) {
     const clueTextEl = document.querySelector('.clue-text');
     const piece = PIECES.find(p => p.id === id);
     if (clueTextEl && piece) {
-      clueTextEl.textContent = `✅ You already have "${piece.name}" - This piece is already collected!`;
+      clueTextEl.textContent = `✅ Ya tienes "${piece.name}" - ¡Esta pieza ya fue recolectada!`;
     }
     highlightObtainedPiece(id);
     return;
@@ -532,7 +532,7 @@ function init() {
   if (typeof Html5Qrcode === 'undefined') {
     console.error('Html5Qrcode not loaded');
     const statusEl = document.getElementById('camera-status');
-    if (statusEl) statusEl.textContent = 'Error: Html5Qrcode not loaded';
+    if (statusEl) statusEl.textContent = 'Error: Biblioteca Html5Qrcode no cargada';
     return;
   }
   
@@ -546,7 +546,7 @@ function init() {
   
   console.log('App: Setting camera status...');
   const statusEl = document.getElementById('camera-status');
-  if (statusEl) statusEl.textContent = 'Requesting camera access...';
+  if (statusEl) statusEl.textContent = 'Solicitando acceso a la cámara...';
   
   console.log('App: Starting QR camera with delay for iPhone compatibility...');
   
@@ -587,7 +587,7 @@ function startCameraAggressively() {
   if (typeof Html5Qrcode === 'undefined') {
     console.error('❌ Html5Qrcode not available!');
     const statusEl = document.getElementById('camera-status');
-    if (statusEl) statusEl.textContent = 'Error: QR scanning library not loaded';
+    if (statusEl) statusEl.textContent = 'Error: Biblioteca de escaneo QR no cargada';
     window.__cameraStarting = false;
     return;
   }
@@ -600,8 +600,8 @@ function startCameraAggressively() {
     const statusEl = document.getElementById('camera-status');
     if (statusEl) {
       statusEl.innerHTML = `
-        <div>❌ Camera Error</div>
-        <small style="opacity:0.7; margin-top:8px;">Please allow camera access and refresh</small>
+        <div>❌ Error de Cámara</div>
+        <small style="opacity:0.7; margin-top:8px;">Por favor permite el acceso a la cámara y recarga</small>
       `;
     }
   }).finally(() => {
@@ -657,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resetBtn = document.getElementById('reset-progress-btn');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to reset all progress? This will clear all found pieces.')) {
+      if (confirm('¿Estás seguro de que quieres resetear todo el progreso? Esto borrará todas las piezas encontradas.')) {
         resetProgress();
       }
     });
@@ -711,7 +711,7 @@ window.addEventListener('qr-camera-started', () => {
   }, 1000);
 });
 window.addEventListener('qr-camera-stopped', () => {
-  cameraStatusEl && (cameraStatusEl.textContent = 'Camera stopped.');
+  cameraStatusEl && (cameraStatusEl.textContent = 'Cámara detenida.');
   // Restaurar UI normal si no se requiere low-power global
   const params = new URLSearchParams(location.search);
   if (params.get('low') !== '1') {
@@ -719,7 +719,7 @@ window.addEventListener('qr-camera-stopped', () => {
   }
 });
 window.addEventListener('qr-camera-error', (e) => {
-  const msg = e.detail?.message || 'Camera error.';
+  const msg = e.detail?.message || 'Error de cámara.';
   if (cameraStatusEl) cameraStatusEl.textContent = msg;
   const clueTextEl = document.querySelector('.clue-text');
   if (clueTextEl) {

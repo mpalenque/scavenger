@@ -112,7 +112,7 @@ class QRCamera {
           console.log('🔄 QRCamera: Retrying in', this._retryDelay, 'ms');
           return setTimeout(() => this._attemptStart(), this._retryDelay);
         }
-        dispatchCustomEvent('qr-camera-error', { message: 'No camera detected on device.' });
+        dispatchCustomEvent('qr-camera-error', { message: 'No se detectó cámara en el dispositivo.' });
         this._pending = false;
         return;
       }
@@ -173,14 +173,14 @@ class QRCamera {
         fps: isIOS ? 15 : 20,
         rememberLastUsedCamera: true,
         disableFlip: true, // Evitar issues de rotación en iOS
-        // Usar resolución muy conservadora en iOS
+        // Usar resoluciones más equilibradas para evitar deformación
         videoConstraints: isIOS ? {
-          width: { ideal: 480, max: 640 },
-          height: { ideal: 360, max: 480 },
+          width: { ideal: 640, max: 800 },
+          height: { ideal: 480, max: 600 },
           facingMode: 'environment'
         } : {
-          width: { ideal: 640, max: 1280 },
-          height: { ideal: 480, max: 720 },
+          width: { ideal: 720, max: 1280 },
+          height: { ideal: 540, max: 720 },
           facingMode: 'environment'
         },
         // Limitar el área de análisis para acelerar
@@ -255,7 +255,7 @@ class QRCamera {
       const permissionDenied = /NotAllowedError|Permission|denied/i.test(e.name || e.message || '');
       if (permissionDenied) {
         console.error('🚫 QRCamera: Permission denied');
-        dispatchCustomEvent('qr-camera-error', { message: 'Camera permission denied. Enable it and reload.' });
+        dispatchCustomEvent('qr-camera-error', { message: 'Permisos de cámara denegados. Habilítalos y recarga la página.' });
         this._pending = false;
         return;
       }
@@ -393,7 +393,7 @@ class QRCamera {
         video.style.opacity = '1';
         video.style.transform = 'none !important';
         video.style.webkitTransform = 'none !important';
-        video.style.objectFit = 'cover';
+        video.style.objectFit = 'contain';
         video.style.position = 'absolute';
         video.style.inset = '0';
         video.style.width = '100%';
