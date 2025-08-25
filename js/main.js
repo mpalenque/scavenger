@@ -41,6 +41,7 @@ function resetProgress() {
   
   // Update UI elements
   refreshPiecesNav();
+  renderPiecesStatus(); // Add this to update the pieces grid
   
   // Update clue to first piece
   updateClue(PIECES[0].id);
@@ -547,10 +548,10 @@ function init() {
   
   // Múltiples intentos de inicio de cámara, salvo que esté desactivada por flag
   if (!window.__disableCamera) {
-    // Add delay for iPhone compatibility
+    // Add longer delay for iPhone compatibility and stability
     setTimeout(() => {
       startCameraAggressively();
-    }, 500);
+    }, 1000);
   } else {
     console.warn('Camera disabled via ?nocam=1');
   }
@@ -563,10 +564,18 @@ function init() {
 function startCameraAggressively() {
   console.log('Starting camera aggressively...');
   
+  // Evitar múltiples inicializaciones
+  if (window.__cameraStarting) {
+    console.log('Camera already starting, skipping...');
+    return;
+  }
+  window.__cameraStarting = true;
+  
   // Verificar que el elemento existe
   const qrReaderEl = document.getElementById('qr-reader');
   if (!qrReaderEl) {
     console.error('❌ qr-reader element not found!');
+    window.__cameraStarting = false;
     return;
   }
   
@@ -575,6 +584,7 @@ function startCameraAggressively() {
     console.error('❌ Html5Qrcode not available!');
     const statusEl = document.getElementById('camera-status');
     if (statusEl) statusEl.textContent = 'Error: QR scanning library not loaded';
+    window.__cameraStarting = false;
     return;
   }
   
@@ -585,6 +595,8 @@ function startCameraAggressively() {
     console.warn('Camera start attempt 1 failed:', e);
     const statusEl = document.getElementById('camera-status');
     if (statusEl) statusEl.textContent = 'Camera access failed, retrying...';
+  }).finally(() => {
+    window.__cameraStarting = false;
   });
   
   // Intento 2: 1 segundo delay

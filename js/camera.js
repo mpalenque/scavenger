@@ -76,37 +76,18 @@ class QRCamera {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       
-      // Verificar permisos de cámara primero
-      try {
-        console.log('🔐 QRCamera: Checking camera permissions...');
-        
-        // Evitar abrir un stream extra en iOS (impacta performance y a veces falla)
-        if (!isIOS) {
-          const testStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-              facingMode: 'environment',
-              width: { ideal: 640 },
-              height: { ideal: 480 }
-            } 
-          });
-          // Parar el stream inmediatamente
-          testStream.getTracks().forEach(track => track.stop());
-          console.log('✅ Camera permission check passed');
-          // Esperar un poco antes de continuar
-          await new Promise(resolve => setTimeout(resolve, 60));
-        }
-        
-      } catch (permError) {
-        console.warn('⚠️ Camera permission error:', permError);
-        if (permError.name === 'NotAllowedError') {
-          throw new Error('Camera permission denied. Please allow camera access and refresh the page.');
-        }
-        // Continue anyway for other errors
-      }
+      // Skip permission check - it can cause conflicts and freezing
+      console.log('🔐 QRCamera: Skipping permission check to avoid conflicts...');
       
       if (!this.html5Qrcode) {
         console.log('🔧 QRCamera: Creating Html5Qrcode instance');
         this.html5Qrcode = new Html5Qrcode(this.elementId);
+        
+        // Add delay after creating instance for stability
+        if (isIOS) {
+          console.log('⏱️ QRCamera: Adding iOS stability delay...');
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
       }
       
       console.log('📷 QRCamera: Getting cameras...');
@@ -186,12 +167,11 @@ class QRCamera {
         : undefined;
 
       const config = { 
-        // Subir FPS de escaneo para vista previa más fluida
-        // Nota: mantener resolución baja + qrbox pequeño para contener CPU
-        fps: 30,
+        // Usar FPS más bajo para estabilidad en móviles
+        fps: isIOS ? 15 : 20,
         rememberLastUsedCamera: true,
         disableFlip: true, // Evitar issues de rotación en iOS
-        // Reducir resolución en iOS; usar 480p ideal
+        // Usar resolución muy conservadora en iOS
         videoConstraints: isIOS ? {
           width: { ideal: 480, max: 640 },
           height: { ideal: 360, max: 480 },
@@ -208,11 +188,11 @@ class QRCamera {
           return { width: size, height: size };
         },
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-  // Solo QR codes para reducir decoders activos (si está disponible)
-  ...(onlyQrFormat ? { formatsToSupport: onlyQrFormat } : {}),
+        // Solo QR codes para reducir decoders activos (si está disponible)
+        ...(onlyQrFormat ? { formatsToSupport: onlyQrFormat } : {}),
+        // Deshabilitar funciones experimentales para estabilidad
         experimentalFeatures: {
-          // Usar el detector nativo si está disponible (mucho más rápido en iOS 16+)
-          useBarCodeDetectorIfSupported: true
+          useBarCodeDetectorIfSupported: false
         }
       };
       
