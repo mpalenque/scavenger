@@ -23,7 +23,7 @@
       inset:0 !important; 
       width:100% !important; 
       height:100% !important;
-      object-fit: contain !important; 
+      object-fit: cover !important; 
       transform:none !important; 
       -webkit-transform:none !important;
       backface-visibility:hidden !important; 
@@ -149,34 +149,6 @@
       0% { opacity:0; transform:scale(1.1); filter:blur(1px);} 
       25% { opacity:1; transform:scale(1.0); filter:none;} 
       100% { opacity:0; transform:scale(1.0);} 
-    }
-
-    /* QR Detection Status Display */
-    .qr-status { 
-      position:absolute; 
-      bottom:2rem; 
-      left:50%; 
-      transform:translateX(-50%); 
-      background:rgba(0,0,0,0.9); 
-      padding:0.75rem 1.5rem; 
-      border-radius:25px; 
-      color:#fff; 
-      font-size:0.9rem; 
-      font-weight:600; 
-      backdrop-filter:blur(10px); 
-      -webkit-backdrop-filter:blur(10px); 
-      border:1px solid rgba(255,255,255,0.2); 
-      opacity:0; 
-      transition:all 0.3s ease; 
-      pointer-events:none; 
-      z-index:7; 
-      max-width:80vw; 
-      text-align:center; 
-    }
-    .qr-status.show { opacity:1; }
-    .qr-status.success { 
-      background:rgba(76,175,80,0.9); 
-      border-color:rgba(76,175,80,0.5); 
     }
 
     .bottom-panel { 
@@ -423,8 +395,6 @@
         <div class="qr-corner bottom-left"></div>
       </div>
       <div id="scan-flash" class="flash-overlay"></div>
-      <!-- QR Detection Status -->
-      <div id="qr-status" class="qr-status"></div>
     </div>
   </div>
 
@@ -479,8 +449,8 @@
   <script src="./html5-qrcode.min.js"></script>
   
   <script type="module" src="./js/data.js"></script>
-  <script type="module" src="./js/camera.js"></script>
   <script type="module" src="./js/perf.js"></script>
+  <script type="module" src="./js/camera.js"></script>
   <script type="module" src="./js/main.js"></script>
 </body>
 </html>

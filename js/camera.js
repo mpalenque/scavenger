@@ -400,17 +400,15 @@ class QRCamera {
         video.style.opacity = '1';
         video.style.transform = 'none !important';
         video.style.webkitTransform = 'none !important';
+        video.style.objectFit = 'cover';
+        video.style.position = 'absolute';
+        video.style.inset = '0';
+        video.style.width = '100%';
+        video.style.height = '100%';
         
         // Force video to play if paused
         if (video.paused) {
           video.play().catch(e => console.warn('Could not play video:', e));
-        }
-        
-        // Set optimal size for performance
-        if (video.videoWidth > 0 && video.videoHeight > 0) {
-          const containerWidth = Math.min(window.innerWidth, 400);
-          video.style.width = containerWidth + 'px';
-          video.style.height = 'auto';
         }
       }
     });

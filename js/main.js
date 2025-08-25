@@ -438,7 +438,7 @@ window.addEventListener('qr-detected', (e) => {
 // Show QR detection feedback with URL
 function showQRDetectionFeedback(url) {
   const qrTarget = document.querySelector('.qr-target');
-  const qrStatus = document.getElementById('qr-status');
+  // const qrStatus = document.getElementById('qr-status'); // Removed for now
   
   // Add success visual feedback to QR target
   if (qrTarget) {
@@ -448,7 +448,8 @@ function showQRDetectionFeedback(url) {
     }, 2000);
   }
   
-  // Show detected URL in status display
+  // Show detected URL in status display - commented out for now
+  /*
   if (qrStatus) {
     qrStatus.textContent = `🎯 QR Detected: ${url}`;
     qrStatus.classList.add('show', 'success');
@@ -458,6 +459,7 @@ function showQRDetectionFeedback(url) {
       qrStatus.classList.remove('show', 'success');
     }, 3000);
   }
+  */
 }
 
 function parsePieceIdFrom(raw) {
@@ -541,11 +543,14 @@ function init() {
   const statusEl = document.getElementById('camera-status');
   if (statusEl) statusEl.textContent = 'Requesting camera access...';
   
-  console.log('App: Starting QR camera immediately...');
+  console.log('App: Starting QR camera with delay for iPhone compatibility...');
   
   // Múltiples intentos de inicio de cámara, salvo que esté desactivada por flag
   if (!window.__disableCamera) {
-    startCameraAggressively();
+    // Add delay for iPhone compatibility
+    setTimeout(() => {
+      startCameraAggressively();
+    }, 500);
   } else {
     console.warn('Camera disabled via ?nocam=1');
   }
