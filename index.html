@@ -170,9 +170,16 @@
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
-      background: url('./assets/qr-scanner-frame.svg') center/contain no-repeat;
+      background: url('./assets/c_scan_QR_code.svg') center/contain no-repeat;
       pointer-events: none;
       z-index: 10;
+      transition: all 0.3s ease;
+    }
+    
+    /* QR detection success state - change to green SVG */
+    .qr-target.qr-detected {
+      background-image: url('./assets/c_scan_QR_code_green.svg');
+      transform: translate(-50%, -50%) scale(1.05);
     }
     
     /* Remove old corner styles - not needed with SVG */

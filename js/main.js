@@ -601,9 +601,9 @@ window.addEventListener('qr-detected', (e) => {
   // Show QR detection success feedback
   showQRDetectionFeedback(raw);
   
-  // Show raw detected text and flash effect
+  // Show raw detected text and trigger frame color change
   updateDetectedText(raw);
-  triggerScanFlash(); // Disabled to prevent black screen
+  triggerQRFrameColorChange(); // Change frame color instead of flash
   processPieceIdentifier(raw);
   
   // Ensure video stays visible after detection
@@ -706,18 +706,22 @@ function updateDetectedText(raw) {
   }
 }
 
-function triggerScanFlash() {
-  // Flash effect disabled to prevent black screen issues
-  // const flashEl = document.getElementById('scan-flash');
-  // if (!flashEl) return;
-  // const now = Date.now();
-  // if (now - __lastFlashAt < 800) return; // throttle
-  // __lastFlashAt = now;
-  // flashEl.classList.remove('flash-animate');
-  // // retrigger animation
-  // void flashEl.offsetWidth;
-  // flashEl.classList.add('flash-animate');
-  // setTimeout(() => flashEl.classList.remove('flash-animate'), 700);
+function triggerQRFrameColorChange() {
+  // Change QR frame color when QR is detected
+  const qrTarget = document.querySelector('.qr-target');
+  if (!qrTarget) return;
+  
+  const now = Date.now();
+  if (now - __lastFlashAt < 800) return; // throttle
+  __lastFlashAt = now;
+  
+  // Add the detected class to change color
+  qrTarget.classList.add('qr-detected');
+  
+  // Remove the class after animation
+  setTimeout(() => {
+    qrTarget.classList.remove('qr-detected');
+  }, 1000);
 }
 
 // Process URL parameter ?piece=piece_1
