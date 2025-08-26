@@ -566,6 +566,12 @@ function processPieceIdentifier(raw) {
     if (clueTextEl) {
       clueTextEl.textContent = 'Invalid QR code.';
     }
+    // Ensure camera resumes on invalid QR
+    setTimeout(() => {
+      if (!state.completed && qrCamera && !qrCamera.isScanning) {
+        qrCamera.resume().catch(e => console.warn('Resume failed after invalid QR:', e));
+      }
+    }, 1000);
     return;
   }
   if (state.obtained[id]) {
@@ -576,6 +582,12 @@ function processPieceIdentifier(raw) {
       clueTextEl.textContent = `✅ You already have "${piece.name}" - This piece is already collected!`;
     }
     highlightObtainedPiece(id);
+    // Ensure camera resumes on already obtained piece
+    setTimeout(() => {
+      if (!state.completed && qrCamera && !qrCamera.isScanning) {
+        qrCamera.resume().catch(e => console.warn('Resume failed after already obtained:', e));
+      }
+    }, 2000);
     return;
   }
   // Launch trivia for the piece
@@ -713,7 +725,32 @@ function checkURLParam() {
   const params = new URLSearchParams(window.location.search);
   const pieceParam = params.get('piece');
   if (pieceParam) {
-    processPieceIdentifier(pieceParam);
+    console.log('🔗 URL param detected:', pieceParam);
+    
+    // Ensure camera is available before processing piece
+    // This prevents issues when accessing piece URLs directly
+    if (!window.__disableCamera && !qrCamera.isScanning) {
+      console.log('⏳ Camera not ready, waiting for initialization...');
+      
+      // Wait for camera to be ready, with a timeout
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total
+      const checkInterval = setInterval(() => {
+        attempts++;
+        if (qrCamera.isScanning) {
+          console.log('✅ Camera ready, processing URL piece');
+          clearInterval(checkInterval);
+          processPieceIdentifier(pieceParam);
+        } else if (attempts >= maxAttempts) {
+          console.warn('⚠️ Camera not ready after timeout, processing anyway');
+          clearInterval(checkInterval);
+          processPieceIdentifier(pieceParam);
+        }
+      }, 500);
+    } else {
+      // Camera disabled or already scanning, process immediately
+      processPieceIdentifier(pieceParam);
+    }
   }
 }
 
@@ -757,12 +794,16 @@ function init() {
       // Add longer delay for iPhone compatibility and stability
       setTimeout(() => {
         startCameraAggressively();
+        // Process URL parameter AFTER camera starts to ensure camera is available
+        setTimeout(() => {
+          checkURLParam();
+        }, 500); // Additional delay to ensure camera is fully initialized
       }, 1500);
     } else {
       console.warn('Camera disabled via ?nocam=1');
+      // Even if camera is disabled, check URL params
+      checkURLParam();
     }
-    
-    checkURLParam();
     console.log('App: Initialization complete');
     
     // Start periodic video visibility check
