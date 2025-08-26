@@ -36,6 +36,11 @@ function resetProgress() {
   state.completed = false;
   state.lastUpdated = Date.now();
   
+  // Reset piece manager
+  if (window.pieceManager) {
+    window.pieceManager.reset();
+  }
+  
   // Save the reset state
   saveState();
   
@@ -391,22 +396,17 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
     btn.classList.add('correct');
     triviaFeedbackEl.textContent = 'Correct! Piece obtained.';
     sendGA('trivia_correct', { piece: currentTargetPiece });
-    awardPiece(currentTargetPiece);
     
-    // Automáticamente continuar después de 1.5 segundos sin mostrar botón
+    // Cerrar trivia inmediatamente y mostrar pantalla de colección
     setTimeout(() => {
-      console.log('🎯 Auto-closing trivia after correct answer and resuming camera');
+      console.log('🎯 Auto-closing trivia after correct answer');
       triviaModal.classList.add('hidden');
-      // Resume camera after closing trivia
+      
+      // Mostrar pantalla de colección de piezas
       setTimeout(() => {
-        console.log('🎯 Attempting to resume camera after trivia auto-close');
-        qrCamera.resume().catch(e => {
-          console.error('❌ Camera resume failed:', e);
-          // Fallback: restart camera
-          setTimeout(() => qrCamera.start().catch(() => {}), 500);
-        });
-      }, 50);
-    }, 1500);
+        showPieceCollectionScreen(currentTargetPiece);
+      }, 100);
+    }, 1000); // Breve pausa para mostrar feedback
   } else {
     btn.classList.add('incorrect');
     triviaFeedbackEl.textContent = 'Incorrect answer. Try again.';
@@ -461,6 +461,12 @@ function awardPiece(pieceId) {
   state.obtained[pieceId] = true;
   saveState();
   
+  // Desbloquear pieza en el sistema de gestión
+  const pieceNumber = parseInt(pieceId.replace('piece_', ''));
+  if (window.pieceManager) {
+    window.pieceManager.unlockPiece(pieceNumber);
+  }
+  
   // Update all UI elements
   refreshPiecesNav();
   updateNextClue();
@@ -469,8 +475,6 @@ function awardPiece(pieceId) {
   if (window.updateHintText) {
     window.updateHintText();
   }
-  
-  // No 3D reveal - removed
   
   checkCompletion();
   // Resume camera if game not yet completed
@@ -485,6 +489,32 @@ function awardPiece(pieceId) {
     }, 100);
   }
 }
+
+// Función para mostrar la pantalla de colección de piezas
+function showPieceCollectionScreen(pieceId) {
+  console.log('🎯 Showing piece collection screen for:', pieceId);
+  
+  // Primero otorgar la pieza
+  awardPiece(pieceId);
+  
+  // Luego mostrar la animación de colección
+  const pieceNumber = parseInt(pieceId.replace('piece_', ''));
+  if (window.pieceCollectionScreen) {
+    window.pieceCollectionScreen.showPieceCollection(pieceNumber);
+  }
+}
+
+// Función global para mostrar la cámara (llamada desde pieces.js)
+window.showCameraView = function() {
+  console.log('🎯 Returning to camera view');
+  setTimeout(() => {
+    qrCamera.resume().catch(e => {
+      console.error('❌ Camera resume failed:', e);
+      // Fallback: restart camera
+      setTimeout(() => qrCamera.start().catch(() => {}), 500);
+    });
+  }, 100);
+};
 
 function checkCompletion() {
   const allObtained = PIECES.every(p => state.obtained[p.id]);
