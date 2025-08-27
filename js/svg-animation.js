@@ -7,6 +7,7 @@ export class SVGAnimationSystem {
     this.svgContainer = null;
     this.svgElement = null;
     this.isAnimating = false;
+    this.shouldShowFinalForm = false;
     
     // Mapping from piece IDs to SVG regions (coordinates extracted from actual locked layers)
     this.pieceRegions = {
@@ -62,7 +63,7 @@ export class SVGAnimationSystem {
   }
 
   createSVGContainer() {
-    // Create a full-screen overlay for the SVG animation
+    // Create a full-screen overlay for the SVG animation with framed interface
     this.svgContainer = document.createElement('div');
     this.svgContainer.id = 'svg-animation-container';
     this.svgContainer.style.cssText = `
@@ -71,13 +72,113 @@ export class SVGAnimationSystem {
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.9);
+      background: #16252E;
       z-index: 1000;
       display: none;
       opacity: 0;
       transition: opacity 0.5s ease-in-out;
       overflow: hidden;
+      padding: 20px;
+      box-sizing: border-box;
     `;
+    
+    // Create the success banner
+    const successBanner = document.createElement('div');
+    successBanner.className = 'svg-success-banner';
+    successBanner.style.cssText = `
+      background: linear-gradient(135deg, #FF8A50, #FF6B2C);
+      border-radius: 40px;
+      padding: 16px 32px;
+      text-align: center;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      max-width: 340px;
+      margin-left: auto;
+      margin-right: auto;
+    `;
+    successBanner.textContent = 'You got another piece!';
+    
+    // Create the SVG frame container
+    const svgFrame = document.createElement('div');
+    svgFrame.className = 'svg-frame';
+    svgFrame.style.cssText = `
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      min-height: 300px;
+      position: relative;
+      overflow: hidden;
+    `;
+    
+    // Create info button
+    const infoButton = document.createElement('div');
+    infoButton.className = 'svg-info-button';
+    infoButton.style.cssText = `
+      background: #35D3D3;
+      border-radius: 40px;
+      padding: 16px 32px;
+      text-align: center;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      max-width: 340px;
+      margin-left: auto;
+      margin-right: auto;
+      cursor: pointer;
+    `;
+    infoButton.textContent = 'Info on the room and device';
+    
+    // Create back button
+    const backButton = document.createElement('button');
+    backButton.className = 'svg-back-button';
+    backButton.style.cssText = `
+      background: transparent;
+      border: 2px solid #FF8A50;
+      border-radius: 40px;
+      padding: 16px 32px;
+      color: #FF8A50;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      max-width: 250px;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+      transition: all 0.3s ease;
+    `;
+    backButton.textContent = 'Back to Main Menu';
+    
+    // Add hover effect to back button
+    backButton.addEventListener('mouseenter', () => {
+      backButton.style.background = '#FF8A50';
+      backButton.style.color = 'white';
+    });
+    backButton.addEventListener('mouseleave', () => {
+      backButton.style.background = 'transparent';
+      backButton.style.color = '#FF8A50';
+    });
+    
+    // Add click handler to back button
+    backButton.addEventListener('click', () => {
+      this.hideSVGAnimation();
+    });
+    
+    this.svgContainer.appendChild(successBanner);
+    this.svgContainer.appendChild(svgFrame);
+    this.svgContainer.appendChild(infoButton);
+    this.svgContainer.appendChild(backButton);
+    
+    // Store references
+    this.svgFrame = svgFrame;
+    this.backButton = backButton;
     
     document.body.appendChild(this.svgContainer);
   }
@@ -107,8 +208,8 @@ export class SVGAnimationSystem {
           transform-origin: 0 0;
           transition: transform 1.5s ease-in-out;
         `;
-  // Ensure aspect ratio is preserved and content is centered
-  this.svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        // Ensure aspect ratio is preserved and content is centered
+        this.svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         
         // Set viewBox if not present
         if (!this.svgElement.getAttribute('viewBox')) {
@@ -118,11 +219,12 @@ export class SVGAnimationSystem {
         }
       }
       
-  this.svgContainer.appendChild(svgWrapper);
+      // Add SVG to the frame container instead of the main container
+      this.svgFrame.appendChild(svgWrapper);
       console.log('🎨 SVG loaded successfully');
 
-  // Apply unlocked state for any already-solved pieces from storage
-  this.applyUnlockedStateFromStorage();
+      // Apply unlocked state for any already-solved pieces from storage
+      this.applyUnlockedStateFromStorage();
     } catch (error) {
       console.error('❌ Failed to load SVG:', error);
     }
@@ -154,7 +256,7 @@ export class SVGAnimationSystem {
 
   // Reset any previous transformations and prepare a subtle fade-in
   this.svgElement.style.transformOrigin = '0 0';
-  this.svgElement.style.transition = 'opacity 220ms ease, filter 220ms ease, transform 1.5s cubic-bezier(0.22, 1, 0.36, 1)';
+  this.svgElement.style.transition = 'opacity 300ms ease-out, filter 300ms ease-out, transform 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
   this.svgElement.style.opacity = '0';
   this.svgElement.style.filter = 'blur(0.6px)';
   // Add a tiny randomized intro offset so the zoom motion varies each time
@@ -165,11 +267,11 @@ export class SVGAnimationSystem {
   this.svgElement.style.opacity = '1';
   this.svgElement.style.filter = 'none';
   // allow the fade-in to complete before zoom
-  await this.wait(260);
+  await this.wait(320);
       await this.wait(300);
 
-      // Calculate zoom transformation
-      const containerRect = this.svgContainer.getBoundingClientRect();
+      // Calculate zoom transformation using the frame container
+      const frameRect = this.svgFrame.getBoundingClientRect();
       const svgRect = this.svgElement.getBoundingClientRect();
       
       // Get SVG viewBox dimensions (original coordinates)
@@ -181,76 +283,51 @@ export class SVGAnimationSystem {
         svgHeight = parseFloat(vb[3]);
       }
       
-  // Map viewBox -> viewport (pre-transform) using preserveAspectRatio='xMidYMid meet'
-  // Baseline content scale (before our zoom): same for X/Y
-  const baselineScale = Math.min(svgRect.width / svgWidth, svgRect.height / svgHeight);
-  // Offsets due to centering inside the SVG viewport
-  const offsetX0 = (svgRect.width - svgWidth * baselineScale) / 2;
-  const offsetY0 = (svgRect.height - svgHeight * baselineScale) / 2;
+      // Map viewBox -> viewport (pre-transform) using preserveAspectRatio='xMidYMid meet'
+      // Baseline content scale (before our zoom): same for X/Y
+      const baselineScale = Math.min(svgRect.width / svgWidth, svgRect.height / svgHeight);
+      // Offsets due to centering inside the SVG viewport
+      const offsetX0 = (svgRect.width - svgWidth * baselineScale) / 2;
+      const offsetY0 = (svgRect.height - svgHeight * baselineScale) / 2;
 
-  // Region size in pixels under baseline mapping
-  const regionWidthPx = region.zoomTarget.width * baselineScale;
-  const regionHeightPx = region.zoomTarget.height * baselineScale;
+      // Region size in pixels under baseline mapping
+      const regionWidthPx = region.zoomTarget.width * baselineScale;
+      const regionHeightPx = region.zoomTarget.height * baselineScale;
 
-  // Our zoom factor so the region fits within the container
-  const scaleX = containerRect.width / regionWidthPx;
-  const scaleY = containerRect.height / regionHeightPx;
-  // Slight random margin so it doesn't feel identical each time
-  const marginJitter = 0.8 + (Math.random() * 0.06 - 0.03); // 0.77..0.83
-  const scale = Math.min(scaleX, scaleY) * Math.max(0.75, Math.min(0.85, marginJitter));
+      // Our zoom factor so the region fits within the frame container
+      const scaleX = frameRect.width / regionWidthPx;
+      const scaleY = frameRect.height / regionHeightPx;
+      // Slight random margin so it doesn't feel identical each time
+      const marginJitter = 0.8 + (Math.random() * 0.06 - 0.03); // 0.77..0.83
+      const scale = Math.min(scaleX, scaleY) * Math.max(0.75, Math.min(0.85, marginJitter));
 
-  // Region center in pixels under baseline mapping (including centering offsets)
-  const regionCenterPxX = offsetX0 + (region.zoomTarget.x + region.zoomTarget.width / 2) * baselineScale;
-  const regionCenterPxY = offsetY0 + (region.zoomTarget.y + region.zoomTarget.height / 2) * baselineScale;
+      // Region center in pixels under baseline mapping (including centering offsets)
+      const regionCenterPxX = offsetX0 + (region.zoomTarget.x + region.zoomTarget.width / 2) * baselineScale;
+      const regionCenterPxY = offsetY0 + (region.zoomTarget.y + region.zoomTarget.height / 2) * baselineScale;
 
-  // Translate so the scaled region center lands in the container center
-  const translateX = (containerRect.width / 2) - (regionCenterPxX * scale);
-  const translateY = (containerRect.height / 2) - (regionCenterPxY * scale);
+      // Translate so the scaled region center lands in the frame center
+      const translateX = (frameRect.width / 2) - (regionCenterPxX * scale);
+      const translateY = (frameRect.height / 2) - (regionCenterPxY * scale);
 
       // Apply zoom transformation
   this.svgElement.style.transformOrigin = '0 0';
   // Use scale first then translate to align with computed math
   this.svgElement.style.transform = `scale(${scale}) translate(${translateX/scale}px, ${translateY/scale}px)`;
       
-      // Wait for zoom animation
-      await this.wait(1500);
+      // Wait for zoom animation to complete
+      await this.wait(2200);
 
       // Reveal the piece (fade out locked layer)
       await this.revealPiece(region);
 
-      // Show revealed state for a moment
-      await this.wait(2000);
-
-      // Zoom back out
-  this.svgElement.style.transformOrigin = '0 0';
-  this.svgElement.style.transform = 'scale(1) translate(0px, 0px)';
-      await this.wait(1500);
-
-      // Show full view for a moment
-      await this.wait(1000);
-
-      // Fade out
-      this.svgContainer.style.opacity = '0';
-      await this.wait(500);
-      
-      // Hide container
-      this.svgContainer.style.display = 'none';
-
-      console.log(`🎨 SVG animation completed for ${pieceId}`);
+      // Keep the SVG open - user must click "Back to Main Menu" to close
+      console.log(`🎨 SVG animation completed for ${pieceId} - staying open for user interaction`);
       
       // Check if game is completed and show final form
       if (this.isGameCompleted()) {
-        console.log('🎯 Game completed! Opening final form after SVG animation');
-        // Import and call openFinalForm from main.js
-        if (window.openFinalForm) {
-          setTimeout(() => window.openFinalForm(), 300);
-        } else {
-          // Fallback: directly unhide #final-form modal
-          const ff = document.getElementById('final-form');
-          if (ff) {
-            ff.classList.remove('hidden');
-          }
-        }
+        console.log('🎯 Game completed! Final form will show when user closes SVG view');
+        // Store that we should show final form when SVG closes
+        this.shouldShowFinalForm = true;
       }
       
     } catch (error) {
@@ -562,6 +639,44 @@ export class SVGAnimationSystem {
         console.log(`  Group ${index + 1}: ${group.tagName}#${group.id || 'no-id'}.${group.className || 'no-class'}`);
       }
     });
+  }
+
+  hideSVGAnimation() {
+    if (this.svgContainer) {
+      // Reset SVG transform with smoother transition
+      if (this.svgElement) {
+        this.svgElement.style.transformOrigin = '0 0';
+        this.svgElement.style.transition = 'transform 2.0s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        this.svgElement.style.transform = 'scale(1) translate(0px, 0px)';
+      }
+      
+      // Wait for zoom out to complete, then fade out
+      setTimeout(() => {
+        this.svgContainer.style.transition = 'opacity 0.6s ease-out';
+        this.svgContainer.style.opacity = '0';
+        
+        // Hide after fade completes
+        setTimeout(() => {
+          this.svgContainer.style.display = 'none';
+          this.isAnimating = false;
+          
+          // Show final form if game was completed
+          if (this.shouldShowFinalForm) {
+            console.log('🎯 Game completed! Opening final form after SVG closed');
+            this.shouldShowFinalForm = false;
+            if (window.openFinalForm) {
+              setTimeout(() => window.openFinalForm(), 300);
+            } else {
+              // Fallback: directly unhide #final-form modal
+              const ff = document.getElementById('final-form');
+              if (ff) {
+                ff.classList.remove('hidden');
+              }
+            }
+          }
+        }, 600);
+      }, 2000);
+    }
   }
 }
 

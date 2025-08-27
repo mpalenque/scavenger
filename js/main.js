@@ -391,15 +391,19 @@ function openTriviaForPiece(pieceId) {
 
 function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
   const buttons = triviaOptionsEl.querySelectorAll('button');
-  buttons.forEach(b => b.disabled = true);
+  // Immediately disable ALL buttons to prevent rapid clicking
+  buttons.forEach(b => {
+    b.disabled = true;
+    b.style.pointerEvents = 'none';
+    b.style.opacity = '0.6';
+  });
+  
   if (selectedIdx === correctIdx) {
     btn.classList.add('correct');
     triviaFeedbackEl.textContent = 'Correct! Piece obtained.';
     sendGA('trivia_correct', { piece: currentTargetPiece });
-  // Subtle green flash on correct answer
-  triggerGreenFlash();
-    
-    // Award piece first
+    // Subtle green flash on correct answer
+    triggerGreenFlash();    // Award piece first
     awardPiece(currentTargetPiece);
     
     // Show SVG animation before continuing
@@ -430,8 +434,12 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
     sendGA('trivia_incorrect', { piece: currentTargetPiece });
     // Re-enable after brief delay
     setTimeout(() => {
-      buttons.forEach(b => b.disabled = false);
-      btn.classList.remove('incorrect');
+      buttons.forEach(b => {
+        b.disabled = false;
+        b.style.pointerEvents = 'auto';
+        b.style.opacity = '1';
+        b.classList.remove('incorrect');
+      });
     }, 1200);
   }
 }
