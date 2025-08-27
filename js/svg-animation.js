@@ -152,9 +152,20 @@ export class SVGAnimationSystem {
       // Wait for fade in to complete
       await this.wait(500);
 
-  // Reset any previous transformations
+  // Reset any previous transformations and prepare a subtle fade-in
   this.svgElement.style.transformOrigin = '0 0';
-  this.svgElement.style.transform = 'scale(1) translate(0px, 0px)';
+  this.svgElement.style.transition = 'opacity 220ms ease, filter 220ms ease, transform 1.5s cubic-bezier(0.22, 1, 0.36, 1)';
+  this.svgElement.style.opacity = '0';
+  this.svgElement.style.filter = 'blur(0.6px)';
+  // Add a tiny randomized intro offset so the zoom motion varies each time
+  const introOffsetX = (Math.random() * 24 - 12); // -12..12 px
+  const introOffsetY = (Math.random() * 24 - 12); // -12..12 px
+  this.svgElement.style.transform = `scale(1) translate(${introOffsetX}px, ${introOffsetY}px)`;
+  await this.wait(10);
+  this.svgElement.style.opacity = '1';
+  this.svgElement.style.filter = 'none';
+  // allow the fade-in to complete before zoom
+  await this.wait(260);
       await this.wait(300);
 
       // Calculate zoom transformation
@@ -184,7 +195,9 @@ export class SVGAnimationSystem {
   // Our zoom factor so the region fits within the container
   const scaleX = containerRect.width / regionWidthPx;
   const scaleY = containerRect.height / regionHeightPx;
-  const scale = Math.min(scaleX, scaleY) * 0.8; // margin factor
+  // Slight random margin so it doesn't feel identical each time
+  const marginJitter = 0.8 + (Math.random() * 0.06 - 0.03); // 0.77..0.83
+  const scale = Math.min(scaleX, scaleY) * Math.max(0.75, Math.min(0.85, marginJitter));
 
   // Region center in pixels under baseline mapping (including centering offsets)
   const regionCenterPxX = offsetX0 + (region.zoomTarget.x + region.zoomTarget.width / 2) * baselineScale;
@@ -282,8 +295,7 @@ export class SVGAnimationSystem {
       if (lockedElement) {
         console.log(`🎨 Hiding locked layer: ${region.lockedLayer}`);
         // Enhanced fade-out: slight scale-up + blur + fade
-        this.ensureEffectsCSS();
-        lockedElement.style.willChange = 'transform, opacity, filter';
+  lockedElement.style.willChange = 'transform, opacity, filter';
         lockedElement.style.transition = 'opacity 900ms ease, transform 900ms ease, filter 900ms ease';
         lockedElement.style.transformBox = 'fill-box';
         lockedElement.style.transformOrigin = '50% 50%';
@@ -293,8 +305,6 @@ export class SVGAnimationSystem {
           lockedElement.style.transform = 'scale(1.08) rotate(0.3deg)';
           lockedElement.style.opacity = '0';
         });
-        // Add a ripple effect at the region center
-        this.spawnRipple(region);
         // Hide after transition
         setTimeout(() => {
           if (lockedElement) {
@@ -334,7 +344,6 @@ export class SVGAnimationSystem {
               console.log(`🎨 Found locked elements with fallback selector: ${selector} (${elements.length} elements)`);
               elements.forEach((el, index) => {
                 console.log(`🎨 Hiding element ${index + 1}: ID="${el.id || 'no-id'}", Class="${el.className || 'no-class'}"`);
-                this.ensureEffectsCSS();
                 el.style.willChange = 'transform, opacity, filter';
                 el.style.transition = 'opacity 900ms ease, transform 900ms ease, filter 900ms ease';
                 el.style.transformBox = 'fill-box';
@@ -344,7 +353,6 @@ export class SVGAnimationSystem {
                   el.style.transform = 'scale(1.08) rotate(0.3deg)';
                   el.style.opacity = '0';
                 });
-                this.spawnRipple(region);
                 setTimeout(() => {
                   if (el) {
                     el.style.display = 'none';
@@ -460,47 +468,6 @@ export class SVGAnimationSystem {
     });
   }
 
-  ensureEffectsCSS() {
-    if (document.getElementById('svg-animation-effects')) return;
-    const style = document.createElement('style');
-    style.id = 'svg-animation-effects';
-    style.textContent = `
-      @keyframes svgRipple {
-        0% { opacity: 0.9; transform: scale(0.6); stroke-width: 6px; }
-        70% { opacity: 0.4; transform: scale(1.3); stroke-width: 3px; }
-        100% { opacity: 0; transform: scale(1.8); stroke-width: 1px; }
-      }
-      .svg-ripple {
-        fill: none;
-        stroke: #35D3D3;
-        filter: drop-shadow(0 0 6px rgba(53,211,211,0.7));
-        transform-origin: 50% 50%;
-        transform-box: fill-box;
-        animation: svgRipple 900ms ease-out forwards;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  spawnRipple(region) {
-    if (!this.svgElement) return;
-    try {
-      const svgNS = 'http://www.w3.org/2000/svg';
-      const circle = document.createElementNS(svgNS, 'circle');
-      // Use viewBox units for positioning
-      const cx = region.zoomTarget.x + region.zoomTarget.width / 2;
-      const cy = region.zoomTarget.y + region.zoomTarget.height / 2;
-      const r = Math.max(region.zoomTarget.width, region.zoomTarget.height) / 6;
-      circle.setAttribute('cx', String(cx));
-      circle.setAttribute('cy', String(cy));
-      circle.setAttribute('r', String(r));
-      circle.setAttribute('class', 'svg-ripple');
-      this.svgElement.appendChild(circle);
-      setTimeout(() => {
-        if (circle && circle.parentNode) circle.parentNode.removeChild(circle);
-      }, 1000);
-    } catch {}
-  }
 
   isGameCompleted() {
     const state = this.getStateFromStorage();
