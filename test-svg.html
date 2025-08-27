@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG Animation Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #1a1a1a;
+      color: white;
+    }
+    
+    .test-button {
+      background: #35d3d3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .test-button:hover {
+      background: #2ab8b8;
+    }
+    
+    h1 {
+      color: #35d3d3;
+    }
+    
+    .info {
+      background: rgba(53, 211, 211, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #35d3d3;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎨 SVG Animation Test</h1>
+  
+  <div class="info">
+    <p><strong>Instructions:</strong></p>
+    <p>Click any of the buttons below to test the SVG zoom animation for each piece.</p>
+    <p>Each animation will show a zoom into a different area of the hospital layout, 
+       reveal the unlocked area, and then zoom back out.</p>
+  </div>
+
+  <h2>Test Animation for Each Piece:</h2>
+  
+  <button class="test-button" onclick="testPiece('piece_1')">Test Piece 1 - Operating Recovery</button>
+  <button class="test-button" onclick="testPiece('piece_2')">Test Piece 2 - ICU</button>
+  <button class="test-button" onclick="testPiece('piece_3')">Test Piece 3 - Med Surgical</button>
+  <button class="test-button" onclick="testPiece('piece_4')">Test Piece 4 - Behavioral</button>
+  <button class="test-button" onclick="testPiece('piece_5')">Test Piece 5 - Pediatrics</button>
+  <button class="test-button" onclick="testPiece('piece_6')">Test Piece 6 - Unit 6</button>
+  <button class="test-button" onclick="testPiece('piece_7')">Test Piece 7 - Emergency</button>
+  
+  <br><br>
+  
+  <button class="test-button" onclick="initSystem()">Initialize SVG System</button>
+  <button class="test-button" onclick="goBack()">Back to Main App</button>
+
+  <script type="module">
+    import { svgAnimationSystem } from './js/svg-animation.js';
+    
+    // Make available globally
+    window.svgAnimationSystem = svgAnimationSystem;
+    
+    // Auto-initialize
+    svgAnimationSystem.init().then(() => {
+      console.log('✅ SVG Animation System initialized');
+    }).catch(e => {
+      console.error('❌ Failed to initialize SVG Animation System:', e);
+    });
+  </script>
+  
+  <script>
+    function testPiece(pieceId) {
+      if (window.svgAnimationSystem) {
+        console.log(`🎨 Testing animation for ${pieceId}`);
+        window.svgAnimationSystem.showSVGAnimation(pieceId);
+      } else {
+        alert('SVG Animation System not initialized. Please wait or click "Initialize SVG System".');
+      }
+    }
+    
+    function initSystem() {
+      if (window.svgAnimationSystem) {
+        window.svgAnimationSystem.init().then(() => {
+          alert('✅ SVG Animation System initialized successfully!');
+        }).catch(e => {
+          alert('❌ Failed to initialize: ' + e.message);
+        });
+      } else {
+        alert('SVG Animation System not loaded.');
+      }
+    }
+    
+    function goBack() {
+      window.location.href = './index.html';
+    }
+  </script>
+</body>
+</html>

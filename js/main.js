@@ -3,6 +3,7 @@
 
 import { PIECES, CLUES, TRIVIA, STORAGE_KEY, getInitialState } from './data.js';
 import { qrCamera } from './camera.js';
+import { svgAnimationSystem } from './svg-animation.js';
 
 // --- Utilidades ---
 export function dispatchCustomEvent(name, detail) {
@@ -42,6 +43,9 @@ function resetProgress() {
   // Update UI elements
   refreshPiecesNav();
   renderPiecesStatus(); // Add this to update the pieces grid
+  
+  // Update test buttons state
+  updateTestButtonsState();
   
   // Update clue to first piece
   updateClue(PIECES[0].id);
@@ -391,21 +395,31 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
     btn.classList.add('correct');
     triviaFeedbackEl.textContent = 'Correct! Piece obtained.';
     sendGA('trivia_correct', { piece: currentTargetPiece });
+    
+    // Award piece first
     awardPiece(currentTargetPiece);
     
-    // Automáticamente continuar después de 1.5 segundos sin mostrar botón
-    setTimeout(() => {
-      console.log('🎯 Auto-closing trivia after correct answer and resuming camera');
+    // Show SVG animation before continuing
+    setTimeout(async () => {
+      console.log('🎯 Auto-closing trivia after correct answer');
       triviaModal.classList.add('hidden');
-      // Resume camera after closing trivia
-      setTimeout(() => {
-        console.log('🎯 Attempting to resume camera after trivia auto-close');
-        qrCamera.resume().catch(e => {
-          console.error('❌ Camera resume failed:', e);
-          // Fallback: restart camera
-          setTimeout(() => qrCamera.start().catch(() => {}), 500);
-        });
-      }, 50);
+      
+      // Show SVG animation
+      console.log(`🎨 Starting SVG animation for piece ${currentTargetPiece}`);
+      await svgAnimationSystem.showSVGAnimation(currentTargetPiece);
+      
+      // After animation, resume camera or show final form
+      if (!state.completed) {
+        console.log('🎯 Resuming camera after SVG animation');
+        setTimeout(() => {
+          qrCamera.resume().catch(e => {
+            console.error('❌ Camera resume failed:', e);
+            // Fallback: restart camera
+            setTimeout(() => qrCamera.start().catch(() => {}), 500);
+          });
+        }, 50);
+      }
+      // If completed, the final form will be shown by checkCompletion()
     }, 1500);
   } else {
     btn.classList.add('incorrect');
@@ -473,17 +487,9 @@ function awardPiece(pieceId) {
   // No 3D reveal - removed
   
   checkCompletion();
-  // Resume camera if game not yet completed
-  if (!state.completed) {
-    console.log('🎯 Game not completed - resuming camera after piece award');
-    setTimeout(() => {
-      qrCamera.resume().catch(e => {
-        console.error('❌ Camera resume failed after piece award:', e);
-        // Fallback: restart camera
-        setTimeout(() => qrCamera.start().catch(() => {}), 500);
-      });
-    }, 100);
-  }
+  
+  // Don't resume camera here - SVG animation will handle it
+  // or checkCompletion will show final form if all pieces collected
 }
 
 function checkCompletion() {
@@ -492,8 +498,10 @@ function checkCompletion() {
     state.completed = true;
     saveState();
     sendGA('puzzle_completed', {});
-    // No 3D animation - go straight to final form
-    openFinalForm();
+    
+    // Delay final form opening to allow SVG animation to complete
+    // The SVG animation system will handle showing the final form
+    console.log('🎯 All pieces collected! Final form will show after SVG animation');
   }
 }
 
@@ -504,6 +512,12 @@ function openFinalForm() {
     finalFormEl.classList.remove('hidden');
   }
 }
+
+// Make openFinalForm available globally for SVG animation system
+window.openFinalForm = openFinalForm;
+
+// Make SVG animation system available globally for testing
+window.svgAnimationSystem = svgAnimationSystem;
 
 // Add event listener for final form submission
 document.addEventListener('DOMContentLoaded', () => {
@@ -783,6 +797,13 @@ function init() {
     refreshPiecesNav(); // Update UI with current state
     initializeHintDisplay(); // Initialize hint area
     setupProgressCircleListeners(); // Add global listeners
+    
+    // Initialize SVG animation system
+    console.log('🎨 Initializing SVG animation system...');
+    svgAnimationSystem.init().catch(e => {
+      console.error('❌ Failed to initialize SVG animation system:', e);
+    });
+    
     // No 3D sync - removed
     checkCompletion();
     updateNextClue();
@@ -1052,5 +1073,73 @@ window.addEventListener('qr-camera-devices', (e) => {
 
 // Exponer para debugging opcional
 window.__qrPuzzleState = state;
+
+// Test buttons functionality for QR simulation
+function setupTestButtons() {
+  const testButtons = document.querySelectorAll('.test-btn[data-test-piece]');
+  
+  testButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pieceNumber = btn.getAttribute('data-test-piece');
+      const pieceId = `piece_${pieceNumber}`;
+      
+      // Visual feedback
+      btn.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        btn.style.transform = '';
+      }, 150);
+      
+      // Simulate QR detection with the piece ID
+      const simulatedQRData = pieceId;
+      
+      // Show QR detection success feedback
+      showQRDetectionFeedback(simulatedQRData);
+      
+      // Show raw detected text and trigger frame color change
+      updateDetectedText(simulatedQRData);
+      triggerQRFrameColorChange();
+      
+      // Process the piece as if it was scanned
+      processPieceIdentifier(simulatedQRData);
+      
+      // Update test button visual state if piece was successfully obtained
+      setTimeout(() => {
+        if (state.obtained[pieceId]) {
+          btn.classList.add('completed');
+        }
+      }, 500);
+      
+      // Log for debugging
+      console.log(`🧪 Test button clicked: Simulating QR detection for ${pieceId}`);
+    });
+  });
+}
+
+// Update test buttons visual state based on current progress
+function updateTestButtonsState() {
+  const testButtons = document.querySelectorAll('.test-btn[data-test-piece]');
+  
+  testButtons.forEach(btn => {
+    const pieceNumber = btn.getAttribute('data-test-piece');
+    const pieceId = `piece_${pieceNumber}`;
+    
+    if (state.obtained[pieceId]) {
+      btn.classList.add('completed');
+    } else {
+      btn.classList.remove('completed');
+    }
+  });
+}
+
+// Initialize test buttons when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  setupTestButtons();
+  updateTestButtonsState();
+});
+
+// Update test buttons when state changes
+window.addEventListener('piece-obtained', () => {
+  updateTestButtonsState();
+});
 
 // No 3D debug - removed

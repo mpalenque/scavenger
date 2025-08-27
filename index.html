@@ -537,6 +537,77 @@
       font-weight: 600;
       font-family: 'Poppins', sans-serif;
     }
+
+    /* Test buttons for QR simulation */
+    .test-buttons-container {
+      position: fixed;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 212, 212, 0.3);
+    }
+
+    .test-btn {
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 212, 212, 0.8);
+      border: 2px solid rgba(0, 212, 212, 0.6);
+      border-radius: 8px;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+    }
+
+    .test-btn:hover {
+      background: rgba(0, 212, 212, 1);
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(0, 212, 212, 0.5);
+    }
+
+    .test-btn:active {
+      transform: scale(0.95);
+    }
+
+    .test-btn.completed {
+      background: rgba(76, 175, 80, 0.8);
+      border-color: rgba(76, 175, 80, 0.6);
+    }
+
+    .test-btn.completed:hover {
+      background: rgba(76, 175, 80, 1);
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    }
+
+    /* Hide test buttons on small screens to avoid overlap */
+    @media (max-width: 480px) {
+      .test-buttons-container {
+        left: 5px;
+        gap: 6px;
+        padding: 8px;
+      }
+      
+      .test-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 11px;
+      }
+    }
   </style>
   
   <script>
@@ -603,6 +674,17 @@
       <button class="progress-circle" data-piece="6" data-piece-id="piece_6">?</button>
       <button class="progress-circle" data-piece="7" data-piece-id="piece_7">?</button>
     </div>
+  </div>
+
+  <!-- Test buttons for QR simulation -->
+  <div class="test-buttons-container">
+    <button class="test-btn" data-test-piece="1" title="Test QR 1">Q1</button>
+    <button class="test-btn" data-test-piece="2" title="Test QR 2">Q2</button>
+    <button class="test-btn" data-test-piece="3" title="Test QR 3">Q3</button>
+    <button class="test-btn" data-test-piece="4" title="Test QR 4">Q4</button>
+    <button class="test-btn" data-test-piece="5" title="Test QR 5">Q5</button>
+    <button class="test-btn" data-test-piece="6" title="Test QR 6">Q6</button>
+    <button class="test-btn" data-test-piece="7" title="Test QR 7">Q7</button>
   </div>
 
   <div class="ui-overlay">
