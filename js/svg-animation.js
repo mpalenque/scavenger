@@ -107,6 +107,8 @@ export class SVGAnimationSystem {
           transform-origin: 0 0;
           transition: transform 1.5s ease-in-out;
         `;
+  // Ensure aspect ratio is preserved and content is centered
+  this.svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         
         // Set viewBox if not present
         if (!this.svgElement.getAttribute('viewBox')) {
@@ -168,24 +170,27 @@ export class SVGAnimationSystem {
         svgHeight = parseFloat(vb[3]);
       }
       
-  // Convert region dimensions from viewBox units to on-screen pixels (pre-transform)
-  const svgScaleX = svgRect.width / svgWidth;
-  const svgScaleY = svgRect.height / svgHeight;
+  // Map viewBox -> viewport (pre-transform) using preserveAspectRatio='xMidYMid meet'
+  // Baseline content scale (before our zoom): same for X/Y
+  const baselineScale = Math.min(svgRect.width / svgWidth, svgRect.height / svgHeight);
+  // Offsets due to centering inside the SVG viewport
+  const offsetX0 = (svgRect.width - svgWidth * baselineScale) / 2;
+  const offsetY0 = (svgRect.height - svgHeight * baselineScale) / 2;
 
-  const regionWidthPx = region.zoomTarget.width * svgScaleX;
-  const regionHeightPx = region.zoomTarget.height * svgScaleY;
+  // Region size in pixels under baseline mapping
+  const regionWidthPx = region.zoomTarget.width * baselineScale;
+  const regionHeightPx = region.zoomTarget.height * baselineScale;
 
-  // Calculate scale so the region fits within the container
+  // Our zoom factor so the region fits within the container
   const scaleX = containerRect.width / regionWidthPx;
   const scaleY = containerRect.height / regionHeightPx;
   const scale = Math.min(scaleX, scaleY) * 0.8; // margin factor
 
-  // Calculate translation to center the (scaled) region
-  const regionCenterPxX = (region.zoomTarget.x + region.zoomTarget.width / 2) * svgScaleX;
-  const regionCenterPxY = (region.zoomTarget.y + region.zoomTarget.height / 2) * svgScaleY;
+  // Region center in pixels under baseline mapping (including centering offsets)
+  const regionCenterPxX = offsetX0 + (region.zoomTarget.x + region.zoomTarget.width / 2) * baselineScale;
+  const regionCenterPxY = offsetY0 + (region.zoomTarget.y + region.zoomTarget.height / 2) * baselineScale;
 
-  // Because transform: translate(...) scale(...) applies scale first, then translate,
-  // we translate by the container center minus the SCALED region center.
+  // Translate so the scaled region center lands in the container center
   const translateX = (containerRect.width / 2) - (regionCenterPxX * scale);
   const translateY = (containerRect.height / 2) - (regionCenterPxY * scale);
 

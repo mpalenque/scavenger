@@ -103,6 +103,7 @@ const resumeCameraBtn = document.getElementById('resume-camera-btn');
 
 let currentTargetPiece = null; // piece being attempted to obtain
 let __lastFlashAt = 0; // throttle flash effect
+let __lastGreenFlashAt = 0; // throttle green screen flash
 
 // --- Construcción de UI inicial ---
 function buildPiecesNav() {
@@ -395,6 +396,8 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
     btn.classList.add('correct');
     triviaFeedbackEl.textContent = 'Correct! Piece obtained.';
     sendGA('trivia_correct', { piece: currentTargetPiece });
+  // Subtle green flash on correct answer
+  triggerGreenFlash();
     
     // Award piece first
     awardPiece(currentTargetPiece);
@@ -614,6 +617,8 @@ window.addEventListener('qr-detected', (e) => {
   
   // Show QR detection success feedback
   showQRDetectionFeedback(raw);
+  // Subtle full-screen green flash on QR detection
+  triggerGreenFlash();
   
   // Show raw detected text and trigger frame color change
   updateDetectedText(raw);
@@ -736,6 +741,33 @@ function triggerQRFrameColorChange() {
   setTimeout(() => {
     qrTarget.classList.remove('qr-detected');
   }, 1000);
+}
+
+// Subtle full-screen green flash
+function triggerGreenFlash() {
+  const flashEl = document.getElementById('scan-flash');
+  if (!flashEl) return;
+
+  const now = Date.now();
+  if (now - __lastGreenFlashAt < 300) return; // light throttle
+  __lastGreenFlashAt = now;
+
+  // Prepare overlay
+  flashEl.style.display = 'block';
+  // Use brand teal-green or success green
+  flashEl.style.background = 'rgba(76, 175, 80, 0.28)'; // #4CAF50 @ ~28%
+  flashEl.classList.remove('flash-animate');
+
+  // Force reflow to restart animation
+  // eslint-disable-next-line no-unused-expressions
+  void flashEl.offsetWidth;
+
+  flashEl.classList.add('flash-animate');
+  setTimeout(() => {
+    flashEl.classList.remove('flash-animate');
+    flashEl.style.background = 'transparent';
+    flashEl.style.display = 'none';
+  }, 650);
 }
 
 // Process URL parameter ?piece=piece_1

@@ -215,15 +215,14 @@
       background: transparent; 
       opacity:0; 
       pointer-events:none; 
-      z-index:6; 
-      transform: scale(1.05);
-      display: none; /* Hide flash overlay to prevent black screen */
+      z-index:20; 
+      display: none;
     }
-    .flash-animate { animation: flashPulse 600ms ease-out; }
+    .flash-animate { animation: flashPulse 380ms ease-out; }
     @keyframes flashPulse { 
-      0% { opacity:0; transform:scale(1.1); filter:blur(1px);} 
-      25% { opacity:1; transform:scale(1.0); filter:none;} 
-      100% { opacity:0; transform:scale(1.0);} 
+      0% { opacity:0; } 
+      15% { opacity:0.9; } 
+      100% { opacity:0; } 
     }
 
     .bottom-panel { 
