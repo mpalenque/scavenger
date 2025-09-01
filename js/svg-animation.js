@@ -80,10 +80,6 @@ export class SVGAnimationSystem {
       overflow: auto;
       padding: 10px;
       box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
     `;
     
     // Create the success banner
@@ -101,6 +97,8 @@ export class SVGAnimationSystem {
       max-width: 300px;
       width: auto;
       flex-shrink: 0;
+      margin-left: auto;
+      margin-right: auto;
     `;
     successBanner.textContent = 'You got another piece!';
     
@@ -142,6 +140,8 @@ export class SVGAnimationSystem {
       width: auto;
       cursor: pointer;
       flex-shrink: 0;
+      margin-left: auto;
+      margin-right: auto;
     `;
     infoButton.textContent = 'Info on the room and device';
     
@@ -161,6 +161,9 @@ export class SVGAnimationSystem {
       width: auto;
       transition: all 0.3s ease;
       flex-shrink: 0;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
     `;
     backButton.textContent = 'Back to Main Menu';
     
@@ -254,8 +257,11 @@ export class SVGAnimationSystem {
     console.log(`🎨 Starting SVG animation for ${pieceId}`);
 
     try {
-      // Show the container with fade in
-      this.svgContainer.style.display = 'block';
+      // Show the container with fade in and flex layout
+      this.svgContainer.style.display = 'flex';
+      this.svgContainer.style.flexDirection = 'column';
+      this.svgContainer.style.justifyContent = 'center';
+      this.svgContainer.style.alignItems = 'center';
       await this.wait(50);
       this.svgContainer.style.opacity = '1';
       
