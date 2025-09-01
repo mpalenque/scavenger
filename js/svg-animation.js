@@ -1,6 +1,7 @@
 // svg-animation.js
 // SVG zoom animation system for trivia completion
 import { STORAGE_KEY } from './data.js';
+import { qrCamera } from './camera.js';
 
 export class SVGAnimationSystem {
   constructor() {
@@ -87,14 +88,14 @@ export class SVGAnimationSystem {
     successBanner.className = 'svg-success-banner';
     successBanner.style.cssText = `
       background: linear-gradient(135deg, #FF8A50, #FF6B2C);
-      border-radius: 40px;
-      padding: 12px 24px;
+      border-radius: 30px;
+      padding: 8px 16px;
       text-align: center;
       color: white;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
-      margin-bottom: 15px;
-      max-width: 300px;
+      margin-bottom: 10px;
+      max-width: 280px;
       width: auto;
       flex-shrink: 0;
       margin-left: auto;
@@ -109,11 +110,11 @@ export class SVGAnimationSystem {
       background: white;
       border-radius: 16px;
       padding: 8px;
-      margin-bottom: 20px;
-      max-width: 90vw;
+      margin-bottom: 10px;
+      max-width: 85vw;
       width: 100%;
-      max-height: 70vh;
-      height: 60vh;
+      max-height: 55vh;
+      height: 50vh;
       margin-left: auto;
       margin-right: auto;
       box-shadow: 0 4px 20px rgba(0,0,0,0.2);
@@ -129,14 +130,14 @@ export class SVGAnimationSystem {
     infoButton.className = 'svg-info-button';
     infoButton.style.cssText = `
       background: #35D3D3;
-      border-radius: 40px;
-      padding: 12px 24px;
+      border-radius: 30px;
+      padding: 8px 16px;
       text-align: center;
       color: white;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
-      margin-bottom: 15px;
-      max-width: 300px;
+      margin-bottom: 8px;
+      max-width: 250px;
       width: auto;
       cursor: pointer;
       flex-shrink: 0;
@@ -151,13 +152,13 @@ export class SVGAnimationSystem {
     backButton.style.cssText = `
       background: transparent;
       border: 2px solid #FF8A50;
-      border-radius: 40px;
-      padding: 12px 24px;
+      border-radius: 30px;
+      padding: 8px 16px;
       color: #FF8A50;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      max-width: 220px;
+      max-width: 200px;
       width: auto;
       transition: all 0.3s ease;
       flex-shrink: 0;
@@ -673,6 +674,20 @@ export class SVGAnimationSystem {
         setTimeout(() => {
           this.svgContainer.style.display = 'none';
           this.isAnimating = false;
+          
+          // Resume camera when SVG closes (if game not completed)
+          if (!this.shouldShowFinalForm) {
+            console.log('🎯 Resuming camera after SVG closed');
+            if (qrCamera && qrCamera.resume) {
+              setTimeout(() => {
+                qrCamera.resume().catch(e => {
+                  console.error('❌ Camera resume failed:', e);
+                  // Fallback: restart camera
+                  setTimeout(() => qrCamera.start().catch(() => {}), 500);
+                });
+              }, 100);
+            }
+          }
           
           // Show final form if game was completed
           if (this.shouldShowFinalForm) {

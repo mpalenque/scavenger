@@ -403,31 +403,22 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
     triviaFeedbackEl.textContent = 'Correct! Piece obtained.';
     sendGA('trivia_correct', { piece: currentTargetPiece });
     // Subtle green flash on correct answer
-    triggerGreenFlash();    // Award piece first
+    triggerGreenFlash();
+    
+    // Award piece first
     awardPiece(currentTargetPiece);
     
-    // Show SVG animation before continuing
+    // Immediately transition to SVG animation (no delay)
     setTimeout(async () => {
-      console.log('🎯 Auto-closing trivia after correct answer');
+      console.log('🎯 Auto-closing trivia after correct answer - direct to SVG');
       triviaModal.classList.add('hidden');
       
-      // Show SVG animation
-      console.log(`🎨 Starting SVG animation for piece ${currentTargetPiece}`);
+      // Show SVG animation immediately
+      console.log(`🎨 Starting immediate SVG animation for piece ${currentTargetPiece}`);
       await svgAnimationSystem.showSVGAnimation(currentTargetPiece);
       
-      // After animation, resume camera or show final form
-      if (!state.completed) {
-        console.log('🎯 Resuming camera after SVG animation');
-        setTimeout(() => {
-          qrCamera.resume().catch(e => {
-            console.error('❌ Camera resume failed:', e);
-            // Fallback: restart camera
-            setTimeout(() => qrCamera.start().catch(() => {}), 500);
-          });
-        }, 50);
-      }
-      // If completed, the final form will be shown by checkCompletion()
-    }, 1500);
+      // Camera handling is now done by the SVG system when user closes it
+    }, 500); // Reduced from 1500 to 500ms for faster transition
   } else {
     btn.classList.add('incorrect');
     triviaFeedbackEl.textContent = 'Incorrect answer. Try again.';
@@ -600,6 +591,8 @@ function processPieceIdentifier(raw) {
     return;
   }
   if (state.obtained[id]) {
+    // Show special effect for already detected QR
+    showAlreadyDetectedFeedback(valid);
     updateClue('already_obtained');
     const clueTextEl = document.querySelector('.clue-text');
     const piece = PIECES.find(p => p.id === id);
@@ -615,6 +608,10 @@ function processPieceIdentifier(raw) {
     }, 2000);
     return;
   }
+  
+  // Show new QR detection success effect
+  showNewQRDetectedFeedback(valid);
+  
   // Launch trivia for the piece
   openTriviaForPiece(id);
 }
@@ -687,21 +684,58 @@ function showQRDetectionFeedback(url) {
     qrTarget.classList.add('qr-detected');
     setTimeout(() => {
       qrTarget.classList.remove('qr-detected');
+  }, 2000);
+}
+
+// New QR detection feedback for first-time detection
+function showNewQRDetectedFeedback(piece) {
+  // Trigger intense green pulse effect
+  triggerGreenFlash();
+  
+  // Show QR frame in success color
+  const qrTarget = document.querySelector('.qr-target');
+  if (qrTarget) {
+    qrTarget.style.border = '4px solid #00FF88';
+    qrTarget.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.6)';
+    setTimeout(() => {
+      qrTarget.style.border = '';
+      qrTarget.style.boxShadow = '';
+    }, 3000);
+  }
+  
+  // Show piece name in detection area
+  const clueTextEl = document.querySelector('.clue-text');
+  if (clueTextEl && piece) {
+    clueTextEl.textContent = `🎯 New QR Detected: "${piece.name}"!`;
+    clueTextEl.style.color = '#00FF88';
+    setTimeout(() => {
+      clueTextEl.style.color = '';
+    }, 3000);
+  }
+}
+
+// Feedback for already detected QRs
+function showAlreadyDetectedFeedback(piece) {
+  // Show QR frame in "already detected" color (orange)
+  const qrTarget = document.querySelector('.qr-target');
+  if (qrTarget) {
+    qrTarget.style.border = '4px solid #FF8A50';
+    qrTarget.style.boxShadow = '0 0 15px rgba(255, 138, 80, 0.5)';
+    setTimeout(() => {
+      qrTarget.style.border = '';
+      qrTarget.style.boxShadow = '';
     }, 2000);
   }
   
-  // Show detected URL in status display - commented out for now
-  /*
-  if (qrStatus) {
-    qrStatus.textContent = `🎯 QR Detected: ${url}`;
-    qrStatus.classList.add('show', 'success');
-    
-    // Hide after 3 seconds
+  // Show feedback text
+  const clueTextEl = document.querySelector('.clue-text');
+  if (clueTextEl && piece) {
+    clueTextEl.textContent = `🔶 Already detected: "${piece.name}" (Collected)`;
+    clueTextEl.style.color = '#FF8A50';
     setTimeout(() => {
-      qrStatus.classList.remove('show', 'success');
-    }, 3000);
+      clueTextEl.style.color = '';
+    }, 2000);
   }
-  */
 }
 
 function parsePieceIdFrom(raw) {
