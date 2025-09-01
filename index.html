@@ -101,6 +101,69 @@
       100% { border-color: #FF8A50; box-shadow: 0 0 25px rgba(255, 138, 80, 0.6); }
     }
 
+    /* Quiz Answer Feedback Animations */
+    .quiz-correct-feedback {
+      animation: quizCorrectPulse 1.2s ease-out;
+    }
+    
+    .quiz-incorrect-feedback {
+      animation: quizIncorrectPulse 1.2s ease-out;
+    }
+    
+    @keyframes quizCorrectPulse {
+      0% { 
+        background: rgba(76, 175, 80, 0);
+        border-color: rgba(76, 175, 80, 0);
+      }
+      25% { 
+        background: rgba(76, 175, 80, 0.15);
+        border-color: rgba(76, 175, 80, 0.8);
+        box-shadow: 0 0 30px rgba(76, 175, 80, 0.4);
+      }
+      50% { 
+        background: rgba(76, 175, 80, 0.2);
+        border-color: rgba(76, 175, 80, 1);
+        box-shadow: 0 0 40px rgba(76, 175, 80, 0.6);
+      }
+      75% { 
+        background: rgba(76, 175, 80, 0.1);
+        border-color: rgba(76, 175, 80, 0.6);
+        box-shadow: 0 0 25px rgba(76, 175, 80, 0.3);
+      }
+      100% { 
+        background: rgba(76, 175, 80, 0);
+        border-color: rgba(76, 175, 80, 0);
+        box-shadow: none;
+      }
+    }
+    
+    @keyframes quizIncorrectPulse {
+      0% { 
+        background: rgba(244, 67, 54, 0);
+        border-color: rgba(244, 67, 54, 0);
+      }
+      25% { 
+        background: rgba(244, 67, 54, 0.15);
+        border-color: rgba(244, 67, 54, 0.8);
+        box-shadow: 0 0 30px rgba(244, 67, 54, 0.4);
+      }
+      50% { 
+        background: rgba(244, 67, 54, 0.2);
+        border-color: rgba(244, 67, 54, 1);
+        box-shadow: 0 0 40px rgba(244, 67, 54, 0.6);
+      }
+      75% { 
+        background: rgba(244, 67, 54, 0.1);
+        border-color: rgba(244, 67, 54, 0.6);
+        box-shadow: 0 0 25px rgba(244, 67, 54, 0.3);
+      }
+      100% { 
+        background: rgba(244, 67, 54, 0);
+        border-color: rgba(244, 67, 54, 0);
+        box-shadow: none;
+      }
+    }
+
     .ui-overlay { 
       position:fixed; 
       inset:0; 
@@ -367,7 +430,7 @@
       bottom: 20px; /* Posicionado absolutamente en la parte inferior */
       left: 50%;
       transform: translateX(-50%);
-      width: 350px; /* Ancho fijo más amplio para mantener altura consistente */
+      width: 350px; /* Vuelto al tamaño original centrado */
       min-height: 80px;
       box-shadow: 0 4px 12px rgba(255, 107, 44, 0.3);
       transition: all 0.3s ease;
@@ -376,6 +439,39 @@
       justify-content: center;
       align-items: center;
       z-index: 14;
+    }
+    
+    /* Hospital Rooms button - Pequeño y a la derecha del área de progreso */
+    .hospital-rooms-btn {
+      background: linear-gradient(135deg, #35D3D3, #20B2B2);
+      border: 2px solid #20B2B2;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 25px;
+      text-align: center;
+      position: absolute;
+      bottom: 20px;
+      right: 20px; /* A la derecha */
+      width: 120px; /* Mucho más pequeño */
+      min-height: 40px; /* Más bajo */
+      box-shadow: 0 4px 12px rgba(53, 211, 211, 0.3);
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 14;
+      cursor: pointer;
+      font-size: 0.8rem; /* Texto más pequeño */
+      font-weight: 600;
+    }
+    
+    .hospital-rooms-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(53, 211, 211, 0.4);
+    }
+    
+    .hospital-rooms-btn:active {
+      transform: translateY(0px);
     }
     
     #hint-text {
@@ -691,9 +787,6 @@
         <!-- Frame is now handled by CSS background -->
       </div>
       
-      <!-- Scan Instruction -->
-      <div class="scan-instruction">SCAN QR CODE</div>
-      
       <div id="scan-flash" class="flash-overlay"></div>
     </div>
     
@@ -728,10 +821,15 @@
       </div>
     </div>
         <div class="bottom-panel safe-area-bottom">
-      <!-- Hint Display - Solo informativo, no botón -->
+      <!-- Hint Display - Centrado -->
       <div class="hint-display" id="hint-display">
         <div id="hint-text">Scan a QR code to begin your hunt!</div>
         <small id="hint-detail" style="opacity: 0.8; display: block; margin-top: 0.25rem;"></small>
+      </div>
+      
+      <!-- Hospital Rooms Button - Pequeño a la derecha -->
+      <div class="hospital-rooms-btn" id="hospital-rooms-btn">
+        <div>Rooms</div>
       </div>
     </div>
   </div>

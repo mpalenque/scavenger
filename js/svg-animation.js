@@ -8,6 +8,8 @@ export class SVGAnimationSystem {
     this.svgElement = null;
     this.isAnimating = false;
     this.shouldShowFinalForm = false;
+    this.isNavigationMode = false; // New: tracks if we're in navigation mode
+    this.currentZoomedRoom = null; // New: tracks which room is currently zoomed
     
     // Mapping from piece IDs to SVG regions (coordinates extracted from actual locked layers)
     this.pieceRegions = {
@@ -657,7 +659,20 @@ export class SVGAnimationSystem {
 
   hideSVGAnimation() {
     if (this.svgContainer) {
-      // Reset SVG transform with smoother transition
+      // Handle navigation mode
+      if (this.isNavigationMode) {
+        if (this.currentZoomedRoom) {
+          // If zoomed into a room, zoom out first
+          this.zoomOutFromRoom();
+          return;
+        } else {
+          // If in overview, exit navigation mode
+          this.exitNavigationMode();
+          return;
+        }
+      }
+      
+      // Regular animation mode closure
       if (this.svgElement) {
         this.svgElement.style.transformOrigin = '0 0';
         this.svgElement.style.transition = 'transform 2.0s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
@@ -702,6 +717,281 @@ export class SVGAnimationSystem {
           }
         }, 600);
       }, 2000);
+    }
+  }
+
+  // Exit navigation mode
+  exitNavigationMode() {
+    console.log('🏥 Exiting Hospital Rooms navigation mode');
+    
+    // Clean up
+    this.removeRoomClickHandlers();
+    this.isNavigationMode = false;
+    this.currentZoomedRoom = null;
+    
+    // Fade out
+    this.svgContainer.style.transition = 'opacity 0.6s ease-out';
+    this.svgContainer.style.opacity = '0';
+    
+    // Hide after fade completes
+    setTimeout(() => {
+      this.svgContainer.style.display = 'none';
+    }, 600);
+  }
+
+  // New method: Show navigation mode (hospital rooms overview)
+  async showNavigationMode() {
+    if (this.isAnimating || !this.svgContainer || !this.svgElement) {
+      console.log('🎨 Animation in progress or SVG not ready');
+      return;
+    }
+
+    this.isNavigationMode = true;
+    this.currentZoomedRoom = null;
+    
+    console.log('🏥 Starting Hospital Rooms navigation mode');
+
+    try {
+      // Show the container with navigation interface
+      this.svgContainer.style.display = 'flex';
+      this.svgContainer.style.flexDirection = 'column';
+      this.svgContainer.style.justifyContent = 'center';
+      this.svgContainer.style.alignItems = 'center';
+      await this.wait(50);
+      this.svgContainer.style.opacity = '1';
+      
+      // Update UI for navigation mode
+      this.updateNavigationUI();
+      
+      // Reset SVG to overview
+      if (this.svgElement) {
+        this.svgElement.style.transformOrigin = '0 0';
+        this.svgElement.style.transition = 'transform 1.0s ease-out';
+        this.svgElement.style.transform = 'scale(1) translate(0px, 0px)';
+      }
+      
+      // Add click handlers for unlocked rooms
+      this.addRoomClickHandlers();
+      
+    } catch (error) {
+      console.error('❌ Navigation mode error:', error);
+    }
+  }
+
+  // Update UI for navigation mode
+  updateNavigationUI() {
+    // Update banner text
+    const banner = this.svgContainer.querySelector('.svg-success-banner');
+    if (banner) {
+      banner.textContent = 'Hospital Rooms - Click to explore';
+    }
+    
+    // Update info button
+    const infoBtn = this.svgContainer.querySelector('.svg-info-button');
+    if (infoBtn) {
+      infoBtn.textContent = 'Click on unlocked rooms to zoom in';
+    }
+    
+    // Update back button
+    const backBtn = this.svgContainer.querySelector('.svg-back-button');
+    if (backBtn) {
+      backBtn.textContent = 'Back to Main Menu';
+    }
+  }
+
+  // Add click handlers for room navigation
+  addRoomClickHandlers() {
+    // Remove existing handlers first
+    this.removeRoomClickHandlers();
+    
+    // Add click handlers for each piece region that's unlocked
+    Object.entries(this.pieceRegions).forEach(([pieceId, region]) => {
+      // Check if this piece is unlocked
+      const state = this.loadState();
+      if (state.obtained[pieceId]) {
+        // Find the unlocked layer element
+        const unlockedElement = this.findUnlockedElement(region);
+        if (unlockedElement) {
+          const clickHandler = (e) => {
+            e.stopPropagation();
+            this.zoomToRoom(pieceId);
+          };
+          
+          unlockedElement.style.cursor = 'pointer';
+          unlockedElement.addEventListener('click', clickHandler);
+          unlockedElement._roomClickHandler = clickHandler; // Store for cleanup
+          
+          console.log(`🏥 Added click handler for ${pieceId}`);
+        }
+      }
+    });
+  }
+
+  // Remove room click handlers
+  removeRoomClickHandlers() {
+    Object.entries(this.pieceRegions).forEach(([pieceId, region]) => {
+      const unlockedElement = this.findUnlockedElement(region);
+      if (unlockedElement && unlockedElement._roomClickHandler) {
+        unlockedElement.removeEventListener('click', unlockedElement._roomClickHandler);
+        unlockedElement.style.cursor = 'default';
+        delete unlockedElement._roomClickHandler;
+      }
+    });
+  }
+
+  // Find unlocked element for a region
+  findUnlockedElement(region) {
+    if (!region.unlockedLayer || !this.svgElement) return null;
+    
+    const selectors = [
+      `#${region.unlockedLayer}`,
+      `[id="${region.unlockedLayer}"]`,
+      `[id*="${region.unlockedLayer}"]`
+    ];
+    
+    for (const selector of selectors) {
+      try {
+        const element = this.svgElement.querySelector(selector);
+        if (element) return element;
+      } catch (e) {
+        console.warn(`🎨 Invalid selector: ${selector}`);
+      }
+    }
+    
+    return null;
+  }
+
+  // Trigger visual click effect on room
+  async triggerRoomClickEffect(pieceId, region) {
+    // Find the unlocked element to animate
+    const unlockedElement = this.findUnlockedElement(region);
+    if (!unlockedElement) {
+      console.warn(`🎨 Could not find unlocked element for ${pieceId}`);
+      return;
+    }
+
+    console.log(`✨ Triggering click effect for room: ${pieceId}`);
+
+    // Store original styles to restore later
+    const originalTransform = unlockedElement.style.transform || '';
+    const originalTransition = unlockedElement.style.transition || '';
+    const originalFilter = unlockedElement.style.filter || '';
+
+    // Apply click effect styles
+    unlockedElement.style.transition = 'transform 200ms ease-out, filter 200ms ease-out';
+    unlockedElement.style.transformOrigin = 'center center';
+    unlockedElement.style.transformBox = 'fill-box';
+    
+    // Trigger the effect
+    requestAnimationFrame(() => {
+      // Pulse effect: slight scale up + glow
+      unlockedElement.style.transform = `${originalTransform} scale(1.05)`;
+      unlockedElement.style.filter = `${originalFilter} drop-shadow(0 0 10px rgba(53, 211, 211, 0.8)) brightness(1.2)`;
+    });
+
+    // Wait for effect to complete
+    await this.wait(200);
+
+    // Reset to original state
+    unlockedElement.style.transform = originalTransform;
+    unlockedElement.style.filter = originalFilter;
+    
+    // Wait a bit more for the reset to complete
+    await this.wait(100);
+    
+    // Restore original transition
+    unlockedElement.style.transition = originalTransition;
+  }
+
+  // Zoom to a specific room
+  async zoomToRoom(pieceId) {
+    if (!this.isNavigationMode) return;
+    
+    const region = this.pieceRegions[pieceId];
+    if (!region) return;
+    
+    // Add click effect animation before zooming
+    await this.triggerRoomClickEffect(pieceId, region);
+    
+    this.currentZoomedRoom = pieceId;
+    console.log(`🔍 Zooming to room: ${pieceId}`);
+    
+    // Calculate zoom transformation (same as regular animation)
+    const frameRect = this.svgFrame.getBoundingClientRect();
+    const svgRect = this.svgElement.getBoundingClientRect();
+    
+    const viewBox = this.svgElement.getAttribute('viewBox');
+    let svgWidth = 1920, svgHeight = 1280;
+    if (viewBox) {
+      const vb = viewBox.split(' ');
+      svgWidth = parseFloat(vb[2]);
+      svgHeight = parseFloat(vb[3]);
+    }
+    
+    const baselineScale = Math.min(svgRect.width / svgWidth, svgRect.height / svgHeight);
+    const offsetX0 = (svgRect.width - svgWidth * baselineScale) / 2;
+    const offsetY0 = (svgRect.height - svgHeight * baselineScale) / 2;
+
+    const regionWidthPx = region.zoomTarget.width * baselineScale;
+    const regionHeightPx = region.zoomTarget.height * baselineScale;
+
+    const scaleX = frameRect.width / regionWidthPx;
+    const scaleY = frameRect.height / regionHeightPx;
+    const scale = Math.min(scaleX, scaleY) * 0.8; // Slightly less zoom for navigation
+
+    const regionCenterPxX = offsetX0 + (region.zoomTarget.x + region.zoomTarget.width / 2) * baselineScale;
+    const regionCenterPxY = offsetY0 + (region.zoomTarget.y + region.zoomTarget.height / 2) * baselineScale;
+
+    const translateX = (frameRect.width / 2) - (regionCenterPxX * scale);
+    const translateY = (frameRect.height / 2) - (regionCenterPxY * scale);
+
+    // Apply zoom transformation
+    this.svgElement.style.transformOrigin = '0 0';
+    this.svgElement.style.transition = 'transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    this.svgElement.style.transform = `scale(${scale}) translate(${translateX/scale}px, ${translateY/scale}px)`;
+    
+    // Update back button to "Zoom Out"
+    const backBtn = this.svgContainer.querySelector('.svg-back-button');
+    if (backBtn) {
+      backBtn.textContent = 'Zoom Out';
+    }
+    
+    // Remove room click handlers while zoomed
+    this.removeRoomClickHandlers();
+  }
+
+  // Zoom out from room to overview
+  async zoomOutFromRoom() {
+    if (!this.isNavigationMode || !this.currentZoomedRoom) return;
+    
+    console.log(`🔄 Zooming out from room: ${this.currentZoomedRoom}`);
+    this.currentZoomedRoom = null;
+    
+    // Reset to overview
+    this.svgElement.style.transformOrigin = '0 0';
+    this.svgElement.style.transition = 'transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    this.svgElement.style.transform = 'scale(1) translate(0px, 0px)';
+    
+    // Update back button to "Back to Main Menu"
+    const backBtn = this.svgContainer.querySelector('.svg-back-button');
+    if (backBtn) {
+      backBtn.textContent = 'Back to Main Menu';
+    }
+    
+    // Re-add room click handlers
+    setTimeout(() => {
+      this.addRoomClickHandlers();
+    }, 1200); // After zoom out completes
+  }
+
+  // Load state helper
+  loadState() {
+    try {
+      const raw = localStorage.getItem('qr_puzzle_state_v1');
+      if (!raw) return { obtained: {} };
+      return JSON.parse(raw);
+    } catch (e) {
+      return { obtained: {} };
     }
   }
 }

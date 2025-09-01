@@ -402,8 +402,10 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
     btn.classList.add('correct');
     triviaFeedbackEl.textContent = 'Correct! Piece obtained.';
     sendGA('trivia_correct', { piece: currentTargetPiece });
-    // Subtle green flash on correct answer
+    
+    // Visual feedback for correct answer
     triggerGreenFlash();
+    triggerQuizCorrectFeedback();
     
     // Award piece first
     awardPiece(currentTargetPiece);
@@ -425,6 +427,10 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
     btn.classList.add('incorrect');
     triviaFeedbackEl.textContent = 'Incorrect answer. Try again.';
     sendGA('trivia_incorrect', { piece: currentTargetPiece });
+    
+    // Visual feedback for incorrect answer
+    triggerQuizIncorrectFeedback();
+    
     // Re-enable after brief delay
     setTimeout(() => {
       buttons.forEach(b => {
@@ -844,6 +850,31 @@ function triggerGreenFlash() {
   }, 650);
 }
 
+// Quiz feedback animation functions
+function triggerQuizCorrectFeedback() {
+  const triviaModal = document.querySelector('.trivia-modal');
+  if (triviaModal) {
+    triviaModal.classList.add('quiz-correct-feedback');
+    
+    // Remove animation class after animation completes
+    setTimeout(() => {
+      triviaModal.classList.remove('quiz-correct-feedback');
+    }, 2000);
+  }
+}
+
+function triggerQuizIncorrectFeedback() {
+  const triviaModal = document.querySelector('.trivia-modal');
+  if (triviaModal) {
+    triviaModal.classList.add('quiz-incorrect-feedback');
+    
+    // Remove animation class after animation completes
+    setTimeout(() => {
+      triviaModal.classList.remove('quiz-incorrect-feedback');
+    }, 2000);
+  }
+}
+
 // Process URL parameter ?piece=piece_1
 function checkURLParam() {
   const params = new URLSearchParams(window.location.search);
@@ -1241,11 +1272,35 @@ function updateTestButtonsState() {
 document.addEventListener('DOMContentLoaded', () => {
   setupTestButtons();
   updateTestButtonsState();
+  setupHospitalRoomsButton();
 });
 
 // Update test buttons when state changes
 window.addEventListener('piece-obtained', () => {
   updateTestButtonsState();
 });
+
+// Setup Hospital Rooms button functionality
+function setupHospitalRoomsButton() {
+  const hospitalBtn = document.getElementById('hospital-rooms-btn');
+  if (hospitalBtn) {
+    hospitalBtn.addEventListener('click', () => {
+      console.log('🏥 Hospital Rooms button clicked');
+      
+      // Visual feedback
+      hospitalBtn.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        hospitalBtn.style.transform = '';
+      }, 150);
+      
+      // Open navigation mode
+      if (svgAnimationSystem && svgAnimationSystem.showNavigationMode) {
+        svgAnimationSystem.showNavigationMode();
+      } else {
+        console.warn('❌ SVG Animation System not available');
+      }
+    });
+  }
+}
 
 // No 3D debug - removed
