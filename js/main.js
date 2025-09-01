@@ -799,18 +799,6 @@ function parsePieceIdFrom(raw) {
   return text || null;
 }
 
-function updateDetectedText(raw) {
-  const el = document.getElementById('detected-text');
-  if (!el) return;
-  const id = parsePieceIdFrom(raw);
-  const piece = PIECES.find(p => p.id === id);
-  if (piece) {
-    el.textContent = `Detected: ${raw} → ${piece.name}`;
-  } else {
-    el.textContent = `Detected: ${raw}`;
-  }
-}
-
 function triggerQRFrameColorChange() {
   // Change QR frame color when QR is detected
   const qrTarget = document.querySelector('.qr-target');
