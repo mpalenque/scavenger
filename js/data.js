@@ -2,13 +2,13 @@
 // Central data source: pieces, clues and trivia questions
 
 export const PIECES = [
-  { id: 'piece_1', name: 'Large Triangle 1' },
-  { id: 'piece_2', name: 'Large Triangle 2' },
-  { id: 'piece_3', name: 'Medium Triangle' },
-  { id: 'piece_4', name: 'Square' },
-  { id: 'piece_5', name: 'Parallelogram' },
-  { id: 'piece_6', name: 'Small Triangle 1' },
-  { id: 'piece_7', name: 'Small Triangle 2' }
+  { id: 'piece_1', name: 'Piece 1' },
+  { id: 'piece_2', name: 'Piece 2' },
+  { id: 'piece_3', name: 'Piece 3' },
+  { id: 'piece_4', name: 'Piece 4' },
+  { id: 'piece_5', name: 'Piece 5' },
+  { id: 'piece_6', name: 'Piece 6' },
+  { id: 'piece_7', name: 'Piece 7' }
 ];
 
 // Definiciones geométricas del tangram tradicional
@@ -60,13 +60,13 @@ export const TANGRAM_PIECES = {
 };
 
 export const CLUES = {
-  piece_1: 'Look for something blue near the entrance.',
-  piece_2: 'Check the place where people gather for meetings.',
-  piece_3: 'Find the spot where you charge your devices.',
-  piece_4: 'Search near the kitchen or coffee area.',
-  piece_5: 'Look for something green in the workspace.',
-  piece_6: 'Check the relaxation or break area.',
-  piece_7: 'Find the final piece near the exit door.'
+  piece_1: 'Find Piece 1',
+  piece_2: 'Find Piece 2',
+  piece_3: 'Find Piece 3',
+  piece_4: 'Find Piece 4',
+  piece_5: 'Find Piece 5',
+  piece_6: 'Find Piece 6',
+  piece_7: 'Find Piece 7'
 };
 
 export const TRIVIA = {
