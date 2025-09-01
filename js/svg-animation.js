@@ -77,9 +77,13 @@ export class SVGAnimationSystem {
       display: none;
       opacity: 0;
       transition: opacity 0.5s ease-in-out;
-      overflow: hidden;
-      padding: 20px;
+      overflow: auto;
+      padding: 10px;
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     `;
     
     // Create the success banner
@@ -88,15 +92,15 @@ export class SVGAnimationSystem {
     successBanner.style.cssText = `
       background: linear-gradient(135deg, #FF8A50, #FF6B2C);
       border-radius: 40px;
-      padding: 16px 32px;
+      padding: 12px 24px;
       text-align: center;
       color: white;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
-      margin-bottom: 20px;
-      max-width: 340px;
-      margin-left: auto;
-      margin-right: auto;
+      margin-bottom: 15px;
+      max-width: 300px;
+      width: auto;
+      flex-shrink: 0;
     `;
     successBanner.textContent = 'You got another piece!';
     
@@ -106,15 +110,20 @@ export class SVGAnimationSystem {
     svgFrame.style.cssText = `
       background: white;
       border-radius: 16px;
-      padding: 16px;
+      padding: 8px;
       margin-bottom: 20px;
-      max-width: 400px;
+      max-width: 90vw;
+      width: 100%;
+      max-height: 70vh;
+      height: 60vh;
       margin-left: auto;
       margin-right: auto;
       box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      min-height: 300px;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     `;
     
     // Create info button
@@ -123,16 +132,16 @@ export class SVGAnimationSystem {
     infoButton.style.cssText = `
       background: #35D3D3;
       border-radius: 40px;
-      padding: 16px 32px;
+      padding: 12px 24px;
       text-align: center;
       color: white;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
-      margin-bottom: 20px;
-      max-width: 340px;
-      margin-left: auto;
-      margin-right: auto;
+      margin-bottom: 15px;
+      max-width: 300px;
+      width: auto;
       cursor: pointer;
+      flex-shrink: 0;
     `;
     infoButton.textContent = 'Info on the room and device';
     
@@ -143,16 +152,15 @@ export class SVGAnimationSystem {
       background: transparent;
       border: 2px solid #FF8A50;
       border-radius: 40px;
-      padding: 16px 32px;
+      padding: 12px 24px;
       color: #FF8A50;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      max-width: 250px;
-      margin-left: auto;
-      margin-right: auto;
-      display: block;
+      max-width: 220px;
+      width: auto;
       transition: all 0.3s ease;
+      flex-shrink: 0;
     `;
     backButton.textContent = 'Back to Main Menu';
     
