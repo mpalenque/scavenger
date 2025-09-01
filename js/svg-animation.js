@@ -1,7 +1,6 @@
 // svg-animation.js
 // SVG zoom animation system for trivia completion
 import { STORAGE_KEY } from './data.js';
-import { qrCamera } from './camera.js';
 
 export class SVGAnimationSystem {
   constructor() {
@@ -109,12 +108,12 @@ export class SVGAnimationSystem {
     svgFrame.style.cssText = `
       background: white;
       border-radius: 16px;
-      padding: 8px;
+      padding: 6px;
       margin-bottom: 10px;
       max-width: 85vw;
       width: 100%;
-      max-height: 55vh;
-      height: 50vh;
+      max-height: 50vh;
+      height: 45vh;
       margin-left: auto;
       margin-right: auto;
       box-shadow: 0 4px 20px rgba(0,0,0,0.2);
@@ -675,20 +674,6 @@ export class SVGAnimationSystem {
           this.svgContainer.style.display = 'none';
           this.isAnimating = false;
           
-          // Resume camera when SVG closes (if game not completed)
-          if (!this.shouldShowFinalForm) {
-            console.log('🎯 Resuming camera after SVG closed');
-            if (qrCamera && qrCamera.resume) {
-              setTimeout(() => {
-                qrCamera.resume().catch(e => {
-                  console.error('❌ Camera resume failed:', e);
-                  // Fallback: restart camera
-                  setTimeout(() => qrCamera.start().catch(() => {}), 500);
-                });
-              }, 100);
-            }
-          }
-          
           // Show final form if game was completed
           if (this.shouldShowFinalForm) {
             console.log('🎯 Game completed! Opening final form after SVG closed');
@@ -701,6 +686,18 @@ export class SVGAnimationSystem {
               if (ff) {
                 ff.classList.remove('hidden');
               }
+            }
+          } else {
+            // Resume camera if game not completed
+            console.log('🎯 Resuming camera after SVG closed');
+            if (window.qrCamera && window.qrCamera.resume) {
+              setTimeout(() => {
+                window.qrCamera.resume().catch(e => {
+                  console.error('❌ Camera resume failed:', e);
+                  // Fallback: restart camera
+                  setTimeout(() => window.qrCamera.start().catch(() => {}), 500);
+                });
+              }, 100);
             }
           }
         }, 600);

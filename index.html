@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,viewport-fit=cover,user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no,maximum-scale=1.0,minimum-scale=1.0" />
   <title>QR Hunt - Find the Pieces</title>
   
   <!-- Google tag (gtag.js) -->
@@ -31,6 +31,16 @@
       -ms-user-select: none;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+    
+    /* Prevent zoom on input focus */
+    input, button, select, textarea {
+      font-size: 16px !important;
+      -webkit-appearance: none;
+      appearance: none;
     }
     
     *:focus {
@@ -72,10 +82,23 @@
       animation: qrSuccess 1s ease-out;
     }
     
+    /* QR Already Detected Visual Feedback */
+    .qr-already-detected {
+      border-color: #FF8A50 !important;
+      box-shadow: 0 0 25px rgba(255, 138, 80, 0.6) !important;
+      animation: qrAlreadyDetected 1s ease-out;
+    }
+    
     @keyframes qrSuccess {
       0% { border-color: rgba(45,140,255,0.5); box-shadow: 0 0 18px rgba(45,140,255,0.22); }
       50% { border-color: #4CAF50; box-shadow: 0 0 30px rgba(76, 175, 80, 0.8); }
       100% { border-color: #4CAF50; box-shadow: 0 0 25px rgba(76, 175, 80, 0.6); }
+    }
+    
+    @keyframes qrAlreadyDetected {
+      0% { border-color: rgba(45,140,255,0.5); box-shadow: 0 0 18px rgba(45,140,255,0.22); }
+      50% { border-color: #FF8A50; box-shadow: 0 0 30px rgba(255, 138, 80, 0.8); }
+      100% { border-color: #FF8A50; box-shadow: 0 0 25px rgba(255, 138, 80, 0.6); }
     }
 
     .ui-overlay { 

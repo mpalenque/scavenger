@@ -408,17 +408,19 @@ function handleTriviaAnswer(selectedIdx, correctIdx, btn) {
     // Award piece first
     awardPiece(currentTargetPiece);
     
-    // Immediately transition to SVG animation (no delay)
+    // Go directly to SVG animation without showing main menu
     setTimeout(async () => {
-      console.log('🎯 Auto-closing trivia after correct answer - direct to SVG');
+      console.log('🎯 Going directly to SVG animation after correct answer');
+      
+      // Hide trivia modal immediately
       triviaModal.classList.add('hidden');
       
-      // Show SVG animation immediately
-      console.log(`🎨 Starting immediate SVG animation for piece ${currentTargetPiece}`);
+      // Start SVG animation directly
+      console.log(`🎨 Starting SVG animation for piece ${currentTargetPiece}`);
       await svgAnimationSystem.showSVGAnimation(currentTargetPiece);
       
-      // Camera handling is now done by the SVG system when user closes it
-    }, 500); // Reduced from 1500 to 500ms for faster transition
+      // No need to resume camera here - SVG system will handle completion
+    }, 800); // Reduced delay for more immediate transition
   } else {
     btn.classList.add('incorrect');
     triviaFeedbackEl.textContent = 'Incorrect answer. Try again.';
@@ -591,8 +593,6 @@ function processPieceIdentifier(raw) {
     return;
   }
   if (state.obtained[id]) {
-    // Show special effect for already detected QR
-    showAlreadyDetectedFeedback(valid);
     updateClue('already_obtained');
     const clueTextEl = document.querySelector('.clue-text');
     const piece = PIECES.find(p => p.id === id);
@@ -608,10 +608,6 @@ function processPieceIdentifier(raw) {
     }, 2000);
     return;
   }
-  
-  // Show new QR detection success effect
-  showNewQRDetectedFeedback(valid);
-  
   // Launch trivia for the piece
   openTriviaForPiece(id);
 }
@@ -620,14 +616,23 @@ function processPieceIdentifier(raw) {
 window.addEventListener('qr-detected', (e) => {
   const { raw } = e.detail;
   
-  // Show QR detection success feedback
-  showQRDetectionFeedback(raw);
-  // Subtle full-screen green flash on QR detection
-  triggerGreenFlash();
+  // Check if QR was already detected
+  const isAlreadyDetected = checkIfQRAlreadyDetected(raw);
   
-  // Show raw detected text and trigger frame color change
-  updateDetectedText(raw);
-  triggerQRFrameColorChange(); // Change frame color instead of flash
+  // Show immediate QR detection success feedback
+  showQRDetectionFeedback(raw, isAlreadyDetected);
+  
+  // Trigger appropriate frame color and flash
+  if (isAlreadyDetected) {
+    triggerAlreadyDetectedFeedback();
+  } else {
+    // Subtle full-screen green flash on new QR detection
+    triggerGreenFlash();
+    triggerQRFrameColorChange(); // Change frame color for new detection
+  }
+  
+  // Show raw detected text
+  updateDetectedText(raw, isAlreadyDetected);
   processPieceIdentifier(raw);
   
   // Ensure video stays visible after detection
@@ -674,8 +679,84 @@ function ensureVideoVisible() {
   }
 }
 
+// Check if QR was already detected
+function checkIfQRAlreadyDetected(url) {
+  // Check each piece to see if this URL was already used
+  for (const pieceId of Object.keys(PIECES)) {
+    if (state.obtained[pieceId] && PIECES[pieceId].qr === url) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Show QR detection feedback with URL and status
+function showQRDetectionFeedback(url, isAlreadyDetected = false) {
+  const qrTarget = document.querySelector('.qr-target');
+  
+  // Add success visual feedback to QR target
+  if (qrTarget) {
+    if (isAlreadyDetected) {
+      qrTarget.classList.add('qr-already-detected');
+      setTimeout(() => {
+        qrTarget.classList.remove('qr-already-detected');
+      }, 2000);
+    } else {
+      qrTarget.classList.add('qr-detected');
+      setTimeout(() => {
+        qrTarget.classList.remove('qr-detected');
+      }, 2000);
+    }
+  }
+}
+
+// Trigger feedback for already detected QR
+function triggerAlreadyDetectedFeedback() {
+  // Orange flash for already detected
+  const flashOverlay = document.createElement('div');
+  flashOverlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 138, 80, 0.3);
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  `;
+  
+  document.body.appendChild(flashOverlay);
+  
+  // Trigger flash
+  requestAnimationFrame(() => {
+    flashOverlay.style.opacity = '1';
+    setTimeout(() => {
+      flashOverlay.style.opacity = '0';
+      setTimeout(() => {
+        document.body.removeChild(flashOverlay);
+      }, 200);
+    }, 150);
+  });
+}
+
+// Update detected text with status
+function updateDetectedText(url, isAlreadyDetected = false) {
+  const detectedElement = document.getElementById('detected-qr');
+  if (detectedElement) {
+    if (isAlreadyDetected) {
+      detectedElement.textContent = `🔄 Already detected: ${url}`;
+      detectedElement.style.color = '#FF8A50';
+    } else {
+      detectedElement.textContent = `🎯 New QR detected: ${url}`;
+      detectedElement.style.color = '#00FF88';
+    }
+  }
+}
+
 // Show QR detection feedback with URL
-function showQRDetectionFeedback(url) {
+function showQRDetectionFeedback_OLD(url) {
   const qrTarget = document.querySelector('.qr-target');
   // const qrStatus = document.getElementById('qr-status'); // Removed for now
   
@@ -684,58 +765,21 @@ function showQRDetectionFeedback(url) {
     qrTarget.classList.add('qr-detected');
     setTimeout(() => {
       qrTarget.classList.remove('qr-detected');
-  }, 2000);
-}
-
-// New QR detection feedback for first-time detection
-function showNewQRDetectedFeedback(piece) {
-  // Trigger intense green pulse effect
-  triggerGreenFlash();
-  
-  // Show QR frame in success color
-  const qrTarget = document.querySelector('.qr-target');
-  if (qrTarget) {
-    qrTarget.style.border = '4px solid #00FF88';
-    qrTarget.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.6)';
-    setTimeout(() => {
-      qrTarget.style.border = '';
-      qrTarget.style.boxShadow = '';
-    }, 3000);
-  }
-  
-  // Show piece name in detection area
-  const clueTextEl = document.querySelector('.clue-text');
-  if (clueTextEl && piece) {
-    clueTextEl.textContent = `🎯 New QR Detected: "${piece.name}"!`;
-    clueTextEl.style.color = '#00FF88';
-    setTimeout(() => {
-      clueTextEl.style.color = '';
-    }, 3000);
-  }
-}
-
-// Feedback for already detected QRs
-function showAlreadyDetectedFeedback(piece) {
-  // Show QR frame in "already detected" color (orange)
-  const qrTarget = document.querySelector('.qr-target');
-  if (qrTarget) {
-    qrTarget.style.border = '4px solid #FF8A50';
-    qrTarget.style.boxShadow = '0 0 15px rgba(255, 138, 80, 0.5)';
-    setTimeout(() => {
-      qrTarget.style.border = '';
-      qrTarget.style.boxShadow = '';
     }, 2000);
   }
   
-  // Show feedback text
-  const clueTextEl = document.querySelector('.clue-text');
-  if (clueTextEl && piece) {
-    clueTextEl.textContent = `🔶 Already detected: "${piece.name}" (Collected)`;
-    clueTextEl.style.color = '#FF8A50';
+  // Show detected URL in status display - commented out for now
+  /*
+  if (qrStatus) {
+    qrStatus.textContent = `🎯 QR Detected: ${url}`;
+    qrStatus.classList.add('show', 'success');
+    
+    // Hide after 3 seconds
     setTimeout(() => {
-      clueTextEl.style.color = '';
-    }, 2000);
+      qrStatus.classList.remove('show', 'success');
+    }, 3000);
   }
+  */
 }
 
 function parsePieceIdFrom(raw) {
