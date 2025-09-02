@@ -726,6 +726,7 @@
     /* Hide test buttons on small screens to avoid overlap */
     @media (max-width: 480px) {
       .test-buttons-container {
+        display: none !important; /* Force hidden on mobile */
         left: 5px;
         gap: 6px;
         padding: 8px;
