@@ -520,6 +520,17 @@ function openFinalForm() {
   const finalFormEl = document.getElementById('final-form');
   if (finalFormEl) {
     finalFormEl.classList.remove('hidden');
+    // Set links (replace with real URLs when available)
+    const selfie = document.getElementById('selfie-link');
+    const linkedin = document.getElementById('linkedin-link');
+    if (selfie && !selfie.dataset.bound) {
+      selfie.href = selfie.href && selfie.href !== '#' ? selfie.href : 'https://example.com/vicky-selfie';
+      selfie.dataset.bound = '1';
+    }
+    if (linkedin && !linkedin.dataset.bound) {
+      linkedin.href = linkedin.href && linkedin.href !== '#' ? linkedin.href : 'https://www.linkedin.com/groups/';
+      linkedin.dataset.bound = '1';
+    }
   }
 }
 
@@ -535,12 +546,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (submitBtn) {
     submitBtn.addEventListener('click', () => {
       const nameInput = document.getElementById('player-name');
+      const emailInput = document.getElementById('player-email');
       const name = nameInput ? nameInput.value.trim() : '';
+      const email = emailInput ? emailInput.value.trim() : '';
       
-      if (name) {
-        alert(`🎉 Congratulations ${name}! You've completed the QR Scavenger Hunt!`);
+      if (name && email) {
+        alert(`🎉 Thanks ${name}! You're entered in the raffle.`);
         console.log('🏆 Hunt completed by:', name);
-        sendGA('hunt_completed', { player_name: name });
+        sendGA('hunt_completed', { player_name: name, player_email: email });
         
         // Hide final form
         const finalFormEl = document.getElementById('final-form');
@@ -549,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset for next player
         resetProgress();
       } else {
-        alert('Please enter your name to complete the hunt!');
+        alert('Please enter your name and email to enter the raffle.');
       }
     });
   }
@@ -614,7 +627,22 @@ function processPieceIdentifier(raw) {
     }, 2000);
     return;
   }
-  // Launch trivia for the piece
+  // Dynamic rule: Only the LAST remaining piece should have a question
+  const remaining = PIECES.filter(p => !state.obtained[p.id]).map(p => p.id);
+  const isLastRemaining = remaining.length === 1 && remaining[0] === id;
+
+  if (!isLastRemaining) {
+    console.log(`🎯 Not last piece (${id}). Awarding directly without trivia.`);
+    awardPiece(id);
+    setTimeout(async () => {
+      if (svgAnimationSystem && svgAnimationSystem.showSVGAnimation) {
+        await svgAnimationSystem.showSVGAnimation(id);
+      }
+    }, 400);
+    return;
+  }
+
+  // If this is the final remaining piece, open trivia
   openTriviaForPiece(id);
 }
 
@@ -970,6 +998,16 @@ function init() {
     
     // Start periodic video visibility check
     setInterval(ensureVideoVisible, 1000);
+
+    // Show intro overlay if URL has ?intro param (e.g., index.html?intro or ?intro=1)
+    try {
+      const url = new URL(window.location.href);
+      const hasIntro = url.searchParams.has('intro');
+      if (hasIntro) {
+        const intro = document.getElementById('intro-overlay');
+        if (intro) intro.classList.remove('hidden');
+      }
+    } catch {}
   } catch (e) {
     console.error('Initialization error:', e);
   } finally {
@@ -1074,6 +1112,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fallback: restart camera completely
         qrCamera.start().catch(() => {});
       });
+    });
+  }
+
+  // Intro Start button
+  const introStartBtn = document.getElementById('intro-start-btn');
+  if (introStartBtn) {
+    introStartBtn.addEventListener('click', () => {
+      const intro = document.getElementById('intro-overlay');
+      if (intro) intro.classList.add('hidden');
     });
   }
   

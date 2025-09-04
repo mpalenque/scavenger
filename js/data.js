@@ -60,13 +60,13 @@ export const TANGRAM_PIECES = {
 };
 
 export const CLUES = {
-  piece_1: 'Find Piece 1',
-  piece_2: 'Find Piece 2',
-  piece_3: 'Find Piece 3',
-  piece_4: 'Find Piece 4',
-  piece_5: 'Find Piece 5',
-  piece_6: 'Find Piece 6',
-  piece_7: 'Find Piece 7'
+  piece_1: 'Registration table: Join the LinkedIn symposium group for first puzzle piece',
+  piece_2: 'Sponsor tables:',
+  piece_3: 'Get a demo at our booth',
+  piece_4: 'Find the person in the cowboy hat at our Denim and Diamonds event to receive the next puzzle piece!',
+  piece_5: 'Keynote 1 presentation (qr code at end of slides)',
+  piece_6: 'Keynote 2 presentation (qr code at end of slides)',
+  piece_7: 'AvaPrize question'
 };
 
 export const TRIVIA = {

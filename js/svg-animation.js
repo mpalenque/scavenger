@@ -10,6 +10,7 @@ export class SVGAnimationSystem {
     this.shouldShowFinalForm = false;
     this.isNavigationMode = false; // New: tracks if we're in navigation mode
     this.currentZoomedRoom = null; // New: tracks which room is currently zoomed
+  this.lastAnimatedPieceId = null; // New: remembers the last piece shown via animation (non-navigation)
     
     // Mapping from piece IDs to SVG regions (coordinates extracted from actual locked layers)
     this.pieceRegions = {
@@ -55,6 +56,22 @@ export class SVGAnimationSystem {
         lockedLayer: 'Locked_Emergency_BACK',
         unlockedLayer: 'Unlocked_Emergency_FRONT'
       }
+    };
+
+    // Room info copy shown in the info panel; fill incrementally as copy is provided
+    this.roomInfo = {
+      // Provided now
+      'piece_1': {
+        title: 'Outpatient Center',
+        text: 'Our web-based platform can be utilized from any device type, making connecting with outpatient centers on the same platform a breeze'
+      },
+      // Stubs (can be updated with exact copy later)
+  'piece_2': { title: 'Pediatrics', text: 'Did you know virtual care has been proven to help with eating disorder patients? A common pediatric use case.' },
+      'piece_3': { title: 'ICU', text: 'Integration with eICU technology makes AvaSure a prime choice in the ICU setting' },
+  'piece_4': { title: 'Behavioral Health', text: 'Ligature-free devices ensure patient safety during observation of behavioral health patients' },
+  'piece_5': { title: 'Operating Room', text: 'Ambient AI helps keep ORs running smoothly' },
+  'piece_6': { title: 'Med/Surg Patient Room', text: 'Connect the AvaSure platform with IPCs, EHRs and other in-room technology to enable a smart patient room' },
+  'piece_7': { title: 'Emergency Room', text: 'Specialty consults in the ER can help prevent patient leakage by improving care access' }
     };
   }
 
@@ -126,7 +143,7 @@ export class SVGAnimationSystem {
       justify-content: center;
     `;
     
-    // Create info button
+    // Create info button (hidden; no longer used for toggling)
     const infoButton = document.createElement('div');
     infoButton.className = 'svg-info-button';
     infoButton.style.cssText = `
@@ -144,8 +161,37 @@ export class SVGAnimationSystem {
       flex-shrink: 0;
       margin-left: auto;
       margin-right: auto;
+      display: none;
     `;
-    infoButton.textContent = 'Info on the room and device';
+    infoButton.textContent = 'Info';
+    // Store ref
+    this.infoButton = infoButton;
+
+    // Create info panel (hidden by default)
+    const infoPanel = document.createElement('div');
+    infoPanel.className = 'svg-info-panel';
+    infoPanel.style.cssText = `
+      display: block;
+      background: #0F1B21;
+      color: #E9F7F7;
+      border: 1px solid rgba(53, 211, 211, 0.35);
+      border-radius: 12px;
+      padding: 12px 14px;
+      max-width: 85vw;
+      margin: 6px auto 10px;
+      line-height: 1.35;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    `;
+    // Body
+    const panelBody = document.createElement('div');
+    panelBody.className = 'svg-info-body';
+    panelBody.style.cssText = `
+      font-size: 13px;
+      opacity: 0.95;
+    `;
+    // Initial generic message
+    panelBody.textContent = 'Tap a room to zoom in and learn more.';
+    infoPanel.appendChild(panelBody);
     
     // Create back button
     const backButton = document.createElement('button');
@@ -179,19 +225,22 @@ export class SVGAnimationSystem {
       backButton.style.color = '#FF8A50';
     });
     
-    // Add click handler to back button
+    // Add click handler to back button (zoom out then fade)
     backButton.addEventListener('click', () => {
       this.hideSVGAnimation();
     });
     
     this.svgContainer.appendChild(successBanner);
     this.svgContainer.appendChild(svgFrame);
-    this.svgContainer.appendChild(infoButton);
+  this.svgContainer.appendChild(infoButton);
+  this.svgContainer.appendChild(infoPanel);
     this.svgContainer.appendChild(backButton);
     
     // Store references
     this.svgFrame = svgFrame;
-    this.backButton = backButton;
+  this.backButton = backButton;
+  this.infoPanel = infoPanel;
+  this.infoPanelBody = panelBody;
     
     document.body.appendChild(this.svgContainer);
   }
@@ -200,7 +249,7 @@ export class SVGAnimationSystem {
     try {
       const response = await fetch('./assets/AvaSureDollhouseGraphics_Optimized 3.svg');
       const svgText = await response.text();
-      
+
       // Create SVG wrapper
       const svgWrapper = document.createElement('div');
       svgWrapper.style.cssText = `
@@ -209,10 +258,10 @@ export class SVGAnimationSystem {
         position: relative;
         overflow: hidden;
       `;
-      
+
       svgWrapper.innerHTML = svgText;
       this.svgElement = svgWrapper.querySelector('svg');
-      
+
       if (this.svgElement) {
         this.svgElement.style.cssText = `
           width: 100%;
@@ -231,12 +280,12 @@ export class SVGAnimationSystem {
           this.svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
         }
       }
-      
+
       // Add SVG to the frame container instead of the main container
       this.svgFrame.appendChild(svgWrapper);
       console.log('🎨 SVG loaded successfully');
 
-      // Apply unlocked state for any already-solved pieces from storage
+      // Apply unlocked state from storage
       this.applyUnlockedStateFromStorage();
     } catch (error) {
       console.error('❌ Failed to load SVG:', error);
@@ -255,10 +304,12 @@ export class SVGAnimationSystem {
       return;
     }
 
-    this.isAnimating = true;
-    console.log(`🎨 Starting SVG animation for ${pieceId}`);
+  // Remember the piece shown via animation for contextual info
+  this.lastAnimatedPieceId = pieceId;
 
-    try {
+  this.isAnimating = true;
+  console.log(`🎨 Starting SVG animation for ${pieceId}`);
+  try {
       // Show the container with fade in and flex layout
       this.svgContainer.style.display = 'flex';
       this.svgContainer.style.flexDirection = 'column';
@@ -345,6 +396,8 @@ export class SVGAnimationSystem {
         // Store that we should show final form when SVG closes
         this.shouldShowFinalForm = true;
       }
+  // Auto-show info for this piece
+  this.showInfoForPiece(pieceId);
       
     } catch (error) {
       console.error('❌ SVG animation error:', error);
@@ -657,86 +710,50 @@ export class SVGAnimationSystem {
     });
   }
 
-  hideSVGAnimation() {
-    if (this.svgContainer) {
-      // Handle navigation mode
-      if (this.isNavigationMode) {
-        if (this.currentZoomedRoom) {
-          // If zoomed into a room, zoom out first
-          this.zoomOutFromRoom();
-          return;
-        } else {
-          // If in overview, exit navigation mode
-          this.exitNavigationMode();
-          return;
-        }
+  hideSVGAnimation(immediate = false) {
+    if (!this.svgContainer) return;
+
+    // In navigation mode, ensure we zoom out to overview, then fade out to main
+    if (this.isNavigationMode) {
+      if (this.currentZoomedRoom) {
+        // Zoom out, then exit with fade and resume
+        this.zoomOutFromRoom(true);
+        return;
+      } else {
+        // Already at overview; exit navigation mode with proper fade/resume
+        this.isNavigationMode = false;
+        this.currentZoomedRoom = null;
+        this.performCloseAndFade();
+        return;
       }
-      
-      // Regular animation mode closure
-      if (this.svgElement) {
-        this.svgElement.style.transformOrigin = '0 0';
-        this.svgElement.style.transition = 'transform 2.0s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        this.svgElement.style.transform = 'scale(1) translate(0px, 0px)';
-      }
-      
-      // Wait for zoom out to complete, then fade out
-      setTimeout(() => {
-        this.svgContainer.style.transition = 'opacity 0.6s ease-out';
-        this.svgContainer.style.opacity = '0';
-        
-        // Hide after fade completes
-        setTimeout(() => {
-          this.svgContainer.style.display = 'none';
-          this.isAnimating = false;
-          
-          // Show final form if game was completed
-          if (this.shouldShowFinalForm) {
-            console.log('🎯 Game completed! Opening final form after SVG closed');
-            this.shouldShowFinalForm = false;
-            if (window.openFinalForm) {
-              setTimeout(() => window.openFinalForm(), 300);
-            } else {
-              // Fallback: directly unhide #final-form modal
-              const ff = document.getElementById('final-form');
-              if (ff) {
-                ff.classList.remove('hidden');
-              }
-            }
-          } else {
-            // Resume camera if game not completed
-            console.log('🎯 Resuming camera after SVG closed');
-            if (window.qrCamera && window.qrCamera.resume) {
-              setTimeout(() => {
-                window.qrCamera.resume().catch(e => {
-                  console.error('❌ Camera resume failed:', e);
-                  // Fallback: restart camera
-                  setTimeout(() => window.qrCamera.start().catch(() => {}), 500);
-                });
-              }, 100);
-            }
-          }
-        }, 600);
-      }, 2000);
+    }
+
+    // Regular animation mode closure
+    if (this.svgElement && !immediate) {
+      this.svgElement.style.transformOrigin = '0 0';
+      this.svgElement.style.transition = 'transform 2.0s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      this.svgElement.style.transform = 'scale(1) translate(0px, 0px)';
+    }
+
+  const startFade = () => this.performCloseAndFade();
+
+    if (immediate) {
+      startFade();
+    } else {
+      setTimeout(startFade, 2000);
     }
   }
 
-  // Exit navigation mode
+  // Exit navigation mode (uses unified fade/close)
   exitNavigationMode() {
     console.log('🏥 Exiting Hospital Rooms navigation mode');
-    
     // Clean up
     this.removeRoomClickHandlers();
     this.isNavigationMode = false;
     this.currentZoomedRoom = null;
-    
-    // Fade out
-    this.svgContainer.style.transition = 'opacity 0.6s ease-out';
-    this.svgContainer.style.opacity = '0';
-    
-    // Hide after fade completes
-    setTimeout(() => {
-      this.svgContainer.style.display = 'none';
-    }, 600);
+    this.lastAnimatedPieceId = null;
+    // Close overlay consistently
+    this.performCloseAndFade();
   }
 
   // New method: Show navigation mode (hospital rooms overview)
@@ -786,10 +803,9 @@ export class SVGAnimationSystem {
       banner.textContent = 'Hospital Rooms - Click to explore';
     }
     
-    // Update info button
-    const infoBtn = this.svgContainer.querySelector('.svg-info-button');
-    if (infoBtn) {
-      infoBtn.textContent = 'Click on unlocked rooms to zoom in';
+    // Keep info panel visible with generic message in overview
+    if (!this.currentZoomedRoom && this.infoPanelBody) {
+      this.infoPanelBody.textContent = 'Tap a room to zoom in and learn more.';
     }
     
     // Update back button
@@ -815,6 +831,8 @@ export class SVGAnimationSystem {
           const clickHandler = (e) => {
             e.stopPropagation();
             this.zoomToRoom(pieceId);
+            // Ensure info panel reflects the zoomed room
+            // Info panel will update on zoom
           };
           
           unlockedElement.style.cursor = 'pointer';
@@ -950,38 +968,41 @@ export class SVGAnimationSystem {
     this.svgElement.style.transition = 'transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     this.svgElement.style.transform = `scale(${scale}) translate(${translateX/scale}px, ${translateY/scale}px)`;
     
-    // Update back button to "Zoom Out"
-    const backBtn = this.svgContainer.querySelector('.svg-back-button');
-    if (backBtn) {
-      backBtn.textContent = 'Zoom Out';
-    }
+  // Keep back button label consistent as "Back to Main Menu"
+  // Auto-show info for the selected room
+  this.showInfoForPiece(pieceId);
     
     // Remove room click handlers while zoomed
     this.removeRoomClickHandlers();
   }
 
   // Zoom out from room to overview
-  async zoomOutFromRoom() {
+  async zoomOutFromRoom(exitAfter = false) {
     if (!this.isNavigationMode || !this.currentZoomedRoom) return;
-    
     console.log(`🔄 Zooming out from room: ${this.currentZoomedRoom}`);
     this.currentZoomedRoom = null;
-    
+    this.lastAnimatedPieceId = null;
     // Reset to overview
     this.svgElement.style.transformOrigin = '0 0';
     this.svgElement.style.transition = 'transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     this.svgElement.style.transform = 'scale(1) translate(0px, 0px)';
-    
     // Update back button to "Back to Main Menu"
     const backBtn = this.svgContainer.querySelector('.svg-back-button');
-    if (backBtn) {
-      backBtn.textContent = 'Back to Main Menu';
+    if (backBtn) backBtn.textContent = 'Back to Main Menu';
+    // Generic info on overview
+    if (this.infoPanelBody) {
+      this.infoPanelBody.textContent = 'Tap a room to zoom in and learn more.';
     }
-    
-    // Re-add room click handlers
+    // After zoom completes, either re-enable nav or close overlay
     setTimeout(() => {
-      this.addRoomClickHandlers();
-    }, 1200); // After zoom out completes
+      if (exitAfter) {
+        // Exit with fade and resume
+        this.isNavigationMode = false;
+        this.performCloseAndFade();
+      } else {
+        this.addRoomClickHandlers();
+      }
+    }, 1200);
   }
 
   // Load state helper
@@ -994,7 +1015,48 @@ export class SVGAnimationSystem {
       return { obtained: {} };
     }
   }
+
+  // --- Info panel logic ---
+  // No toggle/hide; panel is always visible while overlay is open
+
+  showInfoForPiece(pieceId) {
+    if (!this.infoPanel || !this.infoPanelBody) return;
+    const info = this.roomInfo[pieceId] || { text: '' };
+    this.infoPanelBody.textContent = info.text || 'More information coming soon.';
+    this.infoPanel.style.display = 'block';
+  }
+
+  // No hide panel function needed
+
+  // Info button pulse not used anymore
 }
+
+// Unified close helper: fade overlay, then resume camera or open final form
+SVGAnimationSystem.prototype.performCloseAndFade = function() {
+  if (!this.svgContainer) return;
+  this.svgContainer.style.transition = 'opacity 0.6s ease-out';
+  this.svgContainer.style.opacity = '0';
+  setTimeout(() => {
+    this.svgContainer.style.display = 'none';
+    this.isAnimating = false;
+    const showFinal = this.shouldShowFinalForm === true;
+    this.shouldShowFinalForm = false;
+    if (showFinal) {
+      if (window.openFinalForm) {
+        setTimeout(() => window.openFinalForm(), 300);
+      } else {
+        const ff = document.getElementById('final-form');
+        if (ff) ff.classList.remove('hidden');
+      }
+    } else if (window.qrCamera && window.qrCamera.resume) {
+      setTimeout(() => {
+        window.qrCamera.resume().catch(() => {
+          setTimeout(() => window.qrCamera.start().catch(() => {}), 500);
+        });
+      }, 100);
+    }
+  }, 600);
+};
 
 // Export singleton instance
 export const svgAnimationSystem = new SVGAnimationSystem();
