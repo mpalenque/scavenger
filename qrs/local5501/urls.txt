@@ -1,7 +1,0 @@
-http://127.0.0.1:5501/index.html?piece=piece_1
-http://127.0.0.1:5501/index.html?piece=piece_2
-http://127.0.0.1:5501/index.html?piece=piece_3
-http://127.0.0.1:5501/index.html?piece=piece_4
-http://127.0.0.1:5501/index.html?piece=piece_5
-http://127.0.0.1:5501/index.html?piece=piece_6
-http://127.0.0.1:5501/index.html?piece=piece_7

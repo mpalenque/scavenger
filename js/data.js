@@ -69,49 +69,12 @@ export const CLUES = {
   piece_7: 'AvaPrize question'
 };
 
-export const TRIVIA = {
-  piece_1: {
-    question: 'What is the primary color of the ocean?',
-    options: ['Green', 'Blue', 'Red', 'Yellow'],
-    correctIndex: 1
-  },
-  piece_2: {
-    question: 'What do you call a group of people working together?',
-    options: ['Crowd', 'Team', 'Audience', 'Family'],
-    correctIndex: 1
-  },
-  piece_3: {
-    question: 'What type of energy powers most electronic devices?',
-    options: ['Solar', 'Wind', 'Electrical', 'Nuclear'],
-    correctIndex: 2
-  },
-  piece_4: {
-    question: 'What is the most popular hot beverage in offices?',
-    options: ['Tea', 'Coffee', 'Hot chocolate', 'Soup'],
-    correctIndex: 1
-  },
-  piece_5: {
-    question: 'What color do you get when you mix blue and yellow?',
-    options: ['Purple', 'Orange', 'Green', 'Red'],
-    correctIndex: 2
-  },
-  piece_6: {
-    question: 'What do people do during a break?',
-    options: ['Work harder', 'Relax', 'Run', 'Study'],
-    correctIndex: 1
-  },
-  piece_7: {
-    question: 'What do you use to leave a building?',
-    options: ['Window', 'Wall', 'Exit', 'Ceiling'],
-    correctIndex: 2
-  }
-};
-
 export function getInitialState() {
   return {
     obtained: {}, // { piece_1: true, ... }
     completed: false,
-    lastUpdated: Date.now()
+  sponsorMatchCompleted: false,
+  lastUpdated: Date.now()
   };
 }
 

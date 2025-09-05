@@ -180,3 +180,21 @@ input, button, select, textarea {
   .test-buttons-container { display: none !important; left: 5px; gap: 6px; padding: 8px; }
   .test-btn { width: 35px; height: 35px; font-size: 11px; }
 }
+
+/* Sponsor Match (in-page) */
+.sm-modal { width: 520px; max-width: 92vw; }
+.sm-intro { text-align:center; font-family:'Poppins',sans-serif; font-weight:800; color:#35d3d3; margin-bottom:12px; }
+.sm-card { background: rgba(18, 28, 34, 0.9); border: 1px solid rgba(53, 211, 211, 0.2); border-radius: 16px; padding: 16px; margin: 8px 0 14px; }
+.sm-sponsor { background: rgba(53,211,211,0.15); border: 1px solid rgba(53,211,211,0.35); color: #eaffff; border-radius: 999px; padding: 12px 16px; text-align:center; font-weight:700; margin-bottom: 10px; }
+.sm-options { display:flex; flex-direction:column; gap:10px; }
+.sm-options .sm-option { background:#143940; color:#fff; border:2px solid #35d3d3; border-radius: 999px; padding: 12px 16px; cursor:pointer; font-weight:600; transition: transform .12s ease, background .2s ease; text-align:left; }
+.sm-options .sm-option:hover { transform: translateY(-2px); background:#1b4750; }
+.sm-options .sm-option.correct { background:#35d3d3; color:#0b1a1f; }
+.sm-options .sm-option.incorrect { border-color:#f44336; }
+.sm-progress { display:flex; gap:8px; justify-content:center; margin-top:10px; }
+.sm-progress .circle { width: 22px; height: 22px; background: url('../assets/empty-circle.svg') center/contain no-repeat; }
+.sm-progress .circle.completed { background: url('../assets/check-circle.svg') center/contain no-repeat; }
+.sm-toast { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(53,211,211,0.15); color:#eaffff; border:1px solid rgba(53,211,211,0.35); border-radius: 8px; padding:8px 12px; font-weight:600; display:none; }
+.sm-toast.show { display:block; }
+.sm-actions { text-align:center; margin-top: 10px; }
+.sm-exit { background:#243845; border:1px solid rgba(255,255,255,0.15); }

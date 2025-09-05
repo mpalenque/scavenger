@@ -1,7 +1,7 @@
 // main.js
 // Orquestación general de la app (SIN THREE.JS)
 
-import { PIECES, CLUES, TRIVIA, STORAGE_KEY, getInitialState } from './data.js';
+import { PIECES, CLUES, STORAGE_KEY, getInitialState } from './data.js';
 import { qrCamera } from './camera.js';
 import { svgAnimationSystem } from './svg-animation.js';
 
@@ -369,9 +369,16 @@ function highlightObtainedPiece(pieceId) {
 }
 
 // --- Trivia ---
+// Only the FINAL remaining piece should trigger a trivia question.
+// Always use the AvaPrize question here regardless of which piece is last.
+const FINAL_TRIVIA = {
+  question: 'How many categories are included in AvaPrize?',
+  options: ['5', '6', '7', '8'],
+  correctIndex: 2 // '7'
+};
+
 function openTriviaForPiece(pieceId) {
-  const data = TRIVIA[pieceId];
-  if (!data) return;
+  const data = FINAL_TRIVIA;
   currentTargetPiece = pieceId;
 
   triviaQuestionEl.textContent = data.question;
@@ -627,6 +634,21 @@ function processPieceIdentifier(raw) {
     }, 2000);
     return;
   }
+  // If requesting piece_7 and sponsor match isn't completed, run sponsor match mini-game first
+  if (id === 'piece_7' && !state.sponsorMatchCompleted) {
+    console.log('🧩 Launching Sponsor Match for piece_7 before awarding');
+    launchSponsorMatch(() => {
+      // callback after sponsor match completion
+      state.sponsorMatchCompleted = true;
+      saveState();
+      // Open next SVG immediately after match completion
+      window.__immediateAnimationNext = true;
+      // Re-run awarding logic for piece_7 now that gate is complete
+      processPieceIdentifier(id);
+    });
+    return;
+  }
+
   // Dynamic rule: Only the LAST remaining piece should have a question
   const remaining = PIECES.filter(p => !state.obtained[p.id]).map(p => p.id);
   const isLastRemaining = remaining.length === 1 && remaining[0] === id;
@@ -634,16 +656,257 @@ function processPieceIdentifier(raw) {
   if (!isLastRemaining) {
     console.log(`🎯 Not last piece (${id}). Awarding directly without trivia.`);
     awardPiece(id);
-    setTimeout(async () => {
+    const runAnimation = async () => {
       if (svgAnimationSystem && svgAnimationSystem.showSVGAnimation) {
         await svgAnimationSystem.showSVGAnimation(id);
       }
-    }, 400);
+    };
+    if (window.__immediateAnimationNext) {
+      // One-shot immediate animation (used after sponsor match completion)
+      window.__immediateAnimationNext = false;
+      runAnimation();
+    } else {
+      setTimeout(runAnimation, 400);
+    }
     return;
   }
 
   // If this is the final remaining piece, open trivia
   openTriviaForPiece(id);
+}
+
+// --- In-page Sponsor Match mini-game (exact port of matching.html behavior) ---
+function launchSponsorMatch(onComplete) {
+  const overlay = document.getElementById('sponsor-match-overlay');
+  const sponsorEl = overlay?.querySelector('#sponsor');
+  const optionsEl = overlay?.querySelector('#options');
+  const progressEl = overlay?.querySelector('#progress');
+  const toastEl = overlay?.querySelector('#toast');
+  const finalModalEl = overlay?.querySelector('#final-modal');
+  const cardEl = overlay?.querySelector('.card');
+  const introEl = overlay?.querySelector('#intro');
+  const exitLink = overlay?.querySelector('#sm-exit');
+  const returnBtn = overlay?.querySelector('#sm-return');
+  if (!overlay || !sponsorEl || !optionsEl || !progressEl || !toastEl || !cardEl || !introEl || !finalModalEl) {
+    console.error('Sponsor Match overlay DOM missing');
+    return;
+  }
+
+  // Pause camera during game
+  try { qrCamera.pause && qrCamera.pause(); } catch {}
+
+  // DATA from matching.js (includes 8; we'll choose 7 deterministically per session)
+  const DATA = [
+    { name: 'VirtuAlly', def: 'Partnering with AvaSure to bring unmatched expertise and unrivaled virtual caring to bedside care.' },
+    { name: 'Equum', def: 'Partnering with AvaSure to deliver the people and processes that power telehealth success' },
+    { name: 'ServiceNow', def: 'Integrating AvaSure’s data into hospital workflows to put AI to work streamlining operations.' },
+    { name: 'Ascom', def: 'Helping notify nurses quickly by pushing AvaSure alerts to care communication devices in near real time.' },
+    { name: 'ClearDATA', def: 'Protecting AvaSure’s cloud-based solutions in a secure and HITRUST-certified environment built for healthcare.' },
+    { name: 'Nutanix', def: 'Powering AvaSure’s AI platform with scalable, resilient cloud infrastructure for health systems' },
+    { name: 'Suki', def: 'Reducing clinician burden by combining AvaSure with AI-powered documentation support.' },
+    { name: 'CGI Federal', def: 'Partnering with AvaSure to bring secure, innovative virtual care solutions to federal health agencies and the VA/DoD.' }
+  ];
+
+  function chooseSeven(items) {
+    if (items.length <= 7) return items.slice();
+    const seed = (Date.now() + performance.now()) | 0;
+    const arr = items.slice();
+    let s = seed;
+    function rnd() { s = (s * 1664525 + 1013904223) >>> 0; return s / 2 ** 32; }
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rnd() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, 7);
+  }
+  const QUESTIONS = chooseSeven(DATA);
+
+  let current = 0; // index
+  const completed = new Array(QUESTIONS.length).fill(false);
+
+  // Create or reuse correct overlay element inside document.body (style relies on CSS)
+  let correctOverlay = document.querySelector('.correct-overlay');
+  if (!correctOverlay) {
+    correctOverlay = document.createElement('div');
+    correctOverlay.className = 'correct-overlay';
+    correctOverlay.innerHTML = `
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="gradStroke" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+            <stop offset="100%" stop-color="#e8ffff" stop-opacity="0.95"/>
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3" />
+        <path d="M18 34 L28 44 L46 22" fill="none" stroke="url(#gradStroke)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    document.body.appendChild(correctOverlay);
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 1400);
+  }
+
+  function updateProgress() {
+    progressEl.innerHTML = '';
+    for (let i = 0; i < QUESTIONS.length; i++) {
+      const b = document.createElement('div');
+      b.className = 'progress-circle' + (completed[i] ? ' completed' : '');
+      b.title = `Question ${i + 1}`;
+      progressEl.appendChild(b);
+    }
+  }
+
+  function pickOptions(correctIndex) {
+    const indices = [...Array(QUESTIONS.length).keys()].filter(i => i !== correctIndex);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    const distractors = indices.slice(0, 2);
+    const options = [
+      { text: QUESTIONS[correctIndex].def, correct: true },
+      { text: QUESTIONS[distractors[0]].def, correct: false },
+      { text: QUESTIONS[distractors[1]].def, correct: false },
+    ];
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+    return options;
+  }
+
+  function renderQuestion() {
+    if (current >= QUESTIONS.length) {
+      finalModalEl.style.display = 'flex';
+      return;
+    }
+    // Reset animations
+    cardEl.classList.remove('slide-out-left', 'slide-in-right');
+    const q = QUESTIONS[current];
+    sponsorEl.textContent = q.name;
+    optionsEl.innerHTML = '';
+
+    sponsorEl.classList.remove('is-visible');
+    const opts = pickOptions(current);
+    const buttons = [];
+    opts.forEach((opt) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt.text;
+      btn.addEventListener('click', () => handleAnswer(btn, opt.correct));
+      optionsEl.appendChild(btn);
+      buttons.push(btn);
+    });
+
+    setTimeout(() => {
+      sponsorEl.classList.add('is-visible', 'attention');
+      setTimeout(() => sponsorEl.classList.remove('attention'), 1300);
+      setTimeout(() => {
+        buttons.forEach((b, idx) => {
+          setTimeout(() => b.classList.add('is-visible'), idx * 120);
+        });
+      }, 500);
+    }, 80);
+  }
+
+  function handleAnswer(btn, isCorrect) {
+    const buttons = Array.from(optionsEl.querySelectorAll('button'));
+    if (isCorrect) {
+      btn.classList.add('correct', 'animate-correct', 'emphasis');
+      sponsorEl.classList.remove('wrong-animate');
+      sponsorEl.classList.add('correct-animate');
+      buttons.forEach(b => (b.disabled = true));
+      completed[current] = true;
+      updateProgress();
+      showToast(`Great job! ${completed.filter(Boolean).length}/${QUESTIONS.length} completed`);
+      correctOverlay.classList.remove('hide');
+      correctOverlay.classList.add('show');
+      setTimeout(() => {
+        sponsorEl.classList.remove('correct-animate');
+        cardEl.classList.add('slide-out-left');
+        setTimeout(() => {
+          current += 1;
+          correctOverlay.classList.remove('show');
+          correctOverlay.classList.add('hide');
+          renderQuestion();
+          requestAnimationFrame(() => {
+            cardEl.classList.add('slide-in-right');
+            setTimeout(() => {
+              cardEl.classList.remove('slide-in-right');
+              correctOverlay.classList.remove('hide');
+            }, 520);
+          });
+        }, 520);
+      }, 900);
+    } else {
+      if (!btn.classList.contains('incorrect')) {
+        btn.classList.add('incorrect', 'animate-wrong');
+        setTimeout(() => btn.classList.remove('animate-wrong'), 450);
+      }
+      sponsorEl.classList.remove('correct-animate');
+      sponsorEl.classList.add('wrong-animate');
+      setTimeout(() => sponsorEl.classList.remove('wrong-animate'), 450);
+      const circles = progressEl.querySelectorAll('.progress-circle');
+      const circle = circles[current];
+      if (circle) {
+        circle.classList.add('flash-wrong');
+        setTimeout(() => circle.classList.remove('flash-wrong'), 600);
+      }
+      btn.disabled = true;
+      buttons.forEach(b => {
+        if (!b.classList.contains('incorrect') && !b.classList.contains('correct')) b.disabled = false;
+      });
+    }
+  }
+
+  function runIntroThenFirstQuestion() {
+    requestAnimationFrame(() => {
+      introEl.classList.remove('intro-hidden');
+      introEl.classList.add('intro-visible');
+      introEl.classList.add('intro-attention');
+      setTimeout(() => introEl.classList.remove('intro-attention'), 2400);
+    });
+    setTimeout(() => {
+      introEl.classList.remove('intro-center');
+      setTimeout(() => {
+        renderQuestion();
+      }, 360);
+    }, 2200);
+  }
+
+  // Wire close/return to resume and cleanup
+  function closeOverlay(resume = true, completedGame = false) {
+    // Hide any inner final modal if visible
+    finalModalEl.style.display = 'none';
+    overlay.classList.add('hidden');
+    // Clear content to avoid ID collisions on next run
+    optionsEl.innerHTML = '';
+    sponsorEl.textContent = '';
+    progressEl.innerHTML = '';
+    introEl.className = 'main-instructions intro-hidden intro-center';
+    cardEl.classList.remove('slide-out-left', 'slide-in-right');
+    if (resume) {
+      try { qrCamera.resume && qrCamera.resume(); } catch {}
+    }
+    if (completedGame && typeof onComplete === 'function') {
+      try { onComplete(); } catch {}
+    }
+  }
+
+  exitLink.onclick = (e) => { e.preventDefault(); closeOverlay(true, false); };
+  returnBtn.onclick = (e) => { e.preventDefault(); closeOverlay(true, true); };
+  finalModalEl.addEventListener('click', (e) => {
+    if (e.target === finalModalEl) { closeOverlay(true, true); }
+  });
+
+  // Show overlay and start
+  overlay.classList.remove('hidden');
+  updateProgress();
+  runIntroThenFirstQuestion();
 }
 
 // Listen to custom camera event
