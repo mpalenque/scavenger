@@ -51,6 +51,17 @@ function chooseSeven(items) {
   return arr.slice(0, 7);
 }
 
+const LOGO_MAP = {
+  'VirtuAlly': './assets/Links/VirtuAlly-logo_color-gradient.png',
+  'Equum': './assets/Links/equum-logo.webp',
+  'ServiceNow': './assets/Links/ServiceNow_logo.svg',
+  'Ascom': './assets/Links/Ascom-logo-1075x310-300x87@2x.jpg',
+  'ClearDATA': './assets/Links/cleardata.png',
+  'Nutanix': './assets/Links/nutanix-logo-charcoal-gray.png',
+  'Suki': './assets/Links/suki-logo-black-0kri3.png',
+  'CGI Federal': './assets/Links/CGI_logo.svg.png'
+};
+
 const QUESTIONS = chooseSeven(DATA);
 
 // State
@@ -130,7 +141,19 @@ function renderQuestion() {
   // Ensure card is in place for incoming
   cardEl.classList.remove('slide-out-left', 'slide-in-right');
   const q = QUESTIONS[current];
-  sponsorEl.textContent = q.name;
+  // Render sponsor with logo + name
+  sponsorEl.innerHTML = '';
+  const logoSrc = LOGO_MAP[q.name];
+  if (logoSrc) {
+    const img = document.createElement('img');
+    img.src = logoSrc;
+    img.alt = q.name + ' logo';
+    img.className = 'sponsor-logo';
+    sponsorEl.appendChild(img);
+  }
+  const nameSpan = document.createElement('span');
+  nameSpan.textContent = q.name;
+  sponsorEl.appendChild(nameSpan);
   optionsEl.innerHTML = '';
 
   // Initially hide sponsor and options; then show sponsor, then options staggered

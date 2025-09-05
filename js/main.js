@@ -15,7 +15,12 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return getInitialState();
     const parsed = JSON.parse(raw);
-    return { ...getInitialState(), ...parsed };
+    const merged = { ...getInitialState(), ...parsed };
+    // If piece_7 is not obtained, force the sponsor match gate to be required again
+    if (!merged.obtained || !merged.obtained['piece_7']) {
+      merged.sponsorMatchCompleted = false;
+    }
+    return merged;
   } catch (e) {
     console.warn('Failed to load state', e);
     return getInitialState();
@@ -35,6 +40,7 @@ function resetProgress() {
   // Reset state to initial values
   state.obtained = {};
   state.completed = false;
+  state.sponsorMatchCompleted = false;
   state.lastUpdated = Date.now();
   
   // Save the reset state
@@ -582,6 +588,7 @@ function processPieceIdentifier(raw) {
 
   // 1) Si es una URL, intentar extraer ?piece=...
   let id = null;
+  let fromMatchingURL = false;
   try {
     // Acepta URLs absolutas o paths relativos con query
     let url;
@@ -594,6 +601,14 @@ function processPieceIdentifier(raw) {
     if (url) {
       const qp = url.searchParams.get('piece');
       if (qp) id = qp;
+      // If QR points to matching page, treat as piece_7 gate
+      if (!id) {
+        const path = (url.pathname || '').toLowerCase();
+        if (path.endsWith('/matching') || path.endsWith('/matching.html') || path.includes('matching.html')) {
+          id = 'piece_7';
+          fromMatchingURL = true;
+        }
+      }
     }
   } catch (e) {
     // ignorar errores de parseo
@@ -634,7 +649,7 @@ function processPieceIdentifier(raw) {
     }, 2000);
     return;
   }
-  // If requesting piece_7 and sponsor match isn't completed, run sponsor match mini-game first
+  // If requesting piece_7 (including via matching URL) and sponsor match isn't completed, run sponsor match first
   if (id === 'piece_7' && !state.sponsorMatchCompleted) {
     console.log('🧩 Launching Sponsor Match for piece_7 before awarding');
     launchSponsorMatch(() => {
@@ -706,6 +721,17 @@ function launchSponsorMatch(onComplete) {
     { name: 'Suki', def: 'Reducing clinician burden by combining AvaSure with AI-powered documentation support.' },
     { name: 'CGI Federal', def: 'Partnering with AvaSure to bring secure, innovative virtual care solutions to federal health agencies and the VA/DoD.' }
   ];
+
+  const LOGO_MAP = {
+    'VirtuAlly': './assets/Links/VirtuAlly-logo_color-gradient.png',
+    'Equum': './assets/Links/equum-logo.webp',
+    'ServiceNow': './assets/Links/ServiceNow_logo.svg',
+    'Ascom': './assets/Links/Ascom-logo-1075x310-300x87@2x.jpg',
+    'ClearDATA': './assets/Links/cleardata.png',
+    'Nutanix': './assets/Links/nutanix-logo-charcoal-gray.png',
+    'Suki': './assets/Links/suki-logo-black-0kri3.png',
+    'CGI Federal': './assets/Links/CGI_logo.svg.png'
+  };
 
   function chooseSeven(items) {
     if (items.length <= 7) return items.slice();
@@ -787,7 +813,19 @@ function launchSponsorMatch(onComplete) {
     // Reset animations
     cardEl.classList.remove('slide-out-left', 'slide-in-right');
     const q = QUESTIONS[current];
-    sponsorEl.textContent = q.name;
+    // Render sponsor with logo + name
+    sponsorEl.innerHTML = '';
+    const logoSrc = LOGO_MAP[q.name];
+    if (logoSrc) {
+      const img = document.createElement('img');
+      img.src = logoSrc;
+      img.alt = q.name + ' logo';
+      img.className = 'sponsor-logo';
+      sponsorEl.appendChild(img);
+    }
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = q.name;
+    sponsorEl.appendChild(nameSpan);
     optionsEl.innerHTML = '';
 
     sponsorEl.classList.remove('is-visible');
