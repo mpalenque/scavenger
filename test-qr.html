@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Test Page</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: white;
+        }
+        .qr-container { 
+            margin: 20px; 
+            padding: 20px; 
+            border: 2px solid #333; 
+            display: inline-block;
+            background: white;
+        }
+        .qr-container h3 { 
+            margin-top: 0; 
+        }
+        img, svg { 
+            width: 300px; 
+            height: 300px; 
+            border: 1px solid #ccc; 
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code Test Page</h1>
+    
+    <div class="controls">
+        <button onclick="window.open('index.html', '_blank')">Open QR Scanner App</button>
+        <p>Use this page to display QR codes and scan them with the main app in another tab.</p>
+    </div>
+    
+    <div class="qr-container">
+        <h3>AvaSure2.svg</h3>
+        <object data="qrs/official/AvaSure2.svg" type="image/svg+xml" width="300" height="300">
+            <img src="qrs/official/AvaSure2.svg" alt="AvaSure2 QR" width="300" height="300">
+        </object>
+    </div>
+    
+    <div class="qr-container">
+        <h3>piece_2.png (Working QR)</h3>
+        <img src="qrs/piece_2.png" alt="Piece 2 QR" width="300" height="300">
+    </div>
+    
+    <div class="qr-container">
+        <h3>AvaSure1.svg</h3>
+        <object data="qrs/official/AvaSure1.svg" type="image/svg+xml" width="300" height="300">
+            <img src="qrs/official/AvaSure1.svg" alt="AvaSure1 QR" width="300" height="300">
+        </object>
+    </div>
+    
+    <div class="qr-container">
+        <h3>AvaSure3.svg</h3>
+        <object data="qrs/official/AvaSure3.svg" type="image/svg+xml" width="300" height="300">
+            <img src="qrs/official/AvaSure3.svg" alt="AvaSure3 QR" width="300" height="300">
+        </object>
+    </div>
+    
+    <script>
+        // Agregar logs para debug
+        console.log('QR Test page loaded');
+        
+        // Asegurar que los SVGs se rendericen correctamente
+        window.addEventListener('load', () => {
+            const objects = document.querySelectorAll('object');
+            objects.forEach(obj => {
+                obj.addEventListener('load', () => {
+                    console.log('SVG loaded:', obj.data);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

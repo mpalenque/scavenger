@@ -628,19 +628,27 @@ function processPieceIdentifier(raw) {
   if (!id) {
     console.log('🔍 Starting AvaSure detection process...');
     
-    // Exact URL mapping for AvaSure QR codes
+    // Exact URL mapping for AvaSure QR codes - UPDATED WITH CORRECT URLs
     const avasureUrlMapping = {
-      'https://qrfy.io/PnqLFGaq76': 'piece_1', // AvaSure2 -> piece_1
-      'https://qrfy.io/E-RkAnXqkJ': 'piece_2', // AvaSure3 -> piece_2
-      'https://qrfy.io/d9PjvSKUwk': 'piece_3', // AvaSure4 -> piece_3
-      'https://qrfy.io/xH22xWenNA': 'piece_4', // AvaSure5 -> piece_4
-      'https://qrfy.io/JCE5dTgaep': 'piece_5', // AvaSure6 -> piece_5
-      'https://qrfy.io/X8c7qpn05h': 'piece_6', // AvaSure7 -> piece_6
-      'https://qrfy.io/yvzwJegl5T': 'piece_7'  // AvaSure8 -> piece_7
+      'https://qrfy.io/p/U4QhGHiBbA': 'piece_1', // AvaSure2 -> piece_1
+      'https://qrfy.io/p/K9vJFePcRZ': 'piece_2', // AvaSure3 -> piece_2
+      'https://qrfy.io/p/bKmBFhhx5S': 'piece_3', // AvaSure4 -> piece_3
+      'https://qrfy.io/p/dRrwQe4qNj': 'piece_4', // AvaSure5 -> piece_4
+      'https://qrfy.io/p/DvHBs8xgTN': 'piece_5', // AvaSure6 -> piece_5
+      'https://qrfy.io/p/36oTTN9y7w': 'piece_6', // AvaSure7 -> piece_6
+      'https://qrfy.io/p/iSz4F9eNfn': 'piece_7'  // AvaSure8 -> piece_7
     };
     
-    // Also create mapping for the unique codes
+    // Also create mapping for the unique codes (both formats)
     const avasureCodeMapping = {
+      'U4QhGHiBbA': 'piece_1',
+      'K9vJFePcRZ': 'piece_2',
+      'bKmBFhhx5S': 'piece_3',
+      'dRrwQe4qNj': 'piece_4',
+      'DvHBs8xgTN': 'piece_5',
+      '36oTTN9y7w': 'piece_6',
+      'iSz4F9eNfn': 'piece_7',
+      // Old codes as fallback
       'PnqLFGaq76': 'piece_1',
       'E-RkAnXqkJ': 'piece_2',
       'd9PjvSKUwk': 'piece_3',
@@ -1961,14 +1969,14 @@ window.createAvaSureTestPanel = function() {
       `<button onclick="testAvaSureQR(${num})" style="margin: 2px; padding: 3px 6px;">Test Real AvaSure${num}</button>`
     ).join('')}
     <br>
-    <button onclick="processPieceIdentifier('https://qrfy.io/PnqLFGaq76')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 1</button>
-    <button onclick="processPieceIdentifier('https://qrfy.io/E-RkAnXqkJ')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 2</button>
-    <button onclick="processPieceIdentifier('https://qrfy.io/d9PjvSKUwk')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 3</button>
-    <button onclick="processPieceIdentifier('https://qrfy.io/xH22xWenNA')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 4</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/p/U4QhGHiBbA')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 1</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/p/K9vJFePcRZ')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 2</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/p/bKmBFhhx5S')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 3</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/p/dRrwQe4qNj')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 4</button>
     <br>
-    <button onclick="processPieceIdentifier('https://qrfy.io/JCE5dTgaep')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 5</button>
-    <button onclick="processPieceIdentifier('https://qrfy.io/X8c7qpn05h')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 6</button>
-    <button onclick="processPieceIdentifier('https://qrfy.io/yvzwJegl5T')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 7</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/p/DvHBs8xgTN')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 5</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/p/36oTTN9y7w')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 6</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/p/iSz4F9eNfn')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 7</button>
     <br>
     <button onclick="document.getElementById('avasure-test-panel').remove()" style="margin: 5px; padding: 5px 10px; background: red;">Close</button>
   `;
