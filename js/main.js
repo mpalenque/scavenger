@@ -586,8 +586,11 @@ function processPieceIdentifier(raw) {
   // normalize text
   const text = (raw || '').trim();
   
-  // Debug logging for QR content
+  // Enhanced debug logging for QR content
   console.log('🔍 QR Content detected:', text);
+  console.log('🔍 QR Content length:', text.length);
+  console.log('🔍 QR Content type:', typeof text);
+  console.log('🔍 QR Content (first 100 chars):', text.substring(0, 100));
 
   // 1) Si es una URL, intentar extraer ?piece=...
   let id = null;
@@ -617,28 +620,102 @@ function processPieceIdentifier(raw) {
     // ignorar errores de parseo
   }
 
-  // 2) Map AvaSure QR codes to pieces
+  // 2) Map AvaSure QR codes to pieces - EXACT URL MAPPING
   // AvaSure2 -> piece_1, AvaSure3 -> piece_2, ... AvaSure8 -> piece_7
   if (!id) {
-    const avasureMapping = {
-      'avasure2': 'piece_1',
-      'avasure3': 'piece_2', 
-      'avasure4': 'piece_3',
-      'avasure5': 'piece_4',
-      'avasure6': 'piece_5',
-      'avasure7': 'piece_6',
-      'avasure8': 'piece_7'
+    console.log('🔍 Starting AvaSure detection process...');
+    
+    // Exact URL mapping for AvaSure QR codes
+    const avasureUrlMapping = {
+      'https://qrfy.io/PnqLFGaq76': 'piece_1', // AvaSure2 -> piece_1
+      'https://qrfy.io/E-RkAnXqkJ': 'piece_2', // AvaSure3 -> piece_2
+      'https://qrfy.io/d9PjvSKUwk': 'piece_3', // AvaSure4 -> piece_3
+      'https://qrfy.io/xH22xWenNA': 'piece_4', // AvaSure5 -> piece_4
+      'https://qrfy.io/JCE5dTgaep': 'piece_5', // AvaSure6 -> piece_5
+      'https://qrfy.io/X8c7qpn05h': 'piece_6', // AvaSure7 -> piece_6
+      'https://qrfy.io/yvzwJegl5T': 'piece_7'  // AvaSure8 -> piece_7
     };
     
-    // Check for AvaSure patterns in the scanned text
-    const lowerText = text.toLowerCase();
+    // Also create mapping for the unique codes
+    const avasureCodeMapping = {
+      'PnqLFGaq76': 'piece_1',
+      'E-RkAnXqkJ': 'piece_2',
+      'd9PjvSKUwk': 'piece_3',
+      'xH22xWenNA': 'piece_4',
+      'JCE5dTgaep': 'piece_5',
+      'X8c7qpn05h': 'piece_6',
+      'yvzwJegl5T': 'piece_7'
+    };
     
-    // Direct AvaSure pattern matching
-    for (const [avasureKey, pieceId] of Object.entries(avasureMapping)) {
-      if (lowerText.includes(avasureKey)) {
-        id = pieceId;
-        console.log(`✅ AvaSure QR detected: ${avasureKey} -> ${pieceId}`);
-        break;
+    const lowerText = text.toLowerCase();
+    console.log('🔍 Checking AvaSure patterns in:', text);
+    
+    // Direct URL matching (most reliable)
+    if (avasureUrlMapping[text]) {
+      id = avasureUrlMapping[text];
+      console.log(`✅ AvaSure URL QR detected: ${text} -> ${id}`);
+    }
+    
+    // Check for the unique codes in case URL is processed differently
+    if (!id) {
+      for (const [code, pieceId] of Object.entries(avasureCodeMapping)) {
+        if (text.includes(code)) {
+          id = pieceId;
+          console.log(`✅ AvaSure code QR detected: ${code} -> ${id}`);
+          break;
+        }
+      }
+    }
+    
+    // Fallback patterns (keeping the old ones as backup)
+    if (!id) {
+      const avasureMapping = {
+        'avasure2': 'piece_1',
+        'avasure3': 'piece_2', 
+        'avasure4': 'piece_3',
+        'avasure5': 'piece_4',
+        'avasure6': 'piece_5',
+        'avasure7': 'piece_6',
+        'avasure8': 'piece_7'
+      };
+      
+      // Direct AvaSure pattern matching (fallback)
+      for (const [avasureKey, pieceId] of Object.entries(avasureMapping)) {
+        if (lowerText.includes(avasureKey)) {
+          id = pieceId;
+          console.log(`✅ AvaSure pattern QR detected: ${avasureKey} -> ${pieceId}`);
+          break;
+        }
+      }
+    }
+    
+    // Check for "ava sure" with spaces
+    if (!id) {
+      const spaceMatch = lowerText.match(/ava\s*sure\s*([2-8])/);
+      if (spaceMatch) {
+        const num = parseInt(spaceMatch[1]);
+        id = `piece_${num - 1}`;
+        console.log(`✅ AvaSure spaced QR detected: ${spaceMatch[0]} -> ${id}`);
+      }
+    }
+    
+    // Check for any combination of "ava" and numbers 2-8
+    if (!id) {
+      const avaMatch = lowerText.match(/ava.*?([2-8])/);
+      if (avaMatch) {
+        const num = parseInt(avaMatch[1]);
+        id = `piece_${num - 1}`;
+        console.log(`✅ Ava-numeric QR detected: ${avaMatch[0]} -> ${id}`);
+      }
+    }
+    
+    // Check for "sure" and numbers 2-8
+    if (!id) {
+      const sureMatch = lowerText.match(/sure.*?([2-8])/);
+      if (sureMatch) {
+        const num = parseInt(sureMatch[1]);
+        id = `piece_${num - 1}`;
+        console.log(`✅ Sure-numeric QR detected: ${sureMatch[0]} -> ${id}`);
       }
     }
     
@@ -682,6 +759,11 @@ function processPieceIdentifier(raw) {
         }
       }
     }
+    
+    // If still no match, log what we couldn't detect
+    if (!id) {
+      console.log('❌ No AvaSure pattern detected in:', text);
+    }
   }
 
   // 3) If no valid URL or AvaSure mapping, evaluate direct text as ID
@@ -693,9 +775,11 @@ function processPieceIdentifier(raw) {
       console.log(`✅ Direct piece QR detected: ${text} -> ${id}`);
     } else {
       id = text;
+      console.log(`⚠️ Using raw text as ID: ${id}`);
     }
   }
 
+  console.log(`🎯 Final piece ID determined: ${id}`);
   const valid = PIECES.find(p => p.id === id);
   sendGA('qr_scanned', { raw });
   if (!valid) {
@@ -1731,3 +1815,82 @@ function setupHospitalRoomsButton() {
 }
 
 // No 3D debug - removed
+
+// === TEMPORARY AVASURE TESTING FUNCTIONS ===
+window.testAvaSureQR = function(avasureNumber) {
+  console.log(`🧪 Testing AvaSure${avasureNumber} QR code...`);
+  
+  // Real URLs for AvaSure QRs
+  const realUrls = {
+    2: 'https://qrfy.io/PnqLFGaq76', // piece_1
+    3: 'https://qrfy.io/E-RkAnXqkJ', // piece_2
+    4: 'https://qrfy.io/d9PjvSKUwk', // piece_3
+    5: 'https://qrfy.io/xH22xWenNA', // piece_4
+    6: 'https://qrfy.io/JCE5dTgaep', // piece_5
+    7: 'https://qrfy.io/X8c7qpn05h', // piece_6
+    8: 'https://qrfy.io/yvzwJegl5T'  // piece_7
+  };
+  
+  const realUrl = realUrls[avasureNumber];
+  if (realUrl) {
+    console.log(`🧪 Testing REAL AvaSure${avasureNumber} URL: ${realUrl}`);
+    processPieceIdentifier(realUrl);
+  } else {
+    console.log(`❌ No real URL for AvaSure${avasureNumber}`);
+  }
+};
+
+// Quick test all AvaSure QRs
+window.testAllAvaSureQRs = function() {
+  console.log('🧪 Testing all AvaSure QR patterns (2-8)...');
+  for (let i = 2; i <= 8; i++) {
+    console.log(`\n=== Testing AvaSure${i} ===`);
+    testAvaSureQR(i);
+  }
+};
+
+// Create a temporary test panel
+window.createAvaSureTestPanel = function() {
+  // Remove existing panel if any
+  const existingPanel = document.getElementById('avasure-test-panel');
+  if (existingPanel) existingPanel.remove();
+  
+  const panel = document.createElement('div');
+  panel.id = 'avasure-test-panel';
+  panel.style.cssText = `
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #333;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    z-index: 10000;
+    font-family: monospace;
+    font-size: 12px;
+    max-width: 300px;
+  `;
+  
+  panel.innerHTML = `
+    <h3>AvaSure QR Testing</h3>
+    <button onclick="testAllAvaSureQRs()" style="margin: 5px; padding: 5px 10px;">Test All Patterns</button>
+    <br>
+    ${[2,3,4,5,6,7,8].map(num => 
+      `<button onclick="testAvaSureQR(${num})" style="margin: 2px; padding: 3px 6px;">Test Real AvaSure${num}</button>`
+    ).join('')}
+    <br>
+    <button onclick="processPieceIdentifier('https://qrfy.io/PnqLFGaq76')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 1</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/E-RkAnXqkJ')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 2</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/d9PjvSKUwk')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 3</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/xH22xWenNA')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 4</button>
+    <br>
+    <button onclick="processPieceIdentifier('https://qrfy.io/JCE5dTgaep')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 5</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/X8c7qpn05h')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 6</button>
+    <button onclick="processPieceIdentifier('https://qrfy.io/yvzwJegl5T')" style="margin: 2px; padding: 3px 6px; background: green;">Piece 7</button>
+    <br>
+    <button onclick="document.getElementById('avasure-test-panel').remove()" style="margin: 5px; padding: 5px 10px; background: red;">Close</button>
+  `;
+  
+  document.body.appendChild(panel);
+  console.log('🧪 AvaSure test panel created! Use the buttons to test QR detection.');
+};
