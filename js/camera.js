@@ -173,32 +173,32 @@ class QRCamera {
         : undefined;
 
       const config = { 
-        // Usar FPS más bajo para estabilidad en móviles
-        fps: isIOS ? 15 : 20,
+        // Usar FPS más alto para mejor detección de QRs complejos
+        fps: isIOS ? 20 : 30,
         rememberLastUsedCamera: true,
         disableFlip: true, // Evitar issues de rotación en iOS
-        // Usar resoluciones más equilibradas para evitar deformación
+        // Usar resoluciones más altas para mejor detección de SVG
         videoConstraints: isIOS ? {
-          width: { ideal: 640, max: 800 },
-          height: { ideal: 480, max: 600 },
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
           facingMode: 'environment'
         } : {
-          width: { ideal: 720, max: 1280 },
-          height: { ideal: 540, max: 720 },
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
           facingMode: 'environment'
         },
-        // Limitar el área de análisis para acelerar
+        // Área de análisis más grande para SVGs
         qrbox: function(viewfinderWidth, viewfinderHeight) {
           const base = Math.min(viewfinderWidth, viewfinderHeight);
-          const size = Math.min(Math.floor(base * 0.45), 200);
+          const size = Math.min(Math.floor(base * 0.7), 350);
           return { width: size, height: size };
         },
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-        // Solo QR codes para reducir decoders activos (si está disponible)
-        ...(onlyQrFormat ? { formatsToSupport: onlyQrFormat } : {}),
-        // Deshabilitar funciones experimentales para estabilidad
+        // Permitir todos los formatos para mejor detección
+        // ...(onlyQrFormat ? { formatsToSupport: onlyQrFormat } : {}),
+        // Habilitar funciones experimentales para mejor detección
         experimentalFeatures: {
-          useBarCodeDetectorIfSupported: false
+          useBarCodeDetectorIfSupported: true
         }
       };
       
@@ -210,6 +210,15 @@ class QRCamera {
         config,
         (decodedText) => {
           console.log('🎯 QR Code detected:', decodedText);
+          
+          // Mostrar SIEMPRE el texto detectado de inmediato
+          const detectedElement = document.getElementById('detected-qr');
+          if (detectedElement) {
+            detectedElement.textContent = `📱 Scanning: ${decodedText}`;
+            detectedElement.style.color = '#00FF88';
+            detectedElement.style.display = 'block';
+          }
+          
           this._onScan(decodedText);
         },
         (errorMessage) => {
