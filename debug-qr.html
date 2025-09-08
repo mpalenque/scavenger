@@ -51,7 +51,26 @@
     <h1>🔍 SVG QR Debug Mode</h1>
     
     <div class="instructions">
-        <h3>INSTRUCCIONES DE DEBUG:</h3>
+        <h3>🔍 NUEVA INFORMACIÓN DE DEBUG:</h3>
+        <p><strong>IMPORTANTE:</strong> Si tu iPhone puede leer estos QRs pero la app no, entonces es un problema del motor de detección.</p>
+        
+        <div style="background: #ffffcc; padding: 10px; margin: 10px 0; border: 2px solid #ffaa00;">
+            <h4>📱 PRUEBA CON TU IPHONE:</h4>
+            <ol>
+                <li>Abre la cámara de tu iPhone</li>
+                <li>Escanea el AvaSure2.svg de abajo</li>
+                <li>Anota exactamente qué URL aparece</li>
+                <li>Compárala con las URLs configuradas en la app</li>
+            </ol>
+            
+            <h4>⚙️ URLs CONFIGURADAS EN LA APP:</h4>
+            <ul>
+                <li>piece_1: <code>https://qrfy.io/p/U4QhGHiBbA</code></li>
+                <li>piece_2: <code>https://qrfy.io/p/K9vJFePcRZ</code></li>
+                <li>piece_3: <code>https://qrfy.io/p/bKmBFhhx5S</code></li>
+            </ul>
+        </div>
+        
         <ol>
             <li><strong>Abre la app principal:</strong> <button onclick="window.open('index.html', '_blank')">Abrir Scanner App</button></li>
             <li><strong>Permite acceso a cámara</strong> en la app principal</li>
@@ -97,8 +116,12 @@
     </div>
     
     <div class="qr-test">
-        <h3>📋 MANUAL TEST</h3>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <h3>📋 MANUAL TEST - SIMULAR DETECCIÓN</h3>
+        <p>Si tu iPhone detecta una URL específica del AvaSure2, pruébala aquí:</p>
+        <input type="text" id="manual-url" placeholder="Pega aquí la URL que detecta tu iPhone" style="width: 300px; padding: 5px; margin: 5px;">
+        <button onclick="testManualURL()">Test URL Manual</button>
+        
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0;">
             <button onclick="testQR('https://qrfy.io/p/U4QhGHiBbA')">Test piece_1 URL</button>
             <button onclick="testQR('https://qrfy.io/p/K9vJFePcRZ')">Test piece_2 URL</button>
             <button onclick="testQR('piece_1')">Test piece_1 direct</button>
@@ -125,6 +148,18 @@
             }
             
             debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        
+        function testManualURL() {
+            const input = document.getElementById('manual-url');
+            const url = input.value.trim();
+            if (url) {
+                testQR(url);
+                const debugLog = document.getElementById('debug-log');
+                debugLog.innerHTML += `<div>🔍 Testing manual URL from iPhone: ${url}</div>`;
+            } else {
+                alert('Por favor, pega la URL que detectó tu iPhone');
+            }
         }
         
         // Logs from main window

@@ -89,7 +89,12 @@ class QRCamera {
       
       if (!this.html5Qrcode) {
         console.log('🔧 QRCamera: Creating Html5Qrcode instance');
-        this.html5Qrcode = new Html5Qrcode(this.elementId);
+        // Crear scanner con configuración más permisiva
+      this.html5Qrcode = new Html5Qrcode(this.elementId, {
+        verbose: true, // Habilitar logs detallados
+        useBarCodeDetectorIfSupported: true, // Usar detector nativo si está disponible
+        formatsToSupport: undefined // Permitir TODOS los formatos
+      });
         
         // Add delay after creating instance for stability
         if (isIOS) {
@@ -175,33 +180,33 @@ class QRCamera {
         : undefined;
 
       const config = { 
-        // Usar FPS más alto para mejor detección de QRs complejos
-        fps: isIOS ? 20 : 30,
+        // Usar FPS más alto para QRs complejos
+        fps: 30,
         rememberLastUsedCamera: true,
-        disableFlip: true, // Evitar issues de rotación en iOS
-        // Usar resoluciones más altas para mejor detección de SVG
-        videoConstraints: isIOS ? {
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 },
-          facingMode: 'environment'
-        } : {
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 },
+        disableFlip: false, // Permitir flip para mejor detección
+        // Usar resoluciones MUY altas para QRs complejos como AvaSure
+        videoConstraints: {
+          width: { ideal: 1920, max: 4096 },
+          height: { ideal: 1080, max: 2160 },
           facingMode: 'environment'
         },
-        // Área de análisis más grande para SVGs
+        // Área de análisis MUY grande para capturar QRs complejos
         qrbox: function(viewfinderWidth, viewfinderHeight) {
           const base = Math.min(viewfinderWidth, viewfinderHeight);
-          const size = Math.min(Math.floor(base * 0.7), 350);
+          const size = Math.min(Math.floor(base * 0.9), 500); // 90% del área disponible
           return { width: size, height: size };
         },
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-        // Permitir todos los formatos para mejor detección
-        // ...(onlyQrFormat ? { formatsToSupport: onlyQrFormat } : {}),
-        // Habilitar funciones experimentales para mejor detección
+        // QUITAR restricción de formatos - permitir TODOS los tipos
+        // formatsToSupport: ... (comentado para permitir todos)
+        // Habilitar TODAS las funciones experimentales
         experimentalFeatures: {
           useBarCodeDetectorIfSupported: true
-        }
+        },
+        // Configuraciones adicionales para QRs complejos
+        aspectRatio: 1.0, // Ratio cuadrado para QRs
+        showTorchButtonIfSupported: true, // Linterna si está disponible
+        showZoomSliderIfSupported: true   // Zoom si está disponible
       };
       
       console.log('🚀 QRCamera: Starting camera with config:', cameraConfig);
@@ -244,16 +249,16 @@ class QRCamera {
           this._scanAttempts++;
           
           // Update debug status periodically
-          if (this._scanAttempts % 100 === 0) {
+          if (this._scanAttempts % 50 === 0) { // Más frecuente para debug
             const debugEl = document.getElementById('scanner-debug');
             if (debugEl) {
-              debugEl.textContent = `🔍 Scanning... Attempts: ${this._scanAttempts} | Success: ${this._successfulScans}`;
+              debugEl.textContent = `🔍 Scanning... Attempts: ${this._scanAttempts} | Success: ${this._successfulScans} | FPS: ${config.fps}`;
             }
           }
           
-          // Mostrar algunos errores para debug (no todos porque son muchos)
-          if (Math.random() < 0.001) { // Solo 0.1% de los errores
-            console.log('📷 QR scan attempt (sample):', errorMessage);
+          // Mostrar algunos errores específicos para debug
+          if (errorMessage.includes('QR') || errorMessage.includes('code') || Math.random() < 0.005) {
+            console.log('📷 QR scan attempt details:', errorMessage);
           }
         }
       );
