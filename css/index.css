@@ -198,3 +198,87 @@ input, button, select, textarea {
 .sm-toast.show { display:block; }
 .sm-actions { text-align:center; margin-top: 10px; }
 .sm-exit { background:#243845; border:1px solid rgba(255,255,255,0.15); }
+
+/* QR Detection Overlay */
+.qr-detection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: #35d3d3;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  z-index: 1000;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+  border-bottom: 2px solid #35d3d3;
+}
+
+.qr-detection-overlay.show {
+  transform: translateY(0);
+}
+
+.qr-detection-overlay .qr-status {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.qr-detection-overlay .qr-content {
+  background: rgba(53, 211, 211, 0.1);
+  border: 1px solid rgba(53, 211, 211, 0.3);
+  border-radius: 4px;
+  padding: 8px;
+  word-break: break-all;
+  max-height: 60px;
+  overflow-y: auto;
+}
+
+.qr-detection-overlay .qr-result {
+  margin-top: 5px;
+  font-weight: bold;
+  color: #35d3d3;
+}
+
+.qr-detection-overlay.success {
+  border-bottom-color: #4caf50;
+}
+
+.qr-detection-overlay.success .qr-status {
+  color: #4caf50;
+}
+
+.qr-detection-overlay.error {
+  border-bottom-color: #f44336;
+}
+
+.qr-detection-overlay.error .qr-status {
+  color: #f44336;
+}
+
+/* QR Frame Overlay */
+.qr-frame-overlay {
+  position: fixed;
+  pointer-events: none;
+  border: 3px solid #35d3d3;
+  border-radius: 8px;
+  z-index: 999;
+  opacity: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(53, 211, 211, 0.5);
+}
+
+.qr-frame-overlay.show {
+  opacity: 1;
+}
+
+.qr-frame-overlay.success {
+  border-color: #4caf50;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+.qr-frame-overlay.error {
+  border-color: #f44336;
+  box-shadow: 0 0 20px rgba(244, 67, 54, 0.5);
+}

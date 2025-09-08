@@ -591,6 +591,9 @@ function processPieceIdentifier(raw) {
   console.log('🔍 QR Content length:', text.length);
   console.log('🔍 QR Content type:', typeof text);
   console.log('🔍 QR Content (first 100 chars):', text.substring(0, 100));
+  
+  // Show QR content in overlay
+  showQRDetectionOverlay(text);
 
   // 1) Si es una URL, intentar extraer ?piece=...
   let id = null;
@@ -780,6 +783,10 @@ function processPieceIdentifier(raw) {
   }
 
   console.log(`🎯 Final piece ID determined: ${id}`);
+  
+  // Update overlay with result
+  updateQRDetectionResult(id, text);
+  
   const valid = PIECES.find(p => p.id === id);
   sendGA('qr_scanned', { raw });
   if (!valid) {
