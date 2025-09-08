@@ -1,0 +1,339 @@
+html,body { margin:0; padding:0; height:100%; background:#000; font-family: system-ui, Arial, sans-serif; }
+
+/* Header Styles */
+#header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  z-index: 30;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  height: 80px;
+  padding: env(safe-area-inset-top) 0 0 0;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  padding: 0 20px;
+}
+
+.logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+#app { position:relative; width:100vw; height:100vh; overflow:hidden; padding-top: calc(80px + env(safe-area-inset-top)); }
+#webcam { 
+  position:absolute; 
+  inset:0; 
+  width:100%; 
+  height:100%; 
+  object-fit:cover; 
+  z-index:1;
+  /* Aplicar el mismo framing que el overlay de Three.js */
+  transform-origin: center center;
+}
+#three-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:2; }
+#bottomBar { position:fixed; left:0; right:0; bottom:0; display:flex; justify-content:center; align-items:flex-end; padding:0 1.5rem calc(env(safe-area-inset-bottom) + 1rem); pointer-events:none; z-index:25; }
+#bottomBar > * { pointer-events:auto; }
+#ui { display: none; }
+#ui label { display:flex; align-items:center; gap:.35rem; }
+#ui input[type="range"] { width:80px; }
+#startBtn { background:#1e88e5; color:#fff; border:none; padding:.4rem .8rem; border-radius:4px; font-size:.8rem; }
+#startBtn:active { transform:scale(.97); }
+#captureBtn.recording { background:#d32f2f; animation:pulse 1s infinite; }
+@keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(211,47,47,.7);} 70%{box-shadow:0 0 0 12px rgba(211,47,47,0);} 100%{box-shadow:0 0 0 0 rgba(211,47,47,0);} }
+
+#tapOverlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.25rem; color:#fff; background:rgba(0,0,0,.6); z-index:6; user-select:none; }
+ 
+html,body { margin:0; padding:0; height:100%; background:#000; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; -webkit-user-select:none; user-select:none; }
+#app { position:relative; width:100vw; height:100vh; overflow:hidden; touch-action:none; }
+#webcam { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+#three-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:2; }
+#ui label { display:flex; flex-direction:column; align-items:flex-start; gap:.25rem; font-weight:500; letter-spacing:.5px; }
+#ui label input[type="range"] { width:70px; }
+#ui button { background:rgba(255,255,255,.15); color:#fff; border:none; padding:.35rem .6rem; border-radius:999px; font-size:.6rem; letter-spacing:.5px; }
+#ui button:active { transform:scale(.94); }
+
+/* Record Button Styles - Based on 8th Wall */
+.recorder-container {
+  position: fixed;
+  width: clamp(70px, 22vmin, 130px);
+  height: clamp(70px, 22vmin, 130px);
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  transition: 0.4s opacity, 0.3s transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#recorder-button {
+  display: block;
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  color: transparent;
+  top: 0;
+  left: 0;
+  transform-origin: 50% 50%;
+  transform: scale(0.6);
+  transition: 0.3s border-radius, 0.3s transform;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.progress-container {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scale(0.9);
+  transition: 0.3s transform, 0.3s opacity;
+  opacity: 0;
+}
+
+.progress-track,
+.progress-bar, 
+.loading-circle {
+  fill: transparent;
+  stroke-width: 3;
+}
+
+.progress-track {
+  stroke: white;
+}
+
+.progress-bar {
+  opacity: 0;
+  transition: 0;
+  transform-origin: 50% 50%;
+  stroke: #ff1744;
+  transform: rotate(-90deg);
+  stroke-dasharray: 100.531 100.531;
+  stroke-dashoffset: 100.531;
+}
+
+.recording .progress-container,
+.loading .progress-container {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.recording .progress-track, 
+.loading .progress-track {
+  transition: 0.8s stroke;
+  stroke: rgba(255, 255, 255, 0.3);
+}
+
+.recording .progress-bar {
+  opacity: 1;
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.active #recorder-button {
+  transform: scale(0.5);
+}
+
+.recording #recorder-button {
+  background: #ff1744;
+  border-radius: 15%;
+  transform: scale(0.42);
+}
+
+.loading-circle {
+  stroke-dasharray: 25 25 25 25;
+  stroke-dashoffset: 0;
+  stroke: white;
+  opacity: 0;
+  transform-origin: 50% 50%;
+}
+
+@keyframes record-button-spin {
+  0% { transform: rotate(-90deg); }
+  100% { transform: rotate(270deg); }
+}
+
+.loading .loading-circle {
+  animation: record-button-spin 1.1s linear infinite both;
+  opacity: 1;
+}
+
+.flash-element {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: white;
+  opacity: 0;
+  transition: 0.6s opacity;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.flash-element.flashing {
+  transition: 0s opacity;
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 100;
+}
+
+.fade-container {
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.3s opacity;
+}
+
+/* Preview Styles */
+#preview-container {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 50;
+}
+
+#preview-container.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#preview-video,
+#preview-image {
+  width: auto;
+  height: auto;
+  max-width: min(94vw, 1000px);
+  max-height: min(70vh, 600px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+  display: none;
+  object-fit: contain;
+  background: #000;
+}
+
+#preview-video {
+  background: #000;
+  min-width: 300px;
+  min-height: 200px;
+}
+
+.preview-controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.preview-controls button {
+  background: #16252e;
+  border: 2px solid #53c9cc;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.preview-controls button:hover {
+  background: #53c9cc;
+  border: 2px solid #53c9cc;
+  color: #16252e;
+  transform: scale(1.05);
+}
+
+/* Recorder Loading States */
+#recorder-container.loading {
+  min-width: clamp(260px,50vw,480px); min-height: clamp(160px,30vh,320px); 
+
+#recorder-container.loading::after {
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+  .preview-controls { flex-wrap: wrap; justify-content: center; }
+  .preview-controls button { flex: 1 1 calc(33% - 0.5rem); min-width: 90px; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .recorder-container { bottom: 8px; }
+  #preview-video, #preview-image { max-height: 60vh; }
+}
+
+/* Fine-tune very small devices */
+@media (max-width: 380px) {
+  .recorder-container { width: 60px; height: 60px; }
+  #preview-video, #preview-image { max-width: 92vw; }
+}
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+#preview-download {
+  background: #53c9cc;
+  border-color: #53c9cc;
+  color: #16252e;
+}
+
+#preview-download:hover {
+  background: #16252e;
+  border-color: #53c9cc;
+  color: #53c9cc;
+}
+
+#preview-close {
+  background: #16252e;
+  border-color: #53c9cc;
+  color: white;
+}
+
+#preview-close:hover {
+  background: #53c9cc;
+  border-color: #53c9cc;
+  color: #16252e;
+}
+
+#preview-share {
+  background: #53c9cc;
+  border-color: #53c9cc;
+  color: #16252e;
+}
+
+#preview-share:hover {
+  background: #16252e;
+  border-color: #53c9cc;
+  color: #53c9cc;
+}#tapOverlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.25rem; color:#fff; background:rgba(0,0,0,.65); z-index:6; user-select:none; }
