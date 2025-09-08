@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SVG QR Debug</title>
+    <style>
+        body { 
+            font-family: monospace; 
+            margin: 20px; 
+            background: white;
+        }
+        .qr-test { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #333; 
+            background: white;
+        }
+        .qr-display {
+            width: 400px; 
+            height: 400px; 
+            border: 2px solid red;
+            background: white;
+            margin: 10px 0;
+        }
+        .instructions {
+            background: #f0f0f0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .debug-info {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 SVG QR Debug Mode</h1>
+    
+    <div class="instructions">
+        <h3>INSTRUCCIONES DE DEBUG:</h3>
+        <ol>
+            <li><strong>Abre la app principal:</strong> <button onclick="window.open('index.html', '_blank')">Abrir Scanner App</button></li>
+            <li><strong>Permite acceso a cámara</strong> en la app principal</li>
+            <li><strong>Acerca la cámara</strong> a cada QR de abajo (uno por uno)</li>
+            <li><strong>Observa:</strong> 
+                <ul>
+                    <li>Texto en parte superior de la app</li>
+                    <li>Contador en parte inferior izquierda</li>
+                    <li>Logs en consola del navegador (F12)</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+    
+    <div class="debug-info" id="debug-log">
+        Debug logs aparecerán aquí...
+    </div>
+    
+    <div class="qr-test">
+        <h3>🟢 QR FUNCIONANDO (piece_2.png) - PRUEBA PRIMERO</h3>
+        <img src="qrs/piece_2.png" class="qr-display" alt="Working QR">
+        <p><strong>Este QR debería funcionar.</strong> Si no detecta este, hay problema con el scanner.</p>
+    </div>
+    
+    <div class="qr-test">
+        <h3>🔴 PROBLEMA: AvaSure2.svg</h3>
+        <img src="qrs/official/AvaSure2.svg" class="qr-display" alt="AvaSure2 SVG">
+        <p><strong>Este es el QR problemático.</strong> Observa si se detecta algo.</p>
+    </div>
+    
+    <div class="qr-test">
+        <h3>🔴 PROBLEMA: AvaSure1.svg</h3>
+        <img src="qrs/official/AvaSure1.svg" class="qr-display" alt="AvaSure1 SVG">
+        <p><strong>Otro QR problemático.</strong> Prueba este también.</p>
+    </div>
+    
+    <div class="qr-test">
+        <h3>📋 MANUAL TEST</h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="testQR('https://qrfy.io/p/U4QhGHiBbA')">Test piece_1 URL</button>
+            <button onclick="testQR('https://qrfy.io/p/K9vJFePcRZ')">Test piece_2 URL</button>
+            <button onclick="testQR('piece_1')">Test piece_1 direct</button>
+            <button onclick="testQR('piece_2')">Test piece_2 direct</button>
+        </div>
+        <p>Estos botones envían URLs directamente al procesador para verificar que el mapeo funciona.</p>
+    </div>
+    
+    <script>
+        function testQR(text) {
+            const debugLog = document.getElementById('debug-log');
+            debugLog.innerHTML += `<div>📤 Testing: ${text}</div>`;
+            
+            // Comunicar con la ventana principal si está abierta
+            try {
+                if (window.opener && !window.opener.closed) {
+                    window.opener.processPieceIdentifier(text);
+                    debugLog.innerHTML += `<div>✅ Sent to main window</div>`;
+                } else {
+                    debugLog.innerHTML += `<div>❌ No main window open</div>`;
+                }
+            } catch (e) {
+                debugLog.innerHTML += `<div>❌ Error: ${e.message}</div>`;
+            }
+            
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        
+        // Logs from main window
+        window.addEventListener('message', (e) => {
+            const debugLog = document.getElementById('debug-log');
+            debugLog.innerHTML += `<div>📨 Message: ${JSON.stringify(e.data)}</div>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        });
+        
+        console.log('🔍 SVG Debug page loaded. Ready for testing.');
+    </script>
+</body>
+</html>

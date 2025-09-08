@@ -20,6 +20,8 @@ class QRCamera {
     this._lastScanTime = 0;
     this._lastPauseTime = 0;
     this._lastScannedText = null;
+    this._scanAttempts = 0;
+    this._successfulScans = 0;
   }
 
   async start(deviceId = null) {
@@ -209,21 +211,50 @@ class QRCamera {
         cameraConfig,
         config,
         (decodedText) => {
-          console.log('🎯 QR Code detected:', decodedText);
+          this._successfulScans++;
+          console.log('🎯 RAW QR Code detected:', decodedText);
+          console.log('🎯 QR Length:', decodedText.length);
+          console.log('🎯 QR Type:', typeof decodedText);
+          console.log('🎯 QR First 50 chars:', decodedText.substring(0, 50));
+          
+          // Update debug counter
+          const debugEl = document.getElementById('scanner-debug');
+          if (debugEl) {
+            debugEl.textContent = `🎯 QR DETECTED! Attempts: ${this._scanAttempts} | Success: ${this._successfulScans}`;
+            debugEl.style.background = 'rgba(255,165,0,0.9)';
+          }
           
           // Mostrar SIEMPRE el texto detectado de inmediato
           const detectedElement = document.getElementById('detected-qr');
           if (detectedElement) {
-            detectedElement.textContent = `📱 Scanning: ${decodedText}`;
+            detectedElement.textContent = `📱 RAW: ${decodedText}`;
             detectedElement.style.color = '#00FF88';
             detectedElement.style.display = 'block';
+            detectedElement.style.fontSize = '12px';
+            detectedElement.style.wordBreak = 'break-all';
           }
+          
+          // También mostrar en consola del navegador de forma muy visible
+          console.warn('🔥🔥🔥 QR DETECTED: ' + decodedText + ' 🔥🔥🔥');
           
           this._onScan(decodedText);
         },
         (errorMessage) => {
-          // Silent scan error, not critical
-          // console.log('QR scan error (normal):', errorMessage);
+          // Contar intentos
+          this._scanAttempts++;
+          
+          // Update debug status periodically
+          if (this._scanAttempts % 100 === 0) {
+            const debugEl = document.getElementById('scanner-debug');
+            if (debugEl) {
+              debugEl.textContent = `🔍 Scanning... Attempts: ${this._scanAttempts} | Success: ${this._successfulScans}`;
+            }
+          }
+          
+          // Mostrar algunos errores para debug (no todos porque son muchos)
+          if (Math.random() < 0.001) { // Solo 0.1% de los errores
+            console.log('📷 QR scan attempt (sample):', errorMessage);
+          }
         }
       );
       
@@ -232,6 +263,13 @@ class QRCamera {
       this._pending = false;
       this._retryCount = 0; // Reset successful
       console.log('✅ QRCamera: Camera started successfully!');
+      
+      // Update debug status
+      const debugEl = document.getElementById('scanner-debug');
+      if (debugEl) {
+        debugEl.textContent = '✅ Scanner ACTIVE - Ready to detect QRs';
+        debugEl.style.background = 'rgba(0,128,0,0.8)';
+      }
       
       // Force video to play after a short delay
       setTimeout(() => {
