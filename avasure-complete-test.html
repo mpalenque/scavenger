@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AvaSure QR Complete Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: white;
+        }
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .qr-item { 
+            border: 2px solid #333; 
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+        .qr-item h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .qr-display {
+            width: 250px; 
+            height: 250px; 
+            border: 1px solid #ccc;
+            background: white;
+            margin: 10px auto;
+            display: block;
+        }
+        .mapping-info {
+            background: #f0f8ff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .instructions {
+            background: #e8f5e8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .working { border-color: #4caf50; }
+        .testing { border-color: #ff9800; }
+    </style>
+</head>
+<body>
+    <h1>🎯 AvaSure QR Complete Mapping Test</h1>
+    
+    <div class="instructions">
+        <h3>✅ SISTEMA IMPLEMENTADO COMPLETAMENTE</h3>
+        <p><strong>Mapeo implementado:</strong></p>
+        <ul>
+            <li><strong>AvaSure2.svg</strong> → Piece 1 (https://qrfy.io/p/U4QhGHiBbA)</li>
+            <li><strong>AvaSure3.svg</strong> → Piece 2 (https://qrfy.io/p/K9vJFePcRZ)</li>
+            <li><strong>AvaSure4.svg</strong> → Piece 3 (https://qrfy.io/p/bKmBFhhx5S)</li>
+            <li><strong>AvaSure5.svg</strong> → Piece 4 (https://qrfy.io/p/dRrwQe4qNj)</li>
+            <li><strong>AvaSure6.svg</strong> → Piece 5 (https://qrfy.io/p/DvHBs8xgTN)</li>
+            <li><strong>AvaSure7.svg</strong> → Piece 6 (https://qrfy.io/p/36oTTN9y7w)</li>
+            <li><strong>AvaSure8.svg</strong> → Piece 7 (https://qrfy.io/p/iSz4F9eNfn)</li>
+        </ul>
+        
+        <div style="margin: 15px 0;">
+            <button onclick="window.open('index.html', '_blank')" style="background: #28a745; font-size: 18px;">
+                🚀 ABRIR SCANNER PRINCIPAL
+            </button>
+        </div>
+        
+        <p><strong>INSTRUCCIONES:</strong></p>
+        <ol>
+            <li>Haz clic en "ABRIR SCANNER PRINCIPAL" arriba</li>
+            <li>Permite acceso a la cámara en la app principal</li>
+            <li>Escanea cada QR de abajo para probar el mapeo completo</li>
+            <li>Verifica que cada AvaSure detecte la pieza correcta</li>
+        </ol>
+    </div>
+    
+    <div class="qr-grid">
+        <div class="qr-item testing">
+            <h3>🔹 AvaSure2.svg → Piece 1</h3>
+            <img src="qrs/official/AvaSure2.svg" class="qr-display" alt="AvaSure2 QR">
+            <div class="mapping-info">
+                <strong>Esperado:</strong> piece_1<br>
+                <strong>URL:</strong> https://qrfy.io/p/U4QhGHiBbA
+            </div>
+        </div>
+        
+        <div class="qr-item testing">
+            <h3>🔹 AvaSure3.svg → Piece 2</h3>
+            <img src="qrs/official/AvaSure3.svg" class="qr-display" alt="AvaSure3 QR">
+            <div class="mapping-info">
+                <strong>Esperado:</strong> piece_2<br>
+                <strong>URL:</strong> https://qrfy.io/p/K9vJFePcRZ
+            </div>
+        </div>
+        
+        <div class="qr-item testing">
+            <h3>🔹 AvaSure4.svg → Piece 3</h3>
+            <img src="qrs/official/AvaSure4.svg" class="qr-display" alt="AvaSure4 QR">
+            <div class="mapping-info">
+                <strong>Esperado:</strong> piece_3<br>
+                <strong>URL:</strong> https://qrfy.io/p/bKmBFhhx5S
+            </div>
+        </div>
+        
+        <div class="qr-item testing">
+            <h3>🔹 AvaSure5.svg → Piece 4</h3>
+            <img src="qrs/official/AvaSure5.svg" class="qr-display" alt="AvaSure5 QR">
+            <div class="mapping-info">
+                <strong>Esperado:</strong> piece_4<br>
+                <strong>URL:</strong> https://qrfy.io/p/dRrwQe4qNj
+            </div>
+        </div>
+        
+        <div class="qr-item testing">
+            <h3>🔹 AvaSure6.svg → Piece 5</h3>
+            <img src="qrs/official/AvaSure6.svg" class="qr-display" alt="AvaSure6 QR">
+            <div class="mapping-info">
+                <strong>Esperado:</strong> piece_5<br>
+                <strong>URL:</strong> https://qrfy.io/p/DvHBs8xgTN
+            </div>
+        </div>
+        
+        <div class="qr-item testing">
+            <h3>🔹 AvaSure7.svg → Piece 6</h3>
+            <img src="qrs/official/AvaSure7.svg" class="qr-display" alt="AvaSure7 QR">
+            <div class="mapping-info">
+                <strong>Esperado:</strong> piece_6<br>
+                <strong>URL:</strong> https://qrfy.io/p/36oTTN9y7w
+            </div>
+        </div>
+        
+        <div class="qr-item testing">
+            <h3>🔹 AvaSure8.svg → Piece 7</h3>
+            <img src="qrs/official/AvaSure8.svg" class="qr-display" alt="AvaSure8 QR">
+            <div class="mapping-info">
+                <strong>Esperado:</strong> piece_7<br>
+                <strong>URL:</strong> https://qrfy.io/p/iSz4F9eNfn
+            </div>
+        </div>
+        
+        <div class="qr-item working">
+            <h3>✅ piece_2.png (Control)</h3>
+            <img src="qrs/piece_2.png" class="qr-display" alt="piece_2 QR">
+            <div class="mapping-info">
+                <strong>Control:</strong> piece_2 (debería funcionar)<br>
+                <strong>Tipo:</strong> PNG original
+            </div>
+        </div>
+    </div>
+    
+    <div style="background: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #ffc107;">
+        <h3>🧪 Manual Testing</h3>
+        <p>Si algún QR no funciona, puedes probarlo manualmente:</p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0;">
+            <button onclick="testQR('https://qrfy.io/p/U4QhGHiBbA')">Test Piece 1 URL</button>
+            <button onclick="testQR('https://qrfy.io/p/K9vJFePcRZ')">Test Piece 2 URL</button>
+            <button onclick="testQR('https://qrfy.io/p/bKmBFhhx5S')">Test Piece 3 URL</button>
+            <button onclick="testQR('https://qrfy.io/p/dRrwQe4qNj')">Test Piece 4 URL</button>
+            <button onclick="testQR('https://qrfy.io/p/DvHBs8xgTN')">Test Piece 5 URL</button>
+            <button onclick="testQR('https://qrfy.io/p/36oTTN9y7w')">Test Piece 6 URL</button>
+            <button onclick="testQR('https://qrfy.io/p/iSz4F9eNfn')">Test Piece 7 URL</button>
+        </div>
+    </div>
+    
+    <script>
+        function testQR(url) {
+            try {
+                // Buscar si hay una ventana del scanner abierta
+                const scannerWindow = window.open('', '_blank');
+                if (scannerWindow) {
+                    scannerWindow.location.href = 'index.html';
+                    setTimeout(() => {
+                        if (scannerWindow.processPieceIdentifier) {
+                            scannerWindow.processPieceIdentifier(url);
+                        }
+                    }, 2000);
+                }
+            } catch (e) {
+                console.error('Error testing QR:', e);
+                alert('Abre el scanner principal primero, luego usa estos botones');
+            }
+        }
+        
+        console.log('🎯 AvaSure Complete Test page loaded');
+        console.log('📱 All 7 pieces mapped to AvaSure2-8.svg');
+    </script>
+</body>
+</html>
