@@ -1184,6 +1184,79 @@ function ensureVideoVisible() {
   }
 }
 
+// Show QR detection overlay with visual feedback
+function showQRDetectionOverlay(text) {
+  // Update the detected text display
+  updateDetectedText(text, false);
+  
+  // Show overlay based on QR validity
+  const validPiece = processPieceResult(text);
+  if (validPiece) {
+    showOverlay('success', `✅ Valid piece detected: ${validPiece.name || validPiece.id}`);
+  } else {
+    showOverlay('info', `📱 QR detected: ${text}`);
+  }
+}
+
+// Show overlay with different types
+function showOverlay(type, message) {
+  const overlay = document.getElementById('qr-detection-overlay');
+  const frame = document.getElementById('qr-frame-overlay');
+  
+  if (overlay) {
+    overlay.textContent = message;
+    overlay.className = `qr-detection-overlay show ${type}`;
+    
+    // Auto-hide overlay after 2 seconds
+    setTimeout(() => {
+      overlay.classList.remove('show');
+    }, 2000);
+  }
+  
+  if (frame) {
+    frame.className = `qr-frame-overlay show ${type}`;
+    
+    // Auto-hide frame after 2 seconds
+    setTimeout(() => {
+      frame.classList.remove('show');
+    }, 2000);
+  }
+}
+
+// Helper function to check if QR text matches a valid piece
+function processPieceResult(text) {
+  // Check exact AvaSure URLs
+  const avasureMapping = {
+    'https://qrfy.io/p/U4QhGHiBbA': 'piece_1',
+    'https://qrfy.io/p/K9vJFePcRZ': 'piece_2', 
+    'https://qrfy.io/p/bKmBFhhx5S': 'piece_3',
+    'https://qrfy.io/p/dRrwQe4qNj': 'piece_4',
+    'https://qrfy.io/p/DvHBs8xgTN': 'piece_5',
+    'https://qrfy.io/p/36oTTN9y7w': 'piece_6',
+    'https://qrfy.io/p/iSz4F9eNfn': 'piece_7'
+  };
+  
+  const pieceId = avasureMapping[text] || text;
+  return PIECES.find(p => p.id === pieceId);
+}
+
+// Update QR detection result display
+function updateQRDetectionResult(pieceId, originalText) {
+  const detectedElement = document.getElementById('detected-qr');
+  if (detectedElement) {
+    const isValid = PIECES.find(p => p.id === pieceId);
+    if (isValid) {
+      detectedElement.textContent = `✅ Valid: ${originalText} → ${pieceId}`;
+      detectedElement.style.color = '#00FF88';
+      detectedElement.style.borderColor = '#00FF88';
+    } else {
+      detectedElement.textContent = `📱 QR: ${originalText}`;
+      detectedElement.style.color = '#FF8A50';
+      detectedElement.style.borderColor = '#FF8A50';
+    }
+  }
+}
+
 // Check if QR was already detected
 function checkIfQRAlreadyDetected(url) {
   // Check each piece to see if this URL was already used
@@ -1253,9 +1326,11 @@ function updateDetectedText(url, isAlreadyDetected = false) {
     if (isAlreadyDetected) {
       detectedElement.textContent = `🔄 Already detected: ${url}`;
       detectedElement.style.color = '#FF8A50';
+      detectedElement.style.borderColor = '#FF8A50';
     } else {
-      detectedElement.textContent = `🎯 New QR detected: ${url}`;
+      detectedElement.textContent = `🎯 QR detected: ${url}`;
       detectedElement.style.color = '#00FF88';
+      detectedElement.style.borderColor = '#00FF88';
     }
   }
 }

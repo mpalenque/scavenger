@@ -19,6 +19,7 @@ class QRCamera {
     this._isPaused = false;
     this._lastScanTime = 0;
     this._lastPauseTime = 0;
+    this._lastScannedText = null;
   }
 
   async start(deviceId = null) {
@@ -332,20 +333,22 @@ class QRCamera {
       return;
     }
     
-    // Check for rapid repeat scans
+    // Check for rapid repeat scans of the SAME QR
     const now = Date.now();
-    if (this._lastScanTime && (now - this._lastScanTime) < 1000) {
-      console.log('📷 QRCamera: Ignoring rapid repeat scan');
+    if (this._lastScanTime && this._lastScannedText === text && (now - this._lastScanTime) < 2000) {
+      console.log('📷 QRCamera: Ignoring rapid repeat scan of same QR');
       return;
     }
     this._lastScanTime = now;
+    this._lastScannedText = text;
     
-    // Expected QR format: "piece_3"
-    console.log('🎯 QRCamera: Valid QR scan detected:', text);
+    // All QR codes should be detected and shown
+    console.log('🎯 QRCamera: QR scan detected:', text);
     dispatchCustomEvent('qr-detected', { raw: text });
     
-    // Pause scanning temporarily to prevent multiple detections
-    this.pause();
+    // Do NOT pause automatically - allow continuous scanning
+    // Only pause briefly to prevent immediate re-detection of same QR
+    this._lastScanTime = now;
   }
 
   pause() {
