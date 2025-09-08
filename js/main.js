@@ -1194,15 +1194,17 @@ function ensureVideoVisible() {
 
 // Show QR detection overlay with visual feedback
 function showQRDetectionOverlay(text) {
-  // Update the detected text display
-  updateDetectedText(text, false);
+  // Update the detected text display (sin mostrar el texto real)
+  updateDetectedText('', false);
   
   // Show overlay based on QR validity
   const validPiece = processPieceResult(text);
   if (validPiece) {
-    showOverlay('success', `✅ Valid piece detected: ${validPiece.name || validPiece.id}`);
+    showOverlay('success', `QR Code Detected`);
+    triggerFlashEffect(); // Agregar flash cuando se detecta
   } else {
-    showOverlay('info', `📱 QR detected: ${text}`);
+    showOverlay('info', `QR Code Detected`);
+    triggerFlashEffect(); // Agregar flash cuando se detecta
   }
 }
 
@@ -1215,19 +1217,41 @@ function showOverlay(type, message) {
     overlay.textContent = message;
     overlay.className = `qr-detection-overlay show ${type}`;
     
-    // Auto-hide overlay after 2 seconds
+    // Auto-hide overlay after 3 seconds (más tiempo)
     setTimeout(() => {
       overlay.classList.remove('show');
-    }, 2000);
+    }, 3000);
   }
   
   if (frame) {
+    // Hacer el frame más grande y prominente, centrado en pantalla
+    frame.style.width = '280px';
+    frame.style.height = '280px';
+    frame.style.top = '50%';
+    frame.style.left = '50%';
+    frame.style.transform = 'translate(-50%, -50%)';
     frame.className = `qr-frame-overlay show ${type}`;
     
-    // Auto-hide frame after 2 seconds
+    // Auto-hide frame after 3 seconds (más tiempo)
     setTimeout(() => {
       frame.classList.remove('show');
-    }, 2000);
+    }, 3000);
+  }
+}
+
+// Trigger flash effect when QR is detected
+function triggerFlashEffect() {
+  const flashElement = document.getElementById('scan-flash');
+  if (flashElement) {
+    flashElement.classList.remove('flash-animate');
+    // Force reflow
+    flashElement.offsetHeight;
+    flashElement.classList.add('flash-animate');
+    
+    // Remove class after animation
+    setTimeout(() => {
+      flashElement.classList.remove('flash-animate');
+    }, 600);
   }
 }
 

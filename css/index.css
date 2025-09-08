@@ -108,8 +108,18 @@ input, button, select, textarea {
 .scan-instruction { position: absolute; left: 50%; transform: translateX(-50%); bottom: 80px; font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 14px; text-transform: uppercase; color: #35d3d3; text-align: center; width: 113px; line-height: 1.4; z-index: 10; pointer-events: none; }
 
 .flash-overlay { position:absolute; inset:0; background: transparent; opacity:0; pointer-events:none; z-index:20; display: none; }
-.flash-animate { animation: flashPulse 380ms ease-out; }
-@keyframes flashPulse { 0% { opacity:0; } 15% { opacity:0.9; } 100% { opacity:0; } }
+.flash-animate { 
+  animation: flashPulse 600ms ease-out; 
+  background: rgba(0, 255, 136, 0.3) !important;
+  display: block !important;
+}
+@keyframes flashPulse { 
+  0% { opacity:0; transform: scale(1); } 
+  25% { opacity:0.8; transform: scale(1.02); } 
+  50% { opacity:1; transform: scale(1.05); } 
+  75% { opacity:0.6; transform: scale(1.02); } 
+  100% { opacity:0; transform: scale(1); } 
+}
 
 .bottom-panel { margin-top:auto; background: transparent; padding:0.75rem; padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); max-height:35vh; overflow-y:auto; }
 
@@ -206,26 +216,46 @@ input, button, select, textarea {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
-  padding: 20px;
-  border-radius: 10px;
-  font-size: 16px;
+  padding: 25px 35px;
+  border-radius: 15px;
+  font-size: 18px;
   font-weight: bold;
   text-align: center;
   z-index: 1000;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: all 0.4s ease;
   pointer-events: none;
+  border: 2px solid #00D4D4;
+  box-shadow: 0 0 25px rgba(0, 212, 212, 0.6);
 }
 
 .qr-detection-overlay.show {
   opacity: 1;
+  animation: detectionPulse 0.6s ease-out;
 }
 
 .qr-detection-overlay.success {
-  background: rgba(0, 255, 136, 0.9);
+  background: rgba(0, 212, 212, 0.9);
   color: #000;
+  border-color: #00FF88;
+  box-shadow: 0 0 35px rgba(0, 255, 136, 0.8);
+}
+
+@keyframes detectionPulse {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0.9;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
 }
 
 .qr-detection-overlay.error {
@@ -272,50 +302,76 @@ input, button, select, textarea {
 /* QR Detection Text Display */
 .detected-qr-text {
   position: fixed;
-  top: 20px;
+  top: 30px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
-  color: #00FF88;
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
+  background: rgba(0, 212, 212, 0.9);
+  color: #000;
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
   text-align: center;
   z-index: 1001;
   max-width: 80%;
-  word-wrap: break-word;
-  border: 1px solid #00FF88;
-  box-shadow: 0 2px 10px rgba(0, 255, 136, 0.3);
+  border: 2px solid #00D4D4;
+  box-shadow: 0 4px 15px rgba(0, 212, 212, 0.5);
+  transition: all 0.3s ease;
 }
 
 .detected-qr-text:empty::before {
   content: "Ready to scan QR codes...";
-  color: #888;
+  color: #666;
 }
 
 /* QR Frame Overlay */
 .qr-frame-overlay {
   position: fixed;
   pointer-events: none;
-  border: 3px solid #35d3d3;
-  border-radius: 8px;
+  border: 5px solid #00D4D4;
+  border-radius: 12px;
   z-index: 999;
   opacity: 0;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(53, 211, 211, 0.5);
+  transition: all 0.4s ease;
+  box-shadow: 
+    0 0 30px rgba(0, 212, 212, 0.8),
+    inset 0 0 20px rgba(0, 212, 212, 0.3);
+  background: rgba(0, 212, 212, 0.15);
 }
 
 .qr-frame-overlay.show {
   opacity: 1;
+  animation: frameDetection 0.8s ease-out;
 }
 
 .qr-frame-overlay.success {
-  border-color: #4caf50;
-  box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+  border-color: #00D4D4;
+  box-shadow: 
+    0 0 40px rgba(0, 212, 212, 1),
+    inset 0 0 30px rgba(0, 212, 212, 0.4);
+  background: rgba(0, 212, 212, 0.25);
 }
 
 .qr-frame-overlay.error {
   border-color: #f44336;
   box-shadow: 0 0 20px rgba(244, 67, 54, 0.5);
+}
+
+@keyframes frameDetection {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+  }
+  30% { 
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+  60% { 
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
 }

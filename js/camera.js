@@ -229,14 +229,15 @@ class QRCamera {
             debugEl.style.background = 'rgba(255,165,0,0.9)';
           }
           
-          // Mostrar SIEMPRE el texto detectado de inmediato
+          // Mostrar solo que se detectó un QR, sin el contenido
           const detectedElement = document.getElementById('detected-qr');
           if (detectedElement) {
-            detectedElement.textContent = `📱 RAW: ${decodedText}`;
-            detectedElement.style.color = '#00FF88';
+            detectedElement.textContent = `QR Code Detected`;
+            detectedElement.style.color = '#00D4D4';
             detectedElement.style.display = 'block';
-            detectedElement.style.fontSize = '12px';
-            detectedElement.style.wordBreak = 'break-all';
+            detectedElement.style.fontSize = '14px';
+            detectedElement.style.fontWeight = 'bold';
+            detectedElement.style.textAlign = 'center';
           }
           
           // También mostrar en consola del navegador de forma muy visible
