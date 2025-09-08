@@ -585,6 +585,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function processPieceIdentifier(raw) {
   // normalize text
   const text = (raw || '').trim();
+  
+  // Debug logging for QR content
+  console.log('🔍 QR Content detected:', text);
 
   // 1) Si es una URL, intentar extraer ?piece=...
   let id = null;
@@ -614,8 +617,84 @@ function processPieceIdentifier(raw) {
     // ignorar errores de parseo
   }
 
-  // 2) If no valid URL, evaluate direct text as ID
-  if (!id) id = text;
+  // 2) Map AvaSure QR codes to pieces
+  // AvaSure2 -> piece_1, AvaSure3 -> piece_2, ... AvaSure8 -> piece_7
+  if (!id) {
+    const avasureMapping = {
+      'avasure2': 'piece_1',
+      'avasure3': 'piece_2', 
+      'avasure4': 'piece_3',
+      'avasure5': 'piece_4',
+      'avasure6': 'piece_5',
+      'avasure7': 'piece_6',
+      'avasure8': 'piece_7'
+    };
+    
+    // Check for AvaSure patterns in the scanned text
+    const lowerText = text.toLowerCase();
+    
+    // Direct AvaSure pattern matching
+    for (const [avasureKey, pieceId] of Object.entries(avasureMapping)) {
+      if (lowerText.includes(avasureKey)) {
+        id = pieceId;
+        console.log(`✅ AvaSure QR detected: ${avasureKey} -> ${pieceId}`);
+        break;
+      }
+    }
+    
+    // Also check for numeric patterns that might come from QR content
+    // e.g., if QR contains just "2", "3", etc., map to corresponding pieces
+    if (!id) {
+      const numMatch = text.match(/\b([2-8])\b/);
+      if (numMatch) {
+        const num = parseInt(numMatch[1]);
+        if (num >= 2 && num <= 8) {
+          id = `piece_${num - 1}`; // AvaSure2 -> piece_1, etc.
+          console.log(`✅ AvaSure numeric QR detected: ${num} -> ${id}`);
+        }
+      }
+    }
+    
+    // Check for AvaSure.svg filename patterns
+    if (!id && lowerText.includes('.svg')) {
+      const svgMatch = lowerText.match(/avasure(\d+)\.svg/);
+      if (svgMatch) {
+        const num = parseInt(svgMatch[1]);
+        if (num >= 2 && num <= 8) {
+          id = `piece_${num - 1}`;
+          console.log(`✅ AvaSure SVG QR detected: AvaSure${num}.svg -> ${id}`);
+        }
+      }
+    }
+    
+    // Check for URLs that might contain AvaSure identifiers
+    if (!id && (lowerText.includes('avasure') || lowerText.includes('piece'))) {
+      // Look for URLs with AvaSure parameters or paths
+      const urlAvaSureMatch = lowerText.match(/(?:avasure[_-]?(\d+)|piece[_-]?(\d+))/);
+      if (urlAvaSureMatch) {
+        const num = parseInt(urlAvaSureMatch[1] || urlAvaSureMatch[2]);
+        if (num >= 1 && num <= 7) {
+          id = `piece_${num}`;
+          console.log(`✅ AvaSure URL QR detected: ${urlAvaSureMatch[0]} -> ${id}`);
+        } else if (num >= 2 && num <= 8) {
+          id = `piece_${num - 1}`;
+          console.log(`✅ AvaSure URL QR detected: ${urlAvaSureMatch[0]} -> ${id}`);
+        }
+      }
+    }
+  }
+
+  // 3) If no valid URL or AvaSure mapping, evaluate direct text as ID
+  if (!id) {
+    // Additional fallback: check if the text directly contains piece identifiers
+    const directPieceMatch = text.match(/piece[_\s]*([1-7])/i);
+    if (directPieceMatch) {
+      id = `piece_${directPieceMatch[1]}`;
+      console.log(`✅ Direct piece QR detected: ${text} -> ${id}`);
+    } else {
+      id = text;
+    }
+  }
 
   const valid = PIECES.find(p => p.id === id);
   sendGA('qr_scanned', { raw });
