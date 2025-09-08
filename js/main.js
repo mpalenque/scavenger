@@ -1622,7 +1622,17 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.addEventListener('load', () => {
-    console.log('Ventana cargada, iniciando init...');  // Debug: show test buttons on Ctrl+Shift+T
+    console.log('🚀 Main app loaded, starting initialization...');
+    console.log('🔍 QR Detection URLs configured:');
+    console.log('   - https://qrfy.io/p/U4QhGHiBbA -> piece_1');
+    console.log('   - https://qrfy.io/p/K9vJFePcRZ -> piece_2');
+    console.log('   - https://qrfy.io/p/bKmBFhhx5S -> piece_3');
+    console.log('   - https://qrfy.io/p/dRrwQe4qNj -> piece_4');
+    console.log('   - https://qrfy.io/p/DvHBs8xgTN -> piece_5');
+    console.log('   - https://qrfy.io/p/36oTTN9y7w -> piece_6');
+    console.log('   - https://qrfy.io/p/iSz4F9eNfn -> piece_7');
+    
+    // Debug: show test buttons on Ctrl+Shift+T
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.key === 'T') {
       const testSection = document.getElementById('test-section');
