@@ -75,13 +75,14 @@
       
       <div id="scan-flash" class="flash-overlay"></div>
       
-      <!-- QR Detection Text Display -->
-      <div id="detected-qr" class="detected-qr-text">
+      <!-- QR Detection Text Display - HIDDEN -->
+      <div id="detected-qr" class="detected-qr-text" style="display: none;">
         Ready to scan QR codes...
       </div>
       
-      <!-- Debug scanner status -->
+      <!-- Debug scanner status - HIDDEN -->
       <div id="scanner-debug" style="
+        display: none;
         position: fixed;
         bottom: 20px;
         left: 20px;
@@ -277,9 +278,7 @@
 
   <!-- QR Detection Overlays -->
   <div id="qr-detection-overlay" class="qr-detection-overlay">
-    <div class="qr-status">🔍 Scanning QR Code...</div>
-    <div class="qr-content" id="qr-content-display"></div>
-    <div class="qr-result" id="qr-result-display"></div>
+    <!-- Contenido será establecido dinámicamente por JavaScript -->
   </div>
   
   <div id="qr-frame-overlay" class="qr-frame-overlay"></div>

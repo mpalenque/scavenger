@@ -222,23 +222,7 @@ class QRCamera {
           console.log('🎯 QR Type:', typeof decodedText);
           console.log('🎯 QR First 50 chars:', decodedText.substring(0, 50));
           
-          // Update debug counter
-          const debugEl = document.getElementById('scanner-debug');
-          if (debugEl) {
-            debugEl.textContent = `🎯 QR DETECTED! Attempts: ${this._scanAttempts} | Success: ${this._successfulScans}`;
-            debugEl.style.background = 'rgba(255,165,0,0.9)';
-          }
-          
-          // Mostrar solo que se detectó un QR, sin el contenido
-          const detectedElement = document.getElementById('detected-qr');
-          if (detectedElement) {
-            detectedElement.textContent = `QR Code Detected`;
-            detectedElement.style.color = '#00D4D4';
-            detectedElement.style.display = 'block';
-            detectedElement.style.fontSize = '14px';
-            detectedElement.style.fontWeight = 'bold';
-            detectedElement.style.textAlign = 'center';
-          }
+          // Solo logs en consola, sin mostrar texto en pantalla
           
           // También mostrar en consola del navegador de forma muy visible
           console.warn('🔥🔥🔥 QR DETECTED: ' + decodedText + ' 🔥🔥🔥');
@@ -246,18 +230,10 @@ class QRCamera {
           this._onScan(decodedText);
         },
         (errorMessage) => {
-          // Contar intentos
+          // Contar intentos silenciosamente
           this._scanAttempts++;
           
-          // Update debug status periodically
-          if (this._scanAttempts % 50 === 0) { // Más frecuente para debug
-            const debugEl = document.getElementById('scanner-debug');
-            if (debugEl) {
-              debugEl.textContent = `🔍 Scanning... Attempts: ${this._scanAttempts} | Success: ${this._successfulScans} | FPS: ${config.fps}`;
-            }
-          }
-          
-          // Mostrar algunos errores específicos para debug
+          // Solo mostrar errores importantes en consola
           if (errorMessage.includes('QR') || errorMessage.includes('code') || Math.random() < 0.005) {
             console.log('📷 QR scan attempt details:', errorMessage);
           }
@@ -269,13 +245,6 @@ class QRCamera {
       this._pending = false;
       this._retryCount = 0; // Reset successful
       console.log('✅ QRCamera: Camera started successfully!');
-      
-      // Update debug status
-      const debugEl = document.getElementById('scanner-debug');
-      if (debugEl) {
-        debugEl.textContent = '✅ Scanner ACTIVE - Ready to detect QRs';
-        debugEl.style.background = 'rgba(0,128,0,0.8)';
-      }
       
       // Force video to play after a short delay
       setTimeout(() => {
