@@ -16,8 +16,8 @@ function loadState() {
     if (!raw) return getInitialState();
     const parsed = JSON.parse(raw);
     const merged = { ...getInitialState(), ...parsed };
-    // If piece_7 is not obtained, force the sponsor match gate to be required again
-    if (!merged.obtained || !merged.obtained['piece_7']) {
+  // If piece_3 is not obtained, force the sponsor match gate to be required again
+  if (!merged.obtained || !merged.obtained['piece_3']) {
       merged.sponsorMatchCompleted = false;
     }
     return merged;
@@ -610,11 +610,11 @@ function processPieceIdentifier(raw) {
     if (url) {
       const qp = url.searchParams.get('piece');
       if (qp) id = qp;
-      // If QR points to matching page, treat as piece_7 gate
+    // If QR points to matching page, treat as piece_3 gate
       if (!id) {
         const path = (url.pathname || '').toLowerCase();
         if (path.endsWith('/matching') || path.endsWith('/matching.html') || path.includes('matching.html')) {
-          id = 'piece_7';
+      id = 'piece_3';
           fromMatchingURL = true;
         }
       }
@@ -827,16 +827,16 @@ function processPieceIdentifier(raw) {
     }, 2000);
     return;
   }
-  // If requesting piece_7 (including via matching URL) and sponsor match isn't completed, run sponsor match first
-  if (id === 'piece_7' && !state.sponsorMatchCompleted) {
-    console.log('🧩 Launching Sponsor Match for piece_7 before awarding');
+  // If requesting piece_3 (including via matching URL) and sponsor match isn't completed, run sponsor match first
+  if (id === 'piece_3' && !state.sponsorMatchCompleted) {
+    console.log('🧩 Launching Sponsor Match for piece_3 before awarding');
     launchSponsorMatch(() => {
       // callback after sponsor match completion
       state.sponsorMatchCompleted = true;
       saveState();
       // Open next SVG immediately after match completion
       window.__immediateAnimationNext = true;
-      // Re-run awarding logic for piece_7 now that gate is complete
+      // Re-run awarding logic for piece_3 now that gate is complete
       processPieceIdentifier(id);
     });
     return;
