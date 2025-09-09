@@ -6,7 +6,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Popp
 
 * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-text-size-adjust: 100%; touch-action: manipulation; }
 
-input, button, select, textarea { font-size: 16px !important; -webkit-appearance: none; appearance: none; }
+/* Keep form fields at >=16px to avoid iOS zoom; allow buttons to size via component rules */
+input, select, textarea { font-size: 16px !important; -webkit-appearance: none; appearance: none; }
 *:focus { outline: none !important; }
 
 .page { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px); gap: 16px; }
@@ -28,7 +29,7 @@ input, button, select, textarea { font-size: 16px !important; -webkit-appearance
 
 .options { display: flex; flex-direction: column; gap: 12px; padding: 0 4px; }
 
-.option-btn { width: 100%; padding: 16px 18px; background: #143940; color: white; border: 4px solid #35d3d3; border-radius: 58.5px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: opacity 260ms ease, transform 260ms ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; font-family: 'Poppins', sans-serif; text-align: center; opacity: 0; transform: translateY(8px); position: relative; overflow: visible; }
+.option-btn { width: 100%; padding: 16px 18px; background: #143940; color: white; border: 4px solid #35d3d3; border-radius: 58.5px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: opacity 260ms ease, transform 260ms ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; font-family: 'Poppins', sans-serif; text-align: center; opacity: 0; transform: translateY(8px); position: relative; overflow: visible; white-space: normal; word-break: break-word; }
 .option-btn.is-visible { opacity: 1; transform: translateY(0); }
 .option-btn:hover, .option-btn:active { background: #35d3d3; border-color: #35d3d3; transform: translateY(-2px); }
 .option-btn:disabled { opacity: 0.8; cursor: not-allowed; }
@@ -83,41 +84,48 @@ input, button, select, textarea { font-size: 16px !important; -webkit-appearance
 
 /* Mobile iPhone-friendly tweaks: prevent overlap and reduce sizes */
 @media (max-width: 420px) {
-  .page { padding-top: calc(env(safe-area-inset-top) + 76px); gap: 12px; overflow-y: auto; }
+  .page { padding-top: calc(env(safe-area-inset-top) + 88px); gap: 10px; overflow-y: auto; }
 
-  .main-instructions { font-size: 0.8rem; padding: 8px 12px; border-width: 2px; border-radius: 26px; max-width: 88vw; }
+  .main-instructions { font-size: 0.72rem; line-height: 1.2; padding: 6px 10px; border-width: 2px; border-radius: 22px; max-width: 92vw; }
 
-  .card { gap: 12px; justify-content: flex-start; }
+  .card { gap: 10px; justify-content: flex-start; }
 
-  .sponsor-pill { font-size: 1rem; padding: 12px 14px; border-width: 3px; gap: 8px; max-width: 88vw; }
-  .sponsor-pill .sponsor-logo { height: 22px; }
+  .sponsor-pill { font-size: 0.9rem; line-height: 1.15; padding: 10px 12px; border-width: 2px; gap: 8px; max-width: 90vw; }
+  .sponsor-pill .sponsor-logo { height: 18px; }
 
-  .options { gap: 10px; }
-  .option-btn { font-size: 0.9rem; line-height: 1.2; padding: 12px 14px; border-width: 3px; border-radius: 44px; }
+  .options { gap: 8px; padding: 0 2px; }
+  .option-btn { font-size: 0.82rem !important; line-height: 1.25; padding: 10px 12px; border-width: 2px; border-radius: 36px; }
 
-  .progress-container { bottom: calc(14px + env(safe-area-inset-bottom)); gap: 6px; }
-  .progress-circle { width: 24px; height: 24px; font-size: 12px; }
+  .progress-container { bottom: calc(12px + env(safe-area-inset-bottom)); gap: 6px; }
+  .progress-circle { width: 22px; height: 22px; font-size: 11px; }
 
-  .back-link { font-size: 0.8rem; padding: 6px 10px; }
+  .back-link { font-size: 0.78rem; padding: 6px 9px; }
 
-  .correct-overlay { width: 240px; height: 240px; }
+  .correct-overlay { width: 220px; height: 220px; }
+}
+
+/* iPhone 12/13 portrait width: 390px */
+@media (max-width: 390px) and (orientation: portrait) {
+  .main-instructions { font-size: 0.7rem; }
+  .sponsor-pill { font-size: 0.86rem; }
+  .option-btn { font-size: 0.8rem !important; padding: 9px 11px; }
 }
 
 /* Extra-tight portrait screens (older iPhones) */
 @media (max-height: 700px) and (orientation: portrait) {
   .page { padding-top: calc(env(safe-area-inset-top) + 76px); overflow-y: auto; }
   .card { gap: 10px; justify-content: flex-start; }
-  .sponsor-pill { font-size: 0.95rem; padding: 10px 12px; }
-  .sponsor-pill .sponsor-logo { height: 20px; }
-  .option-btn { font-size: 0.88rem; padding: 10px 12px; }
+  .sponsor-pill { font-size: 0.88rem; padding: 8px 10px; }
+  .sponsor-pill .sponsor-logo { height: 18px; }
+  .option-btn { font-size: 0.8rem !important; padding: 8px 10px; }
   .progress-container { bottom: calc(12px + env(safe-area-inset-bottom)); }
 }
 
 /* iOS Safari specific: prevent font inflation and keep buttons consistent */
 @supports (-webkit-touch-callout: none) {
-  .option-btn { font-size: 0.95rem; }
+  .option-btn { font-size: 0.9rem; }
   @media (max-width: 420px) {
-    .option-btn { font-size: 0.9rem !important; }
-    .sponsor-pill { font-size: 0.95rem !important; }
+    .option-btn { font-size: 0.82rem !important; }
+    .sponsor-pill { font-size: 0.88rem !important; }
   }
 }
