@@ -11,6 +11,7 @@ export class SVGAnimationSystem {
     this.isNavigationMode = false; // New: tracks if we're in navigation mode
     this.currentZoomedRoom = null; // New: tracks which room is currently zoomed
   this.lastAnimatedPieceId = null; // New: remembers the last piece shown via animation (non-navigation)
+  this._rectHitHandler = null; // New: svg-level click handler for rect hit testing
     
     // Mapping from piece IDs to SVG regions (coordinates extracted from actual locked layers)
     this.pieceRegions = {
@@ -820,41 +821,45 @@ export class SVGAnimationSystem {
     // Remove existing handlers first
     this.removeRoomClickHandlers();
     
-    // Add click handlers for each piece region that's unlocked
+    const state = this.loadState();
+    let anyClickable = false;
+    // Add click handlers for each piece region that's unlocked (DOM-based)
     Object.entries(this.pieceRegions).forEach(([pieceId, region]) => {
-      // Check if this piece is unlocked
-      const state = this.loadState();
       if (state.obtained[pieceId]) {
-        // Find the unlocked layer element
-        const unlockedElement = this.findUnlockedElement(region);
-        if (unlockedElement) {
+        const clickable = this.findClickableRoomElement(pieceId, region);
+        if (clickable) {
           const clickHandler = (e) => {
             e.stopPropagation();
             this.zoomToRoom(pieceId);
-            // Ensure info panel reflects the zoomed room
-            // Info panel will update on zoom
           };
-          
-          unlockedElement.style.cursor = 'pointer';
-          unlockedElement.addEventListener('click', clickHandler);
-          unlockedElement._roomClickHandler = clickHandler; // Store for cleanup
-          
-          console.log(`🏥 Added click handler for ${pieceId}`);
+          clickable.style.cursor = 'pointer';
+          clickable.addEventListener('click', clickHandler);
+          clickable._roomClickHandler = clickHandler;
+          anyClickable = true;
+          console.log(`\ud83c\udfe5 Added click handler for ${pieceId}`);
         }
       }
     });
+
+    // Always enable rect-based hit testing as a reliable fallback
+    this.addRectHitHandler();
+    if (this.svgElement && (anyClickable || this.anyUnlocked())) {
+      this.svgElement.style.cursor = 'pointer';
+    }
   }
 
   // Remove room click handlers
   removeRoomClickHandlers() {
     Object.entries(this.pieceRegions).forEach(([pieceId, region]) => {
-      const unlockedElement = this.findUnlockedElement(region);
-      if (unlockedElement && unlockedElement._roomClickHandler) {
-        unlockedElement.removeEventListener('click', unlockedElement._roomClickHandler);
-        unlockedElement.style.cursor = 'default';
-        delete unlockedElement._roomClickHandler;
+      const el = this.findClickableRoomElement(pieceId, region) || this.findUnlockedElement(region);
+      if (el && el._roomClickHandler) {
+        el.removeEventListener('click', el._roomClickHandler);
+        el.style.cursor = 'default';
+        delete el._roomClickHandler;
       }
     });
+    this.removeRectHitHandler();
+    if (this.svgElement) this.svgElement.style.cursor = 'default';
   }
 
   // Find unlocked element for a region
@@ -877,6 +882,86 @@ export class SVGAnimationSystem {
     }
     
     return null;
+  }
+
+  // Determine if any piece is unlocked
+  anyUnlocked() {
+    const state = this.loadState();
+    return Object.keys(this.pieceRegions).some(pid => !!state.obtained[pid]);
+  }
+
+  // Broader finder for a clickable element representing the room
+  findClickableRoomElement(pieceId, region) {
+    if (!this.svgElement) return null;
+    // Prefer explicit unlocked layer
+    const primary = this.findUnlockedElement(region);
+    if (primary) return primary;
+    // Fallback by room keywords
+    const keywords = this.getRegionKeywords(pieceId);
+    for (const key of keywords) {
+      const selectors = [
+        `g[id*="${key}"]`,
+        `[id*="${key}"]`,
+      ];
+      for (const sel of selectors) {
+        try {
+          const el = this.svgElement.querySelector(sel);
+          if (el) return el;
+        } catch {}
+      }
+    }
+    return null;
+  }
+
+  // Map pieceId to likely group keywords in the SVG
+  getRegionKeywords(pieceId) {
+    const map = {
+      'piece_1': ['Op_Recovery', 'Recovery', 'Outpatient', 'OpRecovery'],
+      'piece_2': ['Pediatrics', 'Pediatric'],
+      'piece_3': ['ICU'],
+      'piece_4': ['Behavioral', 'Behavior'],
+      'piece_5': ['Operating', 'OR'],
+      'piece_6': ['MedSurgical', 'MedSurg', 'Medical', 'Surgical'],
+      'piece_7': ['Emergency', 'ER']
+    };
+    return map[pieceId] || [];
+  }
+
+  // Add SVG-level rect hit testing so any tap within a room's rect works
+  addRectHitHandler() {
+    if (!this.svgElement || this._rectHitHandler) return;
+    this._rectHitHandler = (evt) => {
+      if (!this.isNavigationMode || this.currentZoomedRoom) return;
+      try {
+        const pt = this.svgElement.createSVGPoint();
+        pt.x = evt.clientX; pt.y = evt.clientY;
+        const ctm = this.svgElement.getScreenCTM();
+        if (!ctm) return;
+        const inv = ctm.inverse();
+        const svgPt = pt.matrixTransform(inv);
+        const state = this.loadState();
+        // Iterate unlocked regions and find the first rect containing the point
+        for (const [pid, region] of Object.entries(this.pieceRegions)) {
+          if (!state.obtained[pid]) continue;
+          const r = region.zoomTarget;
+          if (!r) continue;
+          if (svgPt.x >= r.x && svgPt.x <= r.x + r.width && svgPt.y >= r.y && svgPt.y <= r.y + r.height) {
+            evt.stopPropagation();
+            this.zoomToRoom(pid);
+            return;
+          }
+        }
+      } catch {}
+    };
+    this.svgElement.addEventListener('click', this._rectHitHandler, true);
+  }
+
+  // Remove SVG-level rect hit testing
+  removeRectHitHandler() {
+    if (this.svgElement && this._rectHitHandler) {
+      this.svgElement.removeEventListener('click', this._rectHitHandler, true);
+    }
+    this._rectHitHandler = null;
   }
 
   // Trigger visual click effect on room
