@@ -79,3 +79,35 @@ input, button, select, textarea { font-size: 16px !important; -webkit-appearance
   .sponsor-pill { font-size: 1.4rem; }
   .option-btn { font-size: 1.05rem; }
 }
+
+/* Mobile iPhone-friendly tweaks: prevent overlap and reduce sizes */
+@media (max-width: 420px) {
+  .page { padding-top: calc(env(safe-area-inset-top) + 76px); gap: 12px; overflow-y: auto; }
+
+  .main-instructions { font-size: 0.8rem; padding: 8px 12px; border-width: 2px; border-radius: 26px; max-width: 88vw; }
+
+  .card { gap: 12px; justify-content: flex-start; }
+
+  .sponsor-pill { font-size: 1rem; padding: 12px 14px; border-width: 3px; gap: 8px; max-width: 88vw; }
+  .sponsor-pill .sponsor-logo { height: 22px; }
+
+  .options { gap: 10px; }
+  .option-btn { font-size: 0.9rem; line-height: 1.2; padding: 12px 14px; border-width: 3px; border-radius: 44px; }
+
+  .progress-container { bottom: calc(14px + env(safe-area-inset-bottom)); gap: 6px; }
+  .progress-circle { width: 24px; height: 24px; font-size: 12px; }
+
+  .back-link { font-size: 0.8rem; padding: 6px 10px; }
+
+  .correct-overlay { width: 240px; height: 240px; }
+}
+
+/* Extra-tight portrait screens (older iPhones) */
+@media (max-height: 700px) and (orientation: portrait) {
+  .page { padding-top: calc(env(safe-area-inset-top) + 76px); overflow-y: auto; }
+  .card { gap: 10px; justify-content: flex-start; }
+  .sponsor-pill { font-size: 0.95rem; padding: 10px 12px; }
+  .sponsor-pill .sponsor-logo { height: 20px; }
+  .option-btn { font-size: 0.88rem; padding: 10px 12px; }
+  .progress-container { bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
