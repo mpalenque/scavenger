@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/index.css">
+  <link rel="stylesheet" href="css/index.css">
   <style>
     /* Page-specific tiny overrides only if needed */
 
@@ -257,8 +257,8 @@
     @keyframes shakeX { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
     @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(53,211,211,0.6); } 70% { box-shadow: 0 0 0 12px rgba(53,211,211,0); } 100% { box-shadow: 0 0 0 0 rgba(53,211,211,0); } }
     #sponsor-match-overlay .progress-container { display: flex; justify-content: center; gap: 8px; position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 10; padding: 0 1rem; }
-    #sponsor-match-overlay .progress-circle { width: 28px; height: 28px; border-radius: 50%; background: url('./assets/empty-circle.svg') center/contain no-repeat; transition: all 0.2s ease; border: none; padding: 0; margin: 0; outline: none !important; display: flex; align-items: center; justify-content: center; color: #35d3d3; font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 14px; }
-    #sponsor-match-overlay .progress-circle.completed { background: url('./assets/check-circle.svg') center/contain no-repeat; color: transparent; }
+    #sponsor-match-overlay .progress-circle { width: 28px; height: 28px; border-radius: 50%; background: url('assets/empty-circle.svg') center/contain no-repeat; transition: all 0.2s ease; border: none; padding: 0; margin: 0; outline: none !important; display: flex; align-items: center; justify-content: center; color: #35d3d3; font-family: 'Poppins', sans-serif; font-weight: bold; font-size: 14px; }
+    #sponsor-match-overlay .progress-circle.completed { background: url('assets/check-circle.svg') center/contain no-repeat; color: transparent; }
     #sponsor-match-overlay .progress-circle.flash-wrong { box-shadow: 0 0 0 3px #f44336, 0 0 14px rgba(244,67,54,0.6); }
     #sponsor-match-overlay .card.slide-out-left { animation: slideOutLeft 520ms ease forwards; }
     #sponsor-match-overlay .card.slide-in-right { animation: slideInRight 520ms ease forwards; }
@@ -310,12 +310,12 @@
   <div id="qr-frame-overlay" class="qr-frame-overlay"></div>
 
   <!-- html5-qrcode local -->
-  <script src="./html5-qrcode.min.js"></script>
+  <script src="html5-qrcode.min.js"></script>
   
-  <script type="module" src="./js/data.js"></script>
-  <script type="module" src="./js/perf.js"></script>
-  <script type="module" src="./js/camera.js"></script>
-  <script src="./js/native-qr.js"></script>
-  <script type="module" src="./js/main.js"></script>
+  <script type="module" src="js/data.js"></script>
+  <script type="module" src="js/perf.js"></script>
+  <script type="module" src="js/camera.js"></script>
+  <script src="js/native-qr.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

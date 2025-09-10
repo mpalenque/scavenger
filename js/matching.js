@@ -52,14 +52,14 @@ function chooseSeven(items) {
 }
 
 const LOGO_MAP = {
-  'VirtuAlly': './assets/Links/VirtuAlly-logo_color-gradient.png',
-  'Equum': './assets/Links/equum-logo.webp',
-  'ServiceNow': './assets/Links/ServiceNow_logo.svg',
-  'Ascom': './assets/Links/Ascom-logo-1075x310-300x87@2x.jpg',
-  'ClearDATA': './assets/Links/cleardata.png',
-  'Nutanix': './assets/Links/nutanix-logo-charcoal-gray.png',
-  'Suki': './assets/Links/suki-logo-black-0kri3.png',
-  'CGI Federal': './assets/Links/CGI_logo.svg.png'
+  'VirtuAlly': 'assets/Links/VirtuAlly-logo_color-gradient.png',
+  'Equum': 'assets/Links/equum-logo.webp',
+  'ServiceNow': 'assets/Links/ServiceNow_logo.svg',
+  'Ascom': 'assets/Links/Ascom-logo-1075x310-300x87@2x.jpg',
+  'ClearDATA': 'assets/Links/cleardata.png',
+  'Nutanix': 'assets/Links/nutanix-logo-charcoal-gray.png',
+  'Suki': 'assets/Links/suki-logo-black-0kri3.png',
+  'CGI Federal': 'assets/Links/CGI_logo.svg.png'
 };
 
 const QUESTIONS = chooseSeven(DATA);

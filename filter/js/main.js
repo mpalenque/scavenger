@@ -1,5 +1,5 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js';
-import { createChromaKeyMaterial } from './ChromaKeyMaterial.js';
+import { createChromaKeyMaterial } from 'ChromaKeyMaterial.js';
 
 console.log('🚀 NUEVA VERSION v2.2 - Basic Material Test (No Chroma Key)');
 
@@ -128,7 +128,7 @@ function createFallbackTexture() {
 }
 
 async function loadOverlayVideo(customURL) {
-  console.log('Loading overlay video...', customURL || './vid2_1.mp4');
+  console.log('Loading overlay video...', customURL || 'vid2_1.mp4');
   
   // Check if we're on mobile
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -146,7 +146,7 @@ async function loadOverlayVideo(customURL) {
     overlayVideo.preload = 'metadata'; // Less aggressive preload for mobile
     
     // Don't set crossOrigin for same-origin videos on mobile
-  const videoSrc = customURL || './vid2_1.mp4';
+  const videoSrc = customURL || 'vid2_1.mp4';
     
     console.log('Mobile: Video src set to:', videoSrc);
     
@@ -318,7 +318,7 @@ async function loadOverlayVideo(customURL) {
   overlayVideo.loop = true;
   overlayVideo.crossOrigin = 'anonymous';
   
-  const videoSrc = customURL || './vid2_1.mp4';
+  const videoSrc = customURL || 'vid2_1.mp4';
   overlayVideo.src = videoSrc;
   console.log('Video src set to:', videoSrc);
 

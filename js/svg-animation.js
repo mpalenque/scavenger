@@ -1,6 +1,6 @@
 // svg-animation.js
 // SVG zoom animation system for trivia completion
-import { STORAGE_KEY } from './data.js';
+import { STORAGE_KEY } from 'data.js';
 
 export class SVGAnimationSystem {
   constructor() {
@@ -248,7 +248,7 @@ export class SVGAnimationSystem {
 
   async loadSVG() {
     try {
-      const response = await fetch('./assets/AvaSureDollhouseGraphics_Optimized 3.svg');
+      const response = await fetch('assets/AvaSureDollhouseGraphics_Optimized 3.svg');
       const svgText = await response.text();
 
       // Create SVG wrapper
