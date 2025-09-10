@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google Form Integration - Embedded</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0b2a2a 0%, #143940 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px; /* Reducido el padding */
+            margin: 0;
+        }
+
+        .form-container {
+            background: rgba(20, 57, 64, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 25px; /* Reducido el padding */
+            max-width: 750px;
+            width: 100%;
+            border: 3px solid rgba(53, 211, 211, 0.6);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(53, 211, 211, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            max-height: 95vh; /* Limita la altura total */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #35d3d3, #2bc5c5, #1eb8b8, #35d3d3);
+            background-size: 200% 100%;
+            animation: headerGlow 3s linear infinite;
+        }
+
+        @keyframes headerGlow {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 15px; /* Reducido el margin */
+            color: #35d3d3;
+            font-size: 2rem; /* Reducido el tamaño */
+            font-weight: 700;
+            text-shadow: 
+                0 0 10px rgba(53, 211, 211, 0.5),
+                0 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #35d3d3, transparent);
+            border-radius: 2px;
+        }
+
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ccc;
+            font-size: 1.1rem;
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: 500px; /* Aumentado para mostrar el botón Submit */
+            border-radius: 15px;
+            overflow: hidden;
+            border: 3px solid #35d3d3;
+            background: white;
+            box-shadow: 
+                0 0 0 1px rgba(53, 211, 211, 0.5),
+                0 10px 30px rgba(53, 211, 211, 0.3),
+                inset 0 0 0 2px rgba(53, 211, 211, 0.1);
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 0 1px rgba(53, 211, 211, 0.5),
+                    0 10px 30px rgba(53, 211, 211, 0.3),
+                    inset 0 0 0 2px rgba(53, 211, 211, 0.1);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 0 3px rgba(53, 211, 211, 0.8),
+                    0 15px 40px rgba(53, 211, 211, 0.5),
+                    inset 0 0 0 2px rgba(53, 211, 211, 0.2);
+            }
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+            background: white;
+        }
+
+        /* Overlay decorativo */
+        .iframe-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #35d3d3, #2bc5c5, #35d3d3, #1eb8b8);
+            background-size: 300% 300%;
+            border-radius: 18px;
+            z-index: -1;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .buttons {
+            margin-top: 15px; /* Reducido el margin */
+            display: flex;
+            gap: 12px; /* Reducido el gap */
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #35d3d3;
+            color: #0b2a2a;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(53, 211, 211, 0.4);
+        }
+
+        .info-box {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #4CAF50;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 15px; /* Reducido para móviles */
+                margin: 5px; /* Reducido el margin */
+                max-height: 98vh; /* Más altura en móviles */
+            }
+            
+            .iframe-container {
+                height: 400px; /* Altura reducida para móviles */
+            }
+            
+            h1 {
+                font-size: 1.4rem; /* Más pequeño en móviles */
+                margin-bottom: 10px;
+            }
+            
+            .buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .description {
+                font-size: 0.9rem;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="form-container">
+        <h1>🎯 AvaSure Form Integration</h1>
+        
+        <div class="info-box">
+            <strong>✅ Official AvaSure Symposium Registration!</strong><br>
+            Complete the form below to participate in our exclusive raffle and receive updates.
+        </div>
+        
+        <div class="description">
+            Your information will be securely stored and used only for event-related communications.
+        </div>
+        
+        <!-- Embedded Google Form -->
+        <div class="iframe-container">
+            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSezV-x7jX2h2wehpm1H__5SPp0vHBTrWs5wVNqd-da-hM-wxQ/viewform?embedded=true" 
+                    frameborder="0" 
+                    marginheight="0" 
+                    marginwidth="0"
+                    scrolling="yes">
+                Loading…
+            </iframe>
+        </div>
+
+    </div>
+
+    <script>
+        function refreshForm() {
+            const iframe = document.querySelector('iframe');
+            iframe.src = iframe.src;
+        }
+
+        // Auto-refresh form after 5 seconds if there are issues
+        setTimeout(() => {
+            console.log('Google Form loaded successfully');
+        }, 5000);
+    </script>
+</body>
+</html>

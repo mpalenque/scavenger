@@ -155,17 +155,37 @@
   </div>
 
   <div id="final-form" class="modal-overlay hidden">
-    <div class="modal-content">
-      <h2>Scavenger Hunt Complete!</h2>
-      <p>Congratulations, you've finished the AvaSure Symposium Scavenger Hunt! You've unlocked the Vicky Selfie filter. Click the link below to start snapping.</p>
-      <p style="margin-top: 1rem;"><a id="selfie-link" href="#" target="_blank" style="color:#35d3d3; font-weight:600; text-decoration:underline;">Open Vicky Selfie Filter</a></p>
-      <p style="margin-top: 1rem;">Don't forget to share your selfies in our Symposium LinkedIn group. Also, be sure to enter your name and email for a chance to win a $250 airline gift card!</p>
-      <p style="margin-top: 0.5rem;"><a id="linkedin-link" href="#" target="_blank" style="color:#35d3d3; font-weight:600; text-decoration:underline;">Join the LinkedIn Group</a></p>
-      <div style="margin-top: 1rem;">
-        <input type="text" id="player-name" placeholder="Your name" style="width: 100%; padding: 0.75rem; margin: 0.5rem 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
-        <input type="email" id="player-email" placeholder="Your email" style="width: 100%; padding: 0.75rem; margin: 0.25rem 0 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div class="modal-content" style="max-width: 750px; width: 90vw; max-height: 90vh; overflow: hidden;">
+      <h2 style="margin-bottom: 1rem;">🎉 Scavenger Hunt Complete!</h2>
+      <p style="margin-bottom: 1rem;">Congratulations, you've finished the AvaSure Symposium Scavenger Hunt! You've unlocked the Vicky Selfie filter and are entered to win a $250 airline gift card!</p>
+      <p style="margin-bottom: 1.5rem;"><a id="selfie-link" href="#" target="_blank" style="color:#35d3d3; font-weight:600; text-decoration:underline;">🎯 Open Vicky Selfie Filter</a></p>
+      
+      <!-- Embedded Google Form -->
+      <div style="
+        position: relative;
+        width: 100%;
+        height: 450px;
+        border-radius: 15px;
+        overflow: hidden;
+        border: 3px solid #35d3d3;
+        background: white;
+        box-shadow: 
+          0 0 0 1px rgba(53, 211, 211, 0.5),
+          0 10px 30px rgba(53, 211, 211, 0.3);
+        margin: 1rem 0;
+      ">
+        <iframe 
+          src="https://docs.google.com/forms/d/e/1FAIpQLSezV-x7jX2h2wehpm1H__5SPp0vHBTrWs5wVNqd-da-hM-wxQ/viewform?embedded=true" 
+          frameborder="0" 
+          marginheight="0" 
+          marginwidth="0"
+          scrolling="yes"
+          style="width: 100%; height: 100%; border: none; border-radius: 12px; background: white;">
+          Loading form...
+        </iframe>
       </div>
-      <div style="text-align: center;"><button id="submit-completion" class="btn">Enter Raffle</button></div>
+      
+      <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">Don't forget to share your selfies in our <a id="linkedin-link" href="#" target="_blank" style="color:#35d3d3; text-decoration:underline;">LinkedIn Group</a>!</p>
     </div>
   </div>
 

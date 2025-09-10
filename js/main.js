@@ -555,30 +555,9 @@ window.svgAnimationSystem = svgAnimationSystem;
 
 // Add event listener for final form submission
 document.addEventListener('DOMContentLoaded', () => {
-  const submitBtn = document.getElementById('submit-completion');
-  if (submitBtn) {
-    submitBtn.addEventListener('click', () => {
-      const nameInput = document.getElementById('player-name');
-      const emailInput = document.getElementById('player-email');
-      const name = nameInput ? nameInput.value.trim() : '';
-      const email = emailInput ? emailInput.value.trim() : '';
-      
-      if (name && email) {
-        alert(`🎉 Thanks ${name}! You're entered in the raffle.`);
-        console.log('🏆 Hunt completed by:', name);
-        sendGA('hunt_completed', { player_name: name, player_email: email });
-        
-        // Hide final form
-        const finalFormEl = document.getElementById('final-form');
-        if (finalFormEl) finalFormEl.classList.add('hidden');
-        
-        // Reset for next player
-        resetProgress();
-      } else {
-        alert('Please enter your name and email to enter the raffle.');
-      }
-    });
-  }
+  // Form submission is now handled by embedded Google Form iframe
+  // No need for manual submission handling
+  console.log('� Google Form iframe loaded - form submissions handled automatically');
 });
 
 // --- Manejo de QR y URL ---
