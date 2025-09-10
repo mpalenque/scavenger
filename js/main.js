@@ -16,8 +16,8 @@ function loadState() {
     if (!raw) return getInitialState();
     const parsed = JSON.parse(raw);
     const merged = { ...getInitialState(), ...parsed };
-  // If piece_3 is not obtained, force the sponsor match gate to be required again
-  if (!merged.obtained || !merged.obtained['piece_3']) {
+  // If piece_2 is not obtained, force the sponsor match gate to be required again
+  if (!merged.obtained || !merged.obtained['piece_2']) {
       merged.sponsorMatchCompleted = false;
     }
     return merged;
@@ -547,6 +547,40 @@ function openFinalForm() {
   }
 }
 
+// Initialize game UI (called when returning from final form)
+function initializeGameUI() {
+  if (window.__gameInitialized) return;
+  window.__gameInitialized = true;
+  
+  console.log('🎮 Initializing game UI...');
+  
+  // Initialize UI elements
+  buildPiecesNav();
+  refreshPiecesNav();
+  initializeHintDisplay();
+  setupProgressCircleListeners();
+  
+  // Initialize SVG animation system
+  svgAnimationSystem.init().catch(e => {
+    console.error('❌ Failed to initialize SVG animation system:', e);
+  });
+  
+  // Update clues and check completion
+  checkCompletion();
+  updateNextClue();
+  
+  // Start camera if not disabled
+  if (!window.__disableCamera) {
+    console.log('📷 Starting camera after returning from final form...');
+    setTimeout(() => {
+      startCameraAggressively();
+    }, 500);
+  }
+  
+  // Start periodic video visibility check
+  setInterval(ensureVideoVisible, 1000);
+}
+
 // Make openFinalForm available globally for SVG animation system
 window.openFinalForm = openFinalForm;
 
@@ -600,11 +634,11 @@ function processPieceIdentifier(raw) {
     if (url) {
       const qp = url.searchParams.get('piece');
       if (qp) id = qp;
-    // If QR points to matching page, treat as piece_3 gate
+    // If QR points to matching page, treat as piece_2 gate
       if (!id) {
         const path = (url.pathname || '').toLowerCase();
         if (path.endsWith('/matching') || path.endsWith('/matching.html') || path.includes('matching.html')) {
-      id = 'piece_3';
+      id = 'piece_2';
           fromMatchingURL = true;
         }
       }
@@ -621,7 +655,7 @@ function processPieceIdentifier(raw) {
     // Exact URL mapping for AvaSure QR codes - UPDATED WITH CORRECT URLs
     const avasureUrlMapping = {
       'https://qrfy.io/p/U4QhGHiBbA': 'piece_1', // AvaSure2 -> piece_1
-      'https://qrfy.io/p/K9vJFePcRZ': 'piece_2', // AvaSure3 -> piece_2
+      'https://qrfy.io/p/K9vJFePcRZ': 'piece_2', // AvaSure3 -> piece_2 (with matching gate)
       'https://qrfy.io/p/bKmBFhhx5S': 'piece_3', // AvaSure4 -> piece_3
       'https://qrfy.io/p/dRrwQe4qNj': 'piece_4', // AvaSure5 -> piece_4
       'https://qrfy.io/p/DvHBs8xgTN': 'piece_5', // AvaSure6 -> piece_5
@@ -817,16 +851,16 @@ function processPieceIdentifier(raw) {
     }, 2000);
     return;
   }
-  // If requesting piece_3 (including via matching URL) and sponsor match isn't completed, run sponsor match first
-  if (id === 'piece_3' && !state.sponsorMatchCompleted) {
-    console.log('🧩 Launching Sponsor Match for piece_3 before awarding');
+  // If requesting piece_2 (including via matching URL) and sponsor match isn't completed, run sponsor match first
+  if (id === 'piece_2' && !state.sponsorMatchCompleted) {
+    console.log('🧩 Launching Sponsor Match for piece_2 before awarding');
     launchSponsorMatch(() => {
       // callback after sponsor match completion
       state.sponsorMatchCompleted = true;
       saveState();
       // Open next SVG immediately after match completion
       window.__immediateAnimationNext = true;
-      // Re-run awarding logic for piece_3 now that gate is complete
+      // Re-run awarding logic for piece_2 now that gate is complete
       processPieceIdentifier(id);
     });
     return;
@@ -1530,7 +1564,7 @@ function init() {
       setTimeout(() => {
         openFinalForm();
       }, 500); // Small delay to ensure DOM is ready
-      return; // Don't initialize camera or other UI if completed
+      // Don't return here - allow game UI to be initialized so user can return to game
     }
     
     // Initialize UI
@@ -1549,6 +1583,9 @@ function init() {
     // No 3D sync - removed
     checkCompletion();
     updateNextClue();
+    
+    // Mark game as initialized
+    window.__gameInitialized = true;
     
     console.log('App: Setting camera status...');
     const statusEl = document.getElementById('camera-status');
@@ -1648,7 +1685,7 @@ window.addEventListener('load', () => {
     console.log('🚀 Main app loaded, starting initialization...');
     console.log('🔍 QR Detection URLs configured:');
     console.log('   - https://qrfy.io/p/U4QhGHiBbA -> piece_1');
-    console.log('   - https://qrfy.io/p/K9vJFePcRZ -> piece_2');
+    console.log('   - https://qrfy.io/p/K9vJFePcRZ -> piece_2 (with matching gate)');
     console.log('   - https://qrfy.io/p/bKmBFhhx5S -> piece_3');
     console.log('   - https://qrfy.io/p/dRrwQe4qNj -> piece_4');
     console.log('   - https://qrfy.io/p/DvHBs8xgTN -> piece_5');
@@ -1708,6 +1745,25 @@ document.addEventListener('DOMContentLoaded', () => {
     introStartBtn.addEventListener('click', () => {
       const intro = document.getElementById('intro-overlay');
       if (intro) intro.classList.add('hidden');
+    });
+  }
+
+  // Final form back button
+  const finalFormBackBtn = document.getElementById('final-form-back');
+  if (finalFormBackBtn) {
+    finalFormBackBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const finalForm = document.getElementById('final-form');
+      if (finalForm) {
+        finalForm.classList.add('hidden');
+        console.log('🔙 Returned to game from final form');
+        
+        // If we returned from final form and game UI wasn't initialized, initialize it now
+        if (!window.__gameInitialized) {
+          console.log('🎮 Initializing game UI after returning from final form...');
+          initializeGameUI();
+        }
+      }
     });
   }
   

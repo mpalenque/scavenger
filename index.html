@@ -125,8 +125,8 @@
   <div class="ui-overlay">
     <div class="top-bar safe-area-top">
       <!-- Botones de control arriba a la derecha -->
+      <button id="complete-form-btn" class="reset-btn" style="margin-right: 0.5rem; background: #35d3d3;">🏆 Complete</button>
       <button id="reset-pieces-btn" class="reset-btn">🔄 Reset</button>
-      <button id="complete-form-btn" class="reset-btn" style="margin-left: 0.5rem; background: #35d3d3;">🏆 Complete</button>
     </div>
         <div class="bottom-panel safe-area-bottom">
       <!-- Hint Display - Centrado -->
@@ -156,6 +156,8 @@
   </div>
 
   <div id="final-form" class="modal-overlay hidden">
+    <!-- Back link to return to game -->
+    <a href="#" id="final-form-back" class="back-link" style="position: fixed; top: calc(env(safe-area-inset-top) + 12px); left: 12px; background: linear-gradient(135deg, #35D3D3, #20B2B2); border: 2px solid #20B2B2; color: #fff; border-radius: 24px; padding: 8px 12px; font-weight: 600; font-size: 0.85rem; text-decoration: none; z-index: 20000;">← Back to Game</a>
     <div class="modal-content" style="max-width: 850px; width: 95vw; max-height: 90vh; overflow: hidden;">
       <h2 style="margin-bottom: 1rem;">🎉 Scavenger Hunt Complete!</h2>
       <p style="margin-bottom: 1rem;">Congratulations, you've finished the AvaSure Symposium Scavenger Hunt! You've unlocked the Vicky Selfie filter and are entered to win a $250 airline gift card!</p>

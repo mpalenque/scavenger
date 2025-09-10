@@ -270,6 +270,10 @@ export class SVGAnimationSystem {
           display: block;
           transform-origin: 0 0;
           transition: transform 1.5s ease-in-out;
+          shape-rendering: geometricPrecision;
+          text-rendering: geometricPrecision;
+          image-rendering: -webkit-optimize-contrast;
+          image-rendering: crisp-edges;
         `;
         // Ensure aspect ratio is preserved and content is centered
         this.svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
@@ -280,6 +284,13 @@ export class SVGAnimationSystem {
           const height = this.svgElement.getAttribute('height') || '1280';
           this.svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
         }
+        
+        // Add better text rendering for all text elements
+        const textElements = this.svgElement.querySelectorAll('text, tspan');
+        textElements.forEach(textEl => {
+          textEl.style.textRendering = 'geometricPrecision';
+          textEl.style.shapeRendering = 'geometricPrecision';
+        });
       }
 
       // Add SVG to the frame container instead of the main container
