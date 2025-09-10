@@ -560,6 +560,17 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('� Google Form iframe loaded - form submissions handled automatically');
 });
 
+// Add event listener for complete form button
+document.addEventListener('DOMContentLoaded', () => {
+  const completeFormBtn = document.getElementById('complete-form-btn');
+  if (completeFormBtn) {
+    completeFormBtn.addEventListener('click', () => {
+      console.log('🏆 Complete Form button clicked');
+      openFinalForm();
+    });
+  }
+});
+
 // --- Manejo de QR y URL ---
 function processPieceIdentifier(raw) {
   // normalize text
