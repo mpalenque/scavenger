@@ -1524,6 +1524,15 @@ function init() {
       return;
     }
     
+    // Check if puzzle is already completed - show final form immediately
+    if (state.completed) {
+      console.log('🎉 Puzzle already completed! Showing final form immediately...');
+      setTimeout(() => {
+        openFinalForm();
+      }, 500); // Small delay to ensure DOM is ready
+      return; // Don't initialize camera or other UI if completed
+    }
+    
     // Initialize UI
     console.log('📊 Current state:', state);
     buildPiecesNav();
