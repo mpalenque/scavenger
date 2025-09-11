@@ -1,9 +1,9 @@
 // main.js
 // Orquestación general de la app (SIN THREE.JS)
 
-import { PIECES, CLUES, STORAGE_KEY, getInitialState } from 'data.js';
-import { qrCamera } from 'camera.js';
-import { svgAnimationSystem } from 'svg-animation.js';
+import { PIECES, CLUES, STORAGE_KEY, getInitialState } from './data.js';
+import { qrCamera } from './camera.js';
+import { svgAnimationSystem } from './svg-animation.js';
 
 // --- Utilidades ---
 export function dispatchCustomEvent(name, detail) {

@@ -1,6 +1,6 @@
 // svg-animation.js
 // SVG zoom animation system for trivia completion
-import { STORAGE_KEY } from 'data.js';
+import { STORAGE_KEY } from './data.js';
 
 export class SVGAnimationSystem {
   constructor() {

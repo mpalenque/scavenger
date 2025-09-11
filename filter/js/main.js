@@ -1,5 +1,5 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js';
-import { createChromaKeyMaterial } from 'ChromaKeyMaterial.js';
+import { createChromaKeyMaterial } from './ChromaKeyMaterial.js';
 
 console.log('🚀 NUEVA VERSION v2.2 - Basic Material Test (No Chroma Key)');
 
