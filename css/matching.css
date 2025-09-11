@@ -84,20 +84,36 @@ input, select, textarea { font-size: 16px !important; -webkit-appearance: none; 
 
 /* Mobile iPhone-friendly tweaks: prevent overlap and reduce sizes */
 @media (max-width: 420px) {
-  .page { padding-top: calc(env(safe-area-inset-top) + 88px); gap: 10px; overflow-y: auto; }
+  .page { padding-top: calc(env(safe-area-inset-top) + 80px); gap: 8px; overflow-y: auto; }
 
-  .main-instructions { font-size: 0.72rem; line-height: 1.2; padding: 6px 10px; border-width: 2px; border-radius: 22px; max-width: 92vw; }
+  .main-instructions { font-size: 0.68rem; line-height: 1.2; padding: 5px 8px; border-width: 2px; border-radius: 20px; max-width: 90vw; }
 
-  .card { gap: 10px; justify-content: flex-start; }
+  .card { gap: 8px; justify-content: flex-start; max-width: 100%; }
 
-  .sponsor-pill { font-size: 0.9rem; line-height: 1.15; padding: 10px 12px; border-width: 2px; gap: 8px; max-width: 90vw; }
-  .sponsor-pill .sponsor-logo { height: 18px; }
+  .sponsor-pill { font-size: 0.8rem; line-height: 1.1; padding: 8px 10px; border-width: 2px; gap: 6px; max-width: 88vw; border-radius: 45px; }
+  .sponsor-pill .sponsor-logo { height: 16px; }
 
-  .options { gap: 8px; padding: 0 2px; }
-  .option-btn { font-size: 0.82rem !important; line-height: 1.25; padding: 10px 12px; border-width: 2px; border-radius: 36px; }
+  .options { gap: 6px; padding: 0; }
+  .option-btn { font-size: 0.75rem !important; line-height: 1.2; padding: 8px 10px; border-width: 2px; border-radius: 30px; }
 
-  .progress-container { bottom: calc(12px + env(safe-area-inset-bottom)); gap: 6px; }
-  .progress-circle { width: 22px; height: 22px; font-size: 11px; }
+  .progress-container { bottom: calc(10px + env(safe-area-inset-bottom)); gap: 5px; }
+  .progress-circle { width: 20px; height: 20px; font-size: 10px; }
+
+  .correct-overlay { width: 200px; height: 200px; }
+  .correct-overlay svg { width: 60%; height: 60%; }
+
+  .toast { font-size: 0.8rem; padding: 8px 12px; bottom: calc(50px + env(safe-area-inset-bottom)); }
+}
+
+/* Extra small phones (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  .sponsor-pill { font-size: 0.75rem; padding: 6px 8px; max-width: 85vw; }
+  .sponsor-pill .sponsor-logo { height: 14px; }
+  
+  .option-btn { font-size: 0.7rem !important; padding: 6px 8px; }
+  
+  .main-instructions { font-size: 0.65rem; padding: 4px 6px; }
+}
 
   .back-link { font-size: 0.78rem; padding: 6px 9px; }
 
